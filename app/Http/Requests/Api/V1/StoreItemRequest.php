@@ -46,6 +46,15 @@ class StoreItemRequest extends FormRequest
                 if ($purity && (int) $purity->metal_type_id !== (int) $data['metal_type_id']) {
                     $validator->errors()->add('purity_id', 'The selected purity does not belong to the selected metal type.');
                 }
+
+                if ($purity && strtolower((string) $data['item_type']) === 'ring') {
+                    $purityName = strtolower(trim((string) $purity->name));
+                    $isTwentyFourKarats = preg_match('/^24\s*k$/i', $purityName) === 1;
+
+                    if ($isTwentyFourKarats) {
+                        $validator->errors()->add('purity_id', 'Ring items cannot use 24K purity.');
+                    }
+                }
             }
 
             $gross = (float) ($data['gross_weight_grams'] ?? 0);

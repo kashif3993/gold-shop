@@ -24,7 +24,7 @@ return new class extends Migration
             $table->decimal('polish_cost', 12, 2)->default(0);
             $table->decimal('purchase_rate_per_gram', 12, 2);
             $table->decimal('purchase_price', 12, 2);
-            $table->unsignedBigInteger('source_party_id');
+            $table->unsignedBigInteger('source_party_id')->nullable();
             $table->date('date_received');
             $table->enum('status', ['in_stock', 'sold', 'bought_back'])->default('in_stock');
             $table->unsignedBigInteger('created_by_user_id')->nullable();
@@ -33,8 +33,8 @@ return new class extends Migration
 
             $table->foreign('metal_type_id', 'fk_item_metal')->references('id')->on('metal_types');
             $table->foreign('purity_id', 'fk_item_purity')->references('id')->on('purities');
-            $table->foreign('source_party_id', 'fk_item_source_party')->references('id')->on('parties');
-            $table->foreign('created_by_user_id', 'fk_item_created_by')->references('id')->on('users');
+            $table->foreign('source_party_id', 'fk_item_source_party')->references('id')->on('parties')->nullOnDelete();
+            $table->foreign('created_by_user_id', 'fk_item_created_by')->references('id')->on('users')->nullOnDelete();
             $table->index('status', 'idx_item_status');
             $table->index(['metal_type_id', 'purity_id'], 'idx_item_metal_purity');
         });

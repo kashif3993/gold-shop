@@ -1,36 +1,57 @@
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         url: '/dashboard',
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        url: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
+        icon: LayoutDashboard,
     },
     {
-        title: 'Documentation',
-        url: 'https://laravel.com/docs/starter-kits',
-        icon: BookOpen,
+        title: 'Inventory',
+        url: '/inventory',
+        icon: Database,
+    },
+    {
+        title: 'Item Entry',
+        url: '/items/create',
+        icon: SquarePen,
+    },
+    {
+        title: 'Parties',
+        url: '/parties',
+        icon: Users,
+    },
+    {
+        title: 'Invoices',
+        url: '/invoices',
+        icon: FileText,
+    },
+    {
+        title: 'Reports',
+        url: '/reports',
+        icon: BarChart2,
+    },
+    {
+        title: 'Rate Management',
+        url: '/rate-management',
+        icon: TrendingUp,
+    },
+    {
+        title: 'Settings',
+        url: '/settings',
+        icon: Settings,
     },
 ];
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="offcanvas" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -48,7 +69,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

@@ -12,10 +12,22 @@ class ItemController extends Controller
 {
     public function store(StoreItemRequest $request): JsonResponse
     {
-        $item = Item::create([
-            ...$request->validated(),
-            'created_by_user_id' => $request->user()->id,
-        ])->refresh();
+        $validated = $request->validated();
+
+        $gross = (float) ($validated['gross_weight_grams'] ?? 0);
+        $stone = (float) ($validated['stone_weight_grams'] ?? 0);
+        $cutting = (float) ($validated['cutting_loss_grams'] ?? 0);
+        $net = max(0, $gross - $stone - $cutting);
+
+        $rate = (float) ($validated['purchase_rate_per_gram'] ?? 0);
+        $labour = (float) ($validated['labour_cost'] ?? 0);
+        $polish = (float) ($validated['polish_cost'] ?? 0);
+
+        // Server-side purchase price locking
+        $validated['purchase_price'] = ($net * $rate) + $labour + $polish;
+        $validated['created_by_user_id'] = $request->user()->id;
+
+        $item = Item::create($validated)->refresh();
 
         return (new ItemResource($item))
             ->response()

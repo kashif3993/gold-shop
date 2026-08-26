@@ -27,3 +27,10 @@ createInertiaApp({
 
 // This will set light / dark mode on load...
 initializeTheme();
+
+// Prevent mouse wheel from changing values on number inputs globally
+document.addEventListener('wheel', (e) => {
+    if (document.activeElement?.tagName === 'INPUT' && (document.activeElement as HTMLInputElement).type === 'number') {
+        (document.activeElement as HTMLInputElement).blur();
+    }
+}, { passive: false });

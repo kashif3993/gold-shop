@@ -7,15 +7,15 @@ export function UserInfo({ user, showEmail = false }: { user: User; showEmail?: 
 
     return (
         <>
-            <Avatar className="h-8 w-8 overflow-hidden rounded-full">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
-                    {getInitials(user.name)}
+            <Avatar className="h-[34px] w-[34px] overflow-hidden rounded-full border border-gold bg-transparent">
+                <AvatarImage src={user.avatar} alt={user.full_name} />
+                <AvatarFallback className="bg-transparent text-[13px] font-semibold text-gold">
+                    {getInitials(user.full_name)}
                 </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                {showEmail && <span className="text-muted-foreground truncate text-xs">{user.email}</span>}
+            <div className="grid flex-1 text-left text-[14px] leading-tight ml-1">
+                <span className="truncate font-bold text-slate-900 dark:text-slate-100">{user.full_name}</span>
+                {showEmail && <span className="text-muted-foreground truncate text-xs font-normal mt-0.5">{user.email ?? user.username}</span>}
             </div>
         </>
     );
