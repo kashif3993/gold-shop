@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\StoreItemRequest;
 use App\Http\Resources\ItemResource;
 use App\Models\Item;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
@@ -32,5 +33,25 @@ class ItemController extends Controller
         return (new ItemResource($item))
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $query = $request->query('q');
+
+        if (!$query) {
+            return response()->json(['data' => []]);
+        }
+
+        $items = Item::with(['metalType', 'purity'])
+            ->where('status', 'in_stock')
+            ->where(function ($q) use ($query) {
+                $q->where('item_code', 'like', "%{$query}%")
+                  ->orWhere('qr_payload', 'like', "%{$query}%");
+            })
+            ->limit(10)
+            ->get();
+
+        return ItemResource::collection($items)->response();
     }
 }

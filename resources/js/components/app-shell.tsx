@@ -22,7 +22,7 @@ export function AppShell({ children, variant = 'header' }: AppShellProps) {
     }
 
     return (
-        <SidebarProvider defaultOpen={isOpen} open={isOpen} onOpenChange={handleSidebarChange}>
+        <SidebarProvider defaultOpen={isOpen} open={isOpen} onOpenChange={handleSidebarChange} className="h-svh overflow-visible">
             {children}
         </SidebarProvider>
     );

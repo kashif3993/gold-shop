@@ -13,7 +13,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     const { auth } = usePage<SharedData>().props;
 
     return (
-        <header className="bg-background flex h-16 shrink-0 items-center justify-between gap-2 px-3 sm:px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="bg-background sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-2 px-3 sm:px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-sidebar-border/50">
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                 <SidebarTrigger className="-ml-2 transition-transform hover:scale-105 shrink-0" />
                 <div className="min-w-0 truncate">
@@ -25,7 +25,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                     <Input
                         type="search"
                         placeholder="Search items, parties, invoices..."
-                        className="w-full rounded-lg bg-white dark:bg-black pl-10 border-slate-200 dark:border-slate-800 text-sm shadow-sm transition-all focus-visible:ring-1 focus-visible:ring-gold focus-visible:border-gold/50"
+                        className="w-full rounded-lg bg-white dark:bg-neutral-900 pl-10 border-slate-200 dark:border-slate-800 text-sm shadow-sm transition-all focus-visible:ring-1 focus-visible:ring-gold focus-visible:border-gold/50"
                     />
                 </div>
             </div>

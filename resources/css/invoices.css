@@ -1,0 +1,1043 @@
+/* ============================================================================
+   Invoices module — self-contained stylesheet.
+   No dependency on inventory.css / item-entry.css / parties.css. Every class is
+   namespaced `inv-` so it can't collide with another module.
+
+   Palette: white / black / gold only. Red (`#dc2626`) is reserved for negative
+   amounts (deductions) and errors. Responsive to ~240px. Includes @media print
+   rules so the detail view prints as a clean invoice.
+   ============================================================================ */
+
+:root {
+    --inv-gold: #d4af37;
+    --inv-gold-dark: #b5952f;
+    --inv-gold-soft: #fdf6e3;
+    --inv-gold-soft-border: #e8d18a;
+    --inv-gold-text: #7a5c12;
+    --inv-ink: #1a1a1a;
+    --inv-line: #e5e7eb;
+    --inv-line-strong: #d1d5db;
+    --inv-surface: #ffffff;
+    --inv-surface-alt: #f9fafb;
+    --inv-surface-head: #f3f4f6;
+    --inv-muted: #6b7280;
+    --inv-muted-2: #9ca3af;
+    --inv-negative: #b91c1c;
+    --inv-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --inv-radius: 12px;
+}
+
+/* ───────────────────────── page shell ───────────────────────── */
+
+.inv-page {
+    padding: 2rem;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    min-width: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--inv-ink);
+}
+
+.inv-head {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.inv-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--inv-ink);
+    margin: 0 0 0.5rem;
+}
+
+.inv-desc {
+    color: var(--inv-muted);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.inv-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--inv-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.inv-back:hover {
+    color: var(--inv-ink);
+}
+
+/* ───────────────────────── summary cards ───────────────────────── */
+
+.inv-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.inv-stat {
+    background: var(--inv-surface);
+    border: 1px solid var(--inv-line);
+    border-radius: var(--inv-radius);
+    padding: 1.15rem 1.25rem;
+    box-shadow: var(--inv-shadow);
+}
+
+.inv-stat-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--inv-muted);
+    font-weight: 700;
+}
+
+.inv-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 0.35rem;
+    font-family: monospace;
+}
+
+.inv-stat-value.gold {
+    color: var(--inv-gold-dark);
+}
+
+/* ───────────────────────── filters ───────────────────────── */
+
+.inv-filters {
+    background: var(--inv-surface);
+    border: 1px solid var(--inv-line);
+    border-radius: var(--inv-radius);
+    padding: 1rem;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    align-items: end;
+    box-shadow: var(--inv-shadow);
+}
+
+.inv-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.inv-filter-label {
+    font-size: 0.85rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.inv-filter-input {
+    background: var(--inv-surface-alt);
+    border: 1px solid var(--inv-line-strong);
+    color: #111827;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.inv-filter-input:focus {
+    outline: none;
+    border-color: var(--inv-gold);
+    background: #fff;
+}
+
+.inv-filter-btn {
+    background: var(--inv-gold);
+    color: #111;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    height: 42px;
+}
+
+.inv-filter-btn:hover {
+    background: var(--inv-gold-dark);
+}
+
+.inv-filter-clear {
+    background: transparent;
+    color: var(--inv-muted);
+    border: 1px solid var(--inv-line-strong);
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 42px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.inv-filter-clear:hover {
+    background: var(--inv-surface-head);
+    color: #374151;
+}
+
+/* ───────────────────────── list table ───────────────────────── */
+
+.inv-table-wrap {
+    background: var(--inv-surface);
+    border: 1px solid var(--inv-line);
+    border-radius: var(--inv-radius);
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    box-shadow: var(--inv-shadow);
+}
+
+.inv-table-scroll {
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--inv-muted-2) var(--inv-surface-head);
+}
+
+.inv-table-scroll::-webkit-scrollbar {
+    height: 12px;
+}
+
+.inv-table-scroll::-webkit-scrollbar-track {
+    background: var(--inv-surface-head);
+}
+
+.inv-table-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--inv-muted-2);
+    border-radius: var(--inv-radius);
+    border: 3px solid var(--inv-surface-head);
+}
+
+.inv-table-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: var(--inv-muted);
+}
+
+.inv-table {
+    width: 100%;
+    min-width: 820px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.inv-table th {
+    background: var(--inv-surface-head);
+    color: #374151;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--inv-line);
+}
+
+.inv-table td {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--inv-line);
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.inv-table tbody tr:hover {
+    background: var(--inv-surface-alt);
+}
+
+.inv-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.inv-num {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--inv-gold-dark);
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.inv-num:hover {
+    text-decoration: underline;
+}
+
+.inv-money {
+    font-family: monospace;
+}
+
+.inv-money.negative {
+    color: var(--inv-negative);
+}
+
+.inv-muted {
+    color: var(--inv-muted-2);
+}
+
+.inv-pay-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    background: var(--inv-surface-head);
+    color: #374151;
+    border: 1px solid var(--inv-line);
+}
+
+.inv-pay-badge.cash {
+    background: var(--inv-gold-soft);
+    color: var(--inv-gold-text);
+    border-color: var(--inv-gold-soft-border);
+}
+
+.inv-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--inv-muted-2);
+}
+
+.inv-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    border: 1px solid var(--inv-line-strong);
+    background: #fff;
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.inv-view-btn:hover {
+    background: var(--inv-surface-head);
+}
+
+/* ───────────────────────── pagination ───────────────────────── */
+
+.inv-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.5rem;
+    background: var(--inv-surface-alt);
+    border-top: 1px solid var(--inv-line);
+    font-size: 0.9rem;
+    color: var(--inv-muted);
+}
+
+.inv-pagination-links {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.inv-page-link {
+    padding: 0.5rem 1rem;
+    background: var(--inv-surface);
+    border: 1px solid var(--inv-line-strong);
+    color: #374151;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.inv-page-link:hover:not(.disabled) {
+    background: var(--inv-surface-head);
+}
+
+.inv-page-link.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--inv-surface-alt);
+}
+
+.inv-page-link.active {
+    background: var(--inv-gold);
+    color: #111;
+    border-color: var(--inv-gold);
+}
+
+/* ============================================================================
+   Detail / print sheet
+   ============================================================================ */
+
+.inv-actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.inv-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid transparent;
+}
+
+.inv-btn-gold {
+    background: var(--inv-gold);
+    color: #111;
+}
+
+.inv-btn-gold:hover {
+    background: var(--inv-gold-dark);
+}
+
+.inv-btn-ghost {
+    background: #fff;
+    color: #374151;
+    border-color: var(--inv-line-strong);
+}
+
+.inv-btn-ghost:hover {
+    background: var(--inv-surface-head);
+}
+
+.inv-sheet {
+    background: var(--inv-surface);
+    border: 1px solid var(--inv-line);
+    border-radius: var(--inv-radius);
+    box-shadow: var(--inv-shadow);
+    padding: 2.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.inv-sheet-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--inv-ink);
+}
+
+.inv-shop-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--inv-ink);
+    margin: 0;
+}
+
+.inv-shop-line {
+    font-size: 0.82rem;
+    color: var(--inv-muted);
+    margin-top: 0.25rem;
+}
+
+.inv-doc-label {
+    text-align: right;
+}
+
+.inv-doc-label h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: var(--inv-gold-dark);
+}
+
+.inv-doc-label .inv-doc-num {
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-top: 0.25rem;
+    color: var(--inv-ink);
+}
+
+.inv-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem 2rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--inv-line);
+}
+
+.inv-meta-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--inv-muted);
+    margin-bottom: 0.2rem;
+}
+
+.inv-meta-value {
+    font-size: 0.95rem;
+    color: var(--inv-ink);
+    font-weight: 500;
+}
+
+.inv-line-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0 0;
+    font-size: 0.9rem;
+}
+
+.inv-line-table th {
+    text-align: right;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--inv-muted);
+    border-bottom: 1.5px solid var(--inv-line-strong);
+    white-space: nowrap;
+}
+
+.inv-line-table th:first-child,
+.inv-line-table td:first-child,
+.inv-line-table th:nth-child(2),
+.inv-line-table td:nth-child(2) {
+    text-align: left;
+}
+
+.inv-line-table td {
+    text-align: right;
+    padding: 0.7rem 0.75rem;
+    border-bottom: 1px solid var(--inv-line);
+    color: var(--inv-ink);
+    font-family: monospace;
+}
+
+.inv-line-table td.inv-cell-text {
+    font-family: inherit;
+}
+
+.inv-line-code {
+    font-family: monospace;
+    font-weight: 700;
+}
+
+.inv-line-sub {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--inv-muted);
+    text-transform: capitalize;
+    font-family: inherit;
+}
+
+.inv-line-table tbody tr.inv-exchange-row td {
+    color: var(--inv-negative);
+}
+
+.inv-line-table tfoot td {
+    border: none;
+    padding: 0.35rem 0.75rem;
+    font-family: monospace;
+    text-align: right;
+}
+
+.inv-line-table tfoot tr:first-child td {
+    padding-top: 1rem;
+}
+
+.inv-foot-label {
+    font-family: inherit !important;
+    color: var(--inv-muted);
+    font-weight: 600;
+}
+
+.inv-foot-reason {
+    font-family: inherit !important;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--inv-muted);
+    font-size: 0.8rem;
+    text-align: left !important;
+}
+
+.inv-grand td {
+    border-top: 2px solid var(--inv-ink) !important;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--inv-ink);
+    padding-top: 0.75rem !important;
+}
+
+.inv-negative-amt {
+    color: var(--inv-negative);
+}
+
+.inv-sheet-note {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--inv-line-strong);
+    font-size: 0.8rem;
+    color: var(--inv-muted);
+    text-align: center;
+}
+
+/* ───────────────────────── quick-view modal ───────────────────────── */
+
+.inv-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+    z-index: 9999;
+    overflow-y: auto;
+}
+
+.inv-modal {
+    background: var(--inv-surface);
+    border-radius: var(--inv-radius);
+    width: 100%;
+    max-width: 960px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 5rem);
+    animation: invModalIn 0.14s ease-out;
+}
+
+@keyframes invModalIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: none; }
+}
+
+.inv-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.15rem;
+    border-bottom: 1px solid var(--inv-line);
+    background: var(--inv-surface-alt);
+    flex-shrink: 0;
+}
+
+.inv-modal-head h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.inv-modal-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.inv-modal-close {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--inv-muted);
+    padding: 0.25rem;
+    display: inline-flex;
+    border-radius: 4px;
+}
+
+.inv-modal-close:hover {
+    background: var(--inv-surface-head);
+    color: #111827;
+}
+
+.inv-modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+}
+
+/* The sheet sits flush inside the modal — its own frame is the modal. */
+.inv-modal-body .inv-sheet {
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    margin: 0;
+    padding: 1.5rem;
+}
+
+.inv-modal-status {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--inv-muted);
+    font-size: 0.95rem;
+}
+
+.inv-modal-status.inv-modal-error {
+    color: var(--inv-negative);
+}
+
+/* ============================================================================
+   Dark mode  (screen only — print always uses the light sheet)
+   ============================================================================ */
+
+.dark .inv-page {
+    color: #e5e7eb;
+}
+
+.dark .inv-title {
+    color: #f9fafb;
+}
+
+.dark .inv-desc,
+.dark .inv-back {
+    color: #9ca3af;
+}
+
+.dark .inv-filters,
+.dark .inv-table-wrap,
+.dark .inv-stat,
+.dark .inv-sheet {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .inv-filter-label {
+    color: #d1d5db;
+}
+
+.dark .inv-filter-input {
+    background: #111827;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+.dark .inv-filter-input:focus {
+    background: #1f2937;
+    border-color: var(--inv-gold);
+}
+
+.dark .inv-filter-clear,
+.dark .inv-btn-ghost,
+.dark .inv-view-btn {
+    background: #1f2937;
+    color: #e5e7eb;
+    border-color: #4b5563;
+}
+
+.dark .inv-filter-clear:hover,
+.dark .inv-btn-ghost:hover,
+.dark .inv-view-btn:hover {
+    background: #374151;
+    color: #f9fafb;
+}
+
+.dark .inv-stat-label {
+    color: #9ca3af;
+}
+
+.dark .inv-stat-value {
+    color: #f9fafb;
+}
+
+.dark .inv-stat-value.gold {
+    color: var(--inv-gold);
+}
+
+.dark .inv-table th {
+    background: #111827;
+    color: #9ca3af;
+    border-color: #374151;
+}
+
+.dark .inv-table td {
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+.dark .inv-table tbody tr:hover {
+    background: #374151;
+}
+
+.dark .inv-empty {
+    color: #6b7280;
+}
+
+.dark .inv-pagination {
+    background: #111827;
+    border-color: #374151;
+}
+
+.dark .inv-page-link {
+    background: #1f2937;
+    border-color: #4b5563;
+    color: #d1d5db;
+}
+
+.dark .inv-page-link:hover:not(.disabled) {
+    background: #374151;
+}
+
+.dark .inv-page-link.disabled {
+    background: #111827;
+}
+
+.dark .inv-page-link.active {
+    color: #111;
+}
+
+.dark .inv-num,
+.dark .inv-stat-value.gold {
+    color: var(--inv-gold);
+}
+
+.dark .inv-pay-badge {
+    background: #374151;
+    color: #d1d5db;
+    border-color: #4b5563;
+}
+
+.dark .inv-pay-badge.cash {
+    background: rgba(212, 175, 55, 0.18);
+    color: #f0d489;
+    border-color: rgba(212, 175, 55, 0.35);
+}
+
+.dark .inv-shop-name,
+.dark .inv-meta-value,
+.dark .inv-line-table td,
+.dark .inv-grand td {
+    color: #f3f4f6;
+}
+
+.dark .inv-sheet-top {
+    border-color: #6b7280;
+}
+
+.dark .inv-doc-label h2 {
+    color: var(--inv-gold);
+}
+
+.dark .inv-doc-label .inv-doc-num {
+    color: #f3f4f6;
+}
+
+.dark .inv-meta-grid,
+.dark .inv-line-table td {
+    border-color: #374151;
+}
+
+.dark .inv-line-table th {
+    border-color: #4b5563;
+    color: #9ca3af;
+}
+
+.dark .inv-grand td {
+    border-color: #6b7280 !important;
+}
+
+.dark .inv-line-table tbody tr.inv-exchange-row td,
+.dark .inv-money.negative,
+.dark .inv-negative-amt {
+    color: #f87171;
+}
+
+.dark .inv-modal {
+    background: #1f2937;
+}
+
+.dark .inv-modal-head {
+    background: #111827;
+    border-color: #374151;
+}
+
+.dark .inv-modal-head h3 {
+    color: #f9fafb;
+}
+
+.dark .inv-modal-close {
+    color: #9ca3af;
+}
+
+.dark .inv-modal-close:hover {
+    background: #374151;
+    color: #f9fafb;
+}
+
+.dark .inv-modal-status {
+    color: #9ca3af;
+}
+
+/* ============================================================================
+   Responsive — usable to ~240px
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .inv-page {
+        padding: 1rem;
+        max-width: 100vw;
+    }
+
+    .inv-table-scroll {
+        max-width: calc(100vw - 2rem);
+    }
+
+    .inv-title {
+        font-size: 1.5rem;
+    }
+
+    .inv-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .inv-filter-btn,
+    .inv-filter-clear {
+        width: 100%;
+    }
+
+    .inv-sheet {
+        padding: 1.5rem 1.15rem;
+    }
+
+    .inv-sheet-top {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .inv-doc-label {
+        text-align: left;
+    }
+
+    .inv-line-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 380px) {
+    .inv-page {
+        padding: 0.75rem;
+    }
+
+    .inv-filters {
+        grid-template-columns: 1fr;
+        padding: 0.85rem;
+    }
+
+    .inv-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .inv-sheet {
+        padding: 1.15rem 0.9rem;
+    }
+}
+
+/* ============================================================================
+   Print — strip the app chrome, print the sheet only
+   ============================================================================ */
+
+@media print {
+    /* Hide everything, then reveal just the invoice sheet (works whether the
+       sheet is on the standalone page or inside the quick-view modal). */
+    body * {
+        visibility: hidden !important;
+    }
+
+    .inv-sheet,
+    .inv-sheet * {
+        visibility: visible !important;
+    }
+
+    /* Neutralise the modal chrome so the sheet prints from the page origin. */
+    .inv-modal-overlay,
+    .inv-modal,
+    .inv-modal-body {
+        position: static !important;
+        overflow: visible !important;
+        max-height: none !important;
+        max-width: none !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+    }
+
+    .inv-sheet,
+    .inv-modal-body .inv-sheet {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .inv-actions,
+    .inv-back,
+    .inv-modal-head {
+        display: none !important;
+    }
+
+    .inv-sheet-top {
+        border-color: #000 !important;
+    }
+
+    .inv-doc-label h2 {
+        color: #000 !important;
+    }
+
+    .inv-line-table tbody tr.inv-exchange-row td,
+    .inv-negative-amt {
+        color: #000 !important;
+    }
+
+    .inv-grand td {
+        border-color: #000 !important;
+        color: #000 !important;
+    }
+
+    @page {
+        margin: 16mm;
+    }
+}

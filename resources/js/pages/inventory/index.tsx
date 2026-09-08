@@ -2,7 +2,7 @@ import { Head, router, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Eye, Edit, Trash2, X } from 'lucide-react';
+import { Eye, Edit, Trash2, X, Printer } from 'lucide-react';
 import '../../../css/inventory.css';
 import { formatNumber, fromGrams } from '@/utils/weight';
 
@@ -123,6 +123,7 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
                 </form>
 
                 <div className="table-container">
+                    <div className="table-scroll">
                     <table className="inventory-table">
                         <thead>
                             <tr>
@@ -179,6 +180,14 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
                                                     <Eye size={16} />
                                                 </button>
                                                 <Link
+                                                    href={`/items/${item.id}/tag`}
+                                                    className="action-btn"
+                                                    title="Print Tag"
+                                                    style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}
+                                                >
+                                                    <Printer size={16} />
+                                                </Link>
+                                                <Link
                                                     href={`/items/${item.id}/edit`}
                                                     className="action-btn edit"
                                                     title="Edit Item"
@@ -201,6 +210,7 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
                             )}
                         </tbody>
                     </table>
+                    </div>
 
                     {/* Basic Pagination */}
                     {items.links && items.links.length > 3 && (
@@ -393,6 +403,23 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
                                         }}
                                     >
                                         <Edit size={15} /> Edit Item
+                                    </Link>
+                                    <Link
+                                        href={`/items/${viewItem.id}/tag`}
+                                        style={{
+                                            backgroundColor: '#6366f1',
+                                            color: '#ffffff',
+                                            padding: '0.5rem 1.25rem',
+                                            borderRadius: '6px',
+                                            fontSize: '0.875rem',
+                                            textDecoration: 'none',
+                                            fontWeight: 600,
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.35rem'
+                                        }}
+                                    >
+                                        <Printer size={15} /> Print Tag
                                     </Link>
                                     <button
                                         type="button"

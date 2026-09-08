@@ -1,8 +1,8 @@
 import { Head, useForm, Link } from '@inertiajs/react';
 import { useState, useEffect, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { toGrams, fromGrams, formatNumber } from '@/utils/weight';
-import { Info, AlertCircle, ArrowLeft } from 'lucide-react';
+import { gramsToTraditional, traditionalToGrams, carryTraditional, formatNumber } from '@/utils/weight';
+import { Info, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
 import '../../../css/item-entry.css';
 
 interface Metal {
@@ -71,13 +71,7 @@ function getUnitsFromGrams(grams: number) {
     if (num <= 0) {
         return { gram: '', tola: '', masha: '', ratti: '', point: '' };
     }
-    return {
-        gram: formatNumber(num, 3),
-        tola: formatNumber(fromGrams(num, 'tola'), 3),
-        masha: formatNumber(fromGrams(num, 'masha'), 3),
-        ratti: formatNumber(fromGrams(num, 'ratti'), 3),
-        point: formatNumber(fromGrams(num, 'point'), 3),
-    };
+    return { gram: formatNumber(num, 3), ...gramsToTraditional(num) };
 }
 
 export default function ItemEdit({ item, metals = [], purities = [], parties = [] }: ItemEditProps) {
@@ -184,28 +178,37 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
         setData('purity_id', newPurityId);
     };
 
+    // Gram and the tola/masha/ratti/point breakdown stay in sync; both are editable.
+    // Editing gram re-derives the carried breakdown; editing any traditional unit
+    // sums the breakdown back into gram.
     function handleUnitChange(setObj: any, obj: any, unit: string, value: string, setGrams: (n: number) => void) {
-        const num = parseFloat(value) || 0;
-        const grams = toGrams(num, unit);
+        let newObj: any;
+        let grams = 0;
+
+        if (unit === 'gram') {
+            grams = parseFloat(value) || 0;
+            newObj = { gram: value, ...gramsToTraditional(grams) };
+        } else {
+            const draft = { ...obj, [unit]: value };
+            // Roll a field up once it hits its limit: 100 point -> ratti, 8 ratti -> masha, 12 masha -> tola.
+            const needsCarry =
+                (parseFloat(draft.point) || 0) >= 100 ||
+                (parseFloat(draft.ratti) || 0) >= 8 ||
+                (parseFloat(draft.masha) || 0) >= 12;
+            newObj = needsCarry ? { ...draft, ...carryTraditional(draft) } : draft;
+            grams = traditionalToGrams(newObj);
+
+            const allEmpty = !newObj.tola && !newObj.masha && !newObj.ratti && !newObj.point;
+            newObj.gram = allEmpty ? '' : formatNumber(grams, 3);
+        }
+
         setGrams(Number(grams.toFixed(6)));
-
-        const newObj: any = {};
-        ['gram', 'tola', 'masha', 'ratti', 'point'].forEach((u) => {
-            if (value === '') {
-                 newObj[u] = '';
-                 return;
-            }
-            newObj[u] = u === unit ? value : formatNumber(fromGrams(grams, u));
-        });
-
         setObj(newObj);
     }
 
     function handleStoneGramChange(value: string) {
-        const num = parseFloat(value) || 0;
-        const grams = toGrams(num, 'gram');
         setStone({ gram: value });
-        setStoneGrams(Number(grams.toFixed(6)));
+        setStoneGrams(Number((parseFloat(value) || 0).toFixed(6)));
     }
 
     const netGrams = Math.max(0, grossGrams - stoneGrams - cuttingGrams);
@@ -255,7 +258,24 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
                         </div>
                         <p className="item-entry-desc">Update the details, weight measurements, pricing, and stock status below.</p>
                     </div>
-                    <div>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                        <Link
+                            href={`/items/${item.id}/tag`}
+                            style={{
+                                backgroundColor: '#6366f1',
+                                color: '#ffffff',
+                                padding: '0.5rem 1.25rem',
+                                borderRadius: '6px',
+                                fontSize: '0.875rem',
+                                textDecoration: 'none',
+                                fontWeight: 600,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem'
+                            }}
+                        >
+                            <Printer size={15} /> Print Tag
+                        </Link>
                         <Link href="/inventory" className="filter-clear" style={{ textDecoration: 'none', display: 'inline-block' }}>
                             Back to Inventory
                         </Link>

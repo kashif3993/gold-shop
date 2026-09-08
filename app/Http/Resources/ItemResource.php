@@ -29,6 +29,8 @@ class ItemResource extends JsonResource
             'status' => $this->status,
             'created_by_user_id' => $this->created_by_user_id,
             'created_at' => $this->created_at,
+            'metal_name' => $this->whenLoaded('metalType', fn() => $this->metalType->name),
+            'purity_name' => $this->whenLoaded('purity', fn() => $this->purity->name),
         ];
     }
 }

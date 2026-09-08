@@ -11,7 +11,7 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart, LayoutGrid, Folder, BookOpen, Menu, Search } from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
@@ -19,7 +19,47 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         url: '/dashboard',
-        icon: LayoutGrid,
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'POS (Point of Sale)',
+        url: '/pos',
+        icon: ShoppingCart,
+    },
+    {
+        title: 'Inventory',
+        url: '/inventory',
+        icon: Database,
+    },
+    {
+        title: 'Item Entry',
+        url: '/items/create',
+        icon: SquarePen,
+    },
+    {
+        title: 'Parties',
+        url: '/parties',
+        icon: Users,
+    },
+    {
+        title: 'Invoices',
+        url: '/invoices',
+        icon: FileText,
+    },
+    {
+        title: 'Reports',
+        url: '/reports',
+        icon: BarChart2,
+    },
+    {
+        title: 'Rate Management',
+        url: '/rate-management',
+        icon: TrendingUp,
+    },
+    {
+        title: 'Settings',
+        url: '/settings',
+        icon: Settings,
     },
 ];
 

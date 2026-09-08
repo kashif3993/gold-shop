@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings } from 'lucide-react';
+import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -11,6 +11,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         url: '/dashboard',
         icon: LayoutDashboard,
+    },
+    {
+        title: 'POS (Point of Sale)',
+        url: '/pos',
+        icon: ShoppingCart,
     },
     {
         title: 'Inventory',
@@ -51,7 +56,7 @@ const mainNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="offcanvas" variant="inset">
+        <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>

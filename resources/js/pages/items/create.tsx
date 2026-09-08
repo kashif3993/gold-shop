@@ -1,8 +1,8 @@
 import { Head, useForm } from '@inertiajs/react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { toGrams, fromGrams, formatNumber } from '@/utils/weight';
-import { Info, AlertCircle } from 'lucide-react';
+import { gramsToTraditional, traditionalToGrams, carryTraditional, formatNumber } from '@/utils/weight';
+import { Info, AlertCircle, ChevronDown, Check } from 'lucide-react';
 import '../../../css/item-entry.css';
 
 interface Metal {
@@ -30,6 +30,29 @@ interface ItemCreateProps {
 }
 
 const BULLION_TYPES = ['biscuit', 'nugget', 'bar', 'coin', 'piece'];
+
+const TYPE_ABBREV: Record<string, string> = {
+    ring: 'RNG', bangle: 'BNG', necklace: 'NCK', earring: 'ERN',
+    bracelet: 'BRC', chain: 'CHN', pendant: 'PND', locket: 'LCK',
+    nose_pin: 'NSP', tops: 'TPS', biscuit: 'BSC', nugget: 'NGT',
+    bar: 'BAR', coin: 'CON', piece: 'PCE', other: 'OTH',
+};
+
+const METAL_ABBREV: Record<string, string> = {
+    gold: 'GLD', silver: 'SLV', platinum: 'PLT',
+};
+
+function previewItemCode(metalName: string, itemType: string): string {
+    const metalKey = metalName.toLowerCase().trim();
+    const metalAbbr = METAL_ABBREV[metalKey] ?? metalName.slice(0, 3).toUpperCase();
+    const typeKey = itemType.toLowerCase().trim();
+    const typeAbbr = TYPE_ABBREV[typeKey] ?? itemType.replace(/_/g, '').slice(0, 3).toUpperCase();
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${metalAbbr}-${typeAbbr}-${yy}${mm}${dd}-XXXX`;
+}
 
 function isBullion(type: string): boolean {
     return BULLION_TYPES.includes(type.toLowerCase());
@@ -68,7 +91,110 @@ function resolveDefaultPurityId(itemType: string, metalId: number | string, puri
     return metalPurities[0]?.id || '';
 }
 
+/* ─── Inline Custom Select ─────────────────────────────────────────────── */
+interface CsOption { value: string; label: string; disabled?: boolean; }
+interface CsGroup  { label: string; options: CsOption[]; }
+interface CustomSelectProps {
+    value: string;
+    onValueChange: (v: string) => void;
+    placeholder?: string;
+    options?: CsOption[];
+    groups?: CsGroup[];
+}
+function CustomSelect({ value, onValueChange, placeholder = 'Select...', options, groups }: CustomSelectProps) {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const wrapRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const allOpts = groups ? groups.flatMap(g => g.options) : (options ?? []);
+    const selectedLabel = allOpts.find(o => o.value === value)?.label || '';
+
+    useEffect(() => {
+        const h = (e: MouseEvent) => {
+            if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', h);
+        return () => document.removeEventListener('mousedown', h);
+    }, []);
+
+    useEffect(() => {
+        if (!open) setSearch('');
+    }, [open]);
+
+    const pick = (v: string) => { onValueChange(v); setOpen(false); };
+
+    const filterOptions = (opts: CsOption[]) => {
+        if (!search) return opts;
+        const q = search.toLowerCase();
+        return opts.filter(o => o.label.toLowerCase().includes(q));
+    };
+
+    const renderOpts = (opts: CsOption[]) => {
+        const filtered = filterOptions(opts);
+        if (filtered.length === 0) return null;
+        return filtered.map(opt => (
+            <div
+                key={opt.value}
+                className={`csel-option${opt.value === value ? ' selected' : ''}${opt.disabled ? ' disabled' : ''}`}
+                onMouseDown={e => { e.preventDefault(); if (!opt.disabled) pick(opt.value); }}
+            >
+                {opt.value === value && <Check size={11} className="csel-check" />}
+                {opt.label}
+            </div>
+        ));
+    };
+
+    const hasResults = groups 
+        ? groups.some(g => filterOptions(g.options).length > 0)
+        : filterOptions(allOpts).length > 0;
+
+    return (
+        <div ref={wrapRef} className="csel-wrapper">
+            <div className={`form-select csel-combobox${open ? ' open' : ''}`} onClick={() => { setOpen(true); inputRef.current?.focus(); }}>
+                <input
+                    ref={inputRef}
+                    type="text"
+                    className="csel-combo-input"
+                    placeholder={open ? 'Search...' : (selectedLabel || placeholder)}
+                    value={open ? search : (selectedLabel || '')}
+                    onChange={(e) => {
+                        setSearch(e.target.value);
+                        if (!open) setOpen(true);
+                    }}
+                    onFocus={() => setOpen(true)}
+                    readOnly={!open}
+                />
+                <ChevronDown size={14} className={`csel-arrow${open ? ' up' : ''}`} onClick={(e) => { e.stopPropagation(); setOpen(o => !o); }} style={{cursor: 'pointer'}} />
+            </div>
+            {open && (
+                <div className="csel-dropdown" style={{marginTop: '4px'}}>
+                    <div className="csel-options-container" style={{maxHeight: '170px'}}>
+                        {!hasResults && <div className="p-3 text-sm text-gray-500 text-center">No results found</div>}
+                        {groups
+                            ? groups.map(g => {
+                                const rendered = renderOpts(g.options);
+                                if (!rendered) return null;
+                                return (
+                                    <div key={g.label}>
+                                        <div className="csel-group-label">{g.label}</div>
+                                        {rendered}
+                                    </div>
+                                );
+                              })
+                            : renderOpts(allOpts)
+                        }
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+/* ─────────────────────────────────────────────────────────────────────── */
+
 export default function ItemCreate({ metals = [], purities = [], parties = [] }: ItemCreateProps) {
+    const [codePreview, setCodePreview] = useState('');
     const initialMetalId = metals.length > 0 ? metals[0].id : '';
     const initialItemType = 'ring';
     const initialPurityId = resolveDefaultPurityId(initialItemType, initialMetalId, purities);
@@ -105,6 +231,14 @@ export default function ItemCreate({ metals = [], purities = [], parties = [] }:
         if (!data.metal_type_id) return purities;
         return purities.filter(p => String(p.metal_type_id) === String(data.metal_type_id));
     }, [purities, data.metal_type_id]);
+
+    // Update live code preview whenever metal or type changes
+    useEffect(() => {
+        const metal = metals.find(m => String(m.id) === String(data.metal_type_id));
+        if (metal && data.item_type) {
+            setCodePreview(previewItemCode(metal.name, data.item_type));
+        }
+    }, [data.metal_type_id, data.item_type, metals]);
 
     const handleItemTypeChange = (newType: string) => {
         const isBullionType = isBullion(newType);
@@ -174,30 +308,37 @@ export default function ItemCreate({ metals = [], purities = [], parties = [] }:
         setData('purity_id', newPurityId);
     };
 
-    // when any unit input is changed, update grams and sync other unit fields
+    // Gram and the tola/masha/ratti/point breakdown stay in sync; both are editable.
+    // Editing gram re-derives the carried breakdown; editing any traditional unit
+    // sums the breakdown back into gram.
     function handleUnitChange(setObj: any, obj: any, unit: string, value: string, setGrams: (n: number) => void) {
-        const num = parseFloat(value) || 0;
-        const grams = toGrams(num, unit);
+        let newObj: any;
+        let grams = 0;
+
+        if (unit === 'gram') {
+            grams = parseFloat(value) || 0;
+            newObj = { gram: value, ...gramsToTraditional(grams) };
+        } else {
+            const draft = { ...obj, [unit]: value };
+            // Roll a field up once it hits its limit: 100 point -> ratti, 8 ratti -> masha, 12 masha -> tola.
+            const needsCarry =
+                (parseFloat(draft.point) || 0) >= 100 ||
+                (parseFloat(draft.ratti) || 0) >= 8 ||
+                (parseFloat(draft.masha) || 0) >= 12;
+            newObj = needsCarry ? { ...draft, ...carryTraditional(draft) } : draft;
+            grams = traditionalToGrams(newObj);
+
+            const allEmpty = !newObj.tola && !newObj.masha && !newObj.ratti && !newObj.point;
+            newObj.gram = allEmpty ? '' : formatNumber(grams, 3);
+        }
+
         setGrams(Number(grams.toFixed(6)));
-
-        // build new object where other units are derived from grams
-        const newObj: any = {};
-        ['gram', 'tola', 'masha', 'ratti', 'point'].forEach((u) => {
-            if (value === '') {
-                 newObj[u] = '';
-                 return;
-            }
-            newObj[u] = u === unit ? value : formatNumber(fromGrams(grams, u));
-        });
-
         setObj(newObj);
     }
 
     function handleStoneGramChange(value: string) {
-        const num = parseFloat(value) || 0;
-        const grams = toGrams(num, 'gram');
         setStone({ gram: value });
-        setStoneGrams(Number(grams.toFixed(6)));
+        setStoneGrams(Number((parseFloat(value) || 0).toFixed(6)));
     }
 
     const netGrams = Math.max(0, grossGrams - stoneGrams - cuttingGrams);
@@ -244,7 +385,6 @@ export default function ItemCreate({ metals = [], purities = [], parties = [] }:
             <div className="item-entry-container">
                 <div className="item-entry-header">
                     <h1 className="item-entry-title">Create New Item</h1>
-                    <p className="item-entry-desc">Fill in the details below to add a new gold or silver item to inventory.</p>
                 </div>
 
                 <form onSubmit={submit} className="item-entry-form">
@@ -256,70 +396,62 @@ export default function ItemCreate({ metals = [], purities = [], parties = [] }:
                             <h2 className="card-title">Basic Details</h2>
                             
                             <div className="form-grid">
+                                {/* Item Type */}
                                 <div className="form-group">
                                     <label className="form-label">Item Type</label>
-                                    <select
-                                        className="form-select"
+                                    <CustomSelect
                                         value={data.item_type}
-                                        onChange={e => handleItemTypeChange(e.target.value)}
-                                    >
-                                        <optgroup label="Jewelry Items (Default: 22K)">
-                                            <option value="ring">Ring</option>
-                                            <option value="bangle">Bangle</option>
-                                            <option value="necklace">Necklace</option>
-                                            <option value="earring">Earring</option>
-                                            <option value="bracelet">Bracelet</option>
-                                            <option value="chain">Chain</option>
-                                            <option value="pendant">Pendant</option>
-                                            <option value="locket">Locket</option>
-                                            <option value="nose_pin">Nose Pin</option>
-                                            <option value="tops">Tops</option>
-                                            <option value="other">Other Jewelry</option>
-                                        </optgroup>
-                                        <optgroup label="Bullion & Raw Items (Default: 24K)">
-                                            <option value="biscuit">Biscuit / Bar</option>
-                                            <option value="nugget">Nugget</option>
-                                            <option value="coin">Coin</option>
-                                            <option value="piece">Raw Gold / Lagdi</option>
-                                        </optgroup>
-                                    </select>
+                                        onValueChange={handleItemTypeChange}
+                                        groups={[
+                                            { label: 'Jewelry Items (Default: 22K)', options: [
+                                                { value: 'ring', label: 'Ring' },
+                                                { value: 'bangle', label: 'Bangle' },
+                                                { value: 'necklace', label: 'Necklace' },
+                                                { value: 'earring', label: 'Earring' },
+                                                { value: 'bracelet', label: 'Bracelet' },
+                                                { value: 'chain', label: 'Chain' },
+                                                { value: 'pendant', label: 'Pendant' },
+                                                { value: 'locket', label: 'Locket' },
+                                                { value: 'nose_pin', label: 'Nose Pin' },
+                                                { value: 'tops', label: 'Tops' },
+                                                { value: 'other', label: 'Other Jewelry' },
+                                            ]},
+                                            { label: 'Bullion & Raw Items (Default: 24K)', options: [
+                                                { value: 'biscuit', label: 'Biscuit' },
+                                                { value: 'bar', label: 'Bar' },
+                                                { value: 'nugget', label: 'Nugget' },
+                                                { value: 'coin', label: 'Coin' },
+                                                { value: 'piece', label: 'Raw Gold / Lagdi' },
+                                            ]},
+                                        ]}
+                                    />
                                     {errors.item_type && <div className="text-red-500 text-xs mt-1">{errors.item_type}</div>}
                                 </div>
+
+                                {/* Metal Type */}
                                 <div className="form-group">
                                     <label className="form-label">Metal Type</label>
-                                    <select
-                                        className="form-select"
-                                        value={data.metal_type_id}
-                                        onChange={e => handleMetalChange(e.target.value)}
-                                    >
-                                        <option value="">Select Metal</option>
-                                        {metals.map(m => (
-                                            <option key={m.id} value={m.id}>{m.name}</option>
-                                        ))}
-                                    </select>
+                                    <CustomSelect
+                                        value={String(data.metal_type_id)}
+                                        onValueChange={handleMetalChange}
+                                        placeholder="Select Metal"
+                                        options={metals.map(m => ({ value: String(m.id), label: m.name }))}
+                                    />
                                     {errors.metal_type_id && <div className="text-red-500 text-xs mt-1">{errors.metal_type_id}</div>}
                                 </div>
+
+                                {/* Purity */}
                                 <div className="form-group">
                                     <label className="form-label">Purity</label>
-                                    <select
-                                        className="form-select"
-                                        value={data.purity_id}
-                                        onChange={e => handlePurityChange(e.target.value)}
-                                    >
-                                        <option value="">Select Purity</option>
-                                        {availablePurities.map(p => {
+                                    <CustomSelect
+                                        value={String(data.purity_id)}
+                                        onValueChange={handlePurityChange}
+                                        placeholder="Select Purity"
+                                        options={availablePurities.map(p => {
                                             const isRing24K = data.item_type === 'ring' && is24KPurity(p.name);
-                                            return (
-                                                <option
-                                                    key={p.id}
-                                                    value={p.id}
-                                                    disabled={isRing24K}
-                                                >
-                                                    {p.name} {isRing24K ? '— (Not allowed for rings)' : ''}
-                                                </option>
-                                            );
+                                            return { value: String(p.id), label: `${p.name}${isRing24K ? ' — (Not allowed for rings)' : ''}`, disabled: isRing24K };
                                         })}
-                                    </select>
+                                    />
                                     {errors.purity_id && <div className="text-red-500 text-xs mt-1 font-medium">{errors.purity_id}</div>}
                                     {ringValidationError && (
                                         <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -329,32 +461,32 @@ export default function ItemCreate({ metals = [], purities = [], parties = [] }:
                                     )}
                                     {purityNotice && (
                                         <div style={{
-                                            marginTop: '0.5rem',
-                                            padding: '0.5rem 0.75rem',
-                                            borderRadius: '6px',
-                                            backgroundColor: '#eff6ff',
-                                            border: '1px solid #bfdbfe',
-                                            color: '#1e40af',
-                                            fontSize: '0.8rem',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.4rem'
+                                            marginTop: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '6px',
+                                            backgroundColor: '#eff6ff', border: '1px solid #bfdbfe',
+                                            color: '#1e40af', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem'
                                         }}>
                                             <Info size={15} style={{ flexShrink: 0, color: '#2563eb' }} />
                                             <span>{purityNotice}</span>
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Source Party */}
                                 <div className="form-group">
                                     <label className="form-label">Source Party</label>
-                                    <select className="form-select" value={data.source_party_id} onChange={e => setData('source_party_id', e.target.value)}>
-                                        <option value="">Select Party (Optional)</option>
-                                        {parties.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                        ))}
-                                    </select>
+                                    <CustomSelect
+                                        value={data.source_party_id ? String(data.source_party_id) : '__none__'}
+                                        onValueChange={val => setData('source_party_id', val === '__none__' ? '' : val)}
+                                        placeholder="Select Party (Optional)"
+                                        options={[
+                                            { value: '__none__', label: 'Select Party (Optional)' },
+                                            ...parties.map(p => ({ value: String(p.id), label: p.name })),
+                                        ]}
+                                    />
                                     {errors.source_party_id && <div className="text-red-500 text-xs mt-1">{errors.source_party_id}</div>}
                                 </div>
+
+                                {/* Date Received */}
                                 <div className="form-group">
                                     <label className="form-label">Date Received</label>
                                     <input type="date" className="form-input" value={data.date_received} onChange={e => setData('date_received', e.target.value)} />

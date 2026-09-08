@@ -107,14 +107,15 @@
     --chart-4: hsl(0, 0%, 55%);
     --chart-5: hsl(30, 60%, 30%);
     --radius: 0.5rem;
-    --sidebar-background: hsl(0, 0%, 7%);
-    --sidebar-foreground: hsl(0, 0%, 80%);
-    --sidebar-primary: hsl(43, 80%, 55%);
-    --sidebar-primary-foreground: hsl(0, 0%, 8%);
-    --sidebar-accent: hsl(43, 40%, 16%);
-    --sidebar-accent-foreground: hsl(43, 80%, 70%);
-    --sidebar-border: hsl(0, 0%, 15.9%);
-    --sidebar-ring: hsl(43, 80%, 55%);
+    /* Light mode sidebar: white surface, dark text, gold accents (no black bg). */
+    --sidebar-background: hsl(0, 0%, 98%);
+    --sidebar-foreground: hsl(0, 0%, 25%);
+    --sidebar-primary: hsl(38, 75%, 42%);
+    --sidebar-primary-foreground: hsl(0, 0%, 100%);
+    --sidebar-accent: hsl(43, 60%, 94%);
+    --sidebar-accent-foreground: hsl(38, 75%, 28%);
+    --sidebar-border: hsl(0, 0%, 92.8%);
+    --sidebar-ring: hsl(38, 75%, 42%);
 }
 
 .dark {
@@ -161,6 +162,16 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+@layer utilities {
+    .scrollbar-hidden {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-hidden::-webkit-scrollbar {
+        display: none;
     }
 }
 

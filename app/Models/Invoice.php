@@ -19,6 +19,7 @@ class Invoice extends Model
         'total_polish_cost',
         'total_tax',
         'total_discount',
+        'discount_reason',
         'total_exchange_deduction',
         'grand_total',
         'payment_method',
