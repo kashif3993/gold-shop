@@ -129,7 +129,7 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
         
         let newPurityId = data.purity_id;
         let notice = '';
-        let ringErr = '';
+        const ringErr = '';
 
         const currentPurity = purities.find(p => String(p.id) === String(data.purity_id));
 

@@ -264,7 +264,7 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
         
         let newPurityId = data.purity_id;
         let notice = '';
-        let ringErr = '';
+        const ringErr = '';
 
         const currentPurity = purities.find(p => String(p.id) === String(data.purity_id));
 

@@ -19,7 +19,7 @@ test('password can be updated', function () {
         ->assertSessionHasNoErrors()
         ->assertRedirect('/settings/password');
 
-    expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
+    expect(Hash::check('new-password', $user->refresh()->password_hash))->toBeTrue();
 });
 
 test('correct password must be provided to update password', function () {
