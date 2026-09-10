@@ -1,13 +1,13 @@
 export function useInitials() {
-    const getInitials = (fullName?: string | null): string => {
-        if (!fullName) return '';
+    const getInitials = (name?: string | null): string => {
+        if (!name) return '';
 
-        const names = fullName.trim().split(' ');
+        const parts = name.trim().split(/[\s._-]+/).filter(Boolean);
 
-        if (names.length === 0) return '';
-        if (names.length === 1) return names[0].charAt(0).toUpperCase();
+        if (parts.length === 0) return '';
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
-        return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
+        return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
     };
 
     return getInitials;

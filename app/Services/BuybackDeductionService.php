@@ -44,20 +44,39 @@ class BuybackDeductionService
     }
 
     /**
-     * Calculate buy-back valuation.
-     * Note: Labour & polish are always zero. Value is strictly derived from:
-     * Effective Weight = reweighedWeight * (1 - (deductionPercent / 100))
-     * Buyback Amount = Effective Weight * currentRate
+     * Calculate buy-back valuation. Labour & polish are always zero.
+     *
+     * Two ways a jeweller expresses the deduction for wear / melting loss:
+     *   - a percentage of the re-weighed weight, or
+     *   - a fixed weight cut in grams (what "cut 3 ratti / half a masha" means).
+     *
+     * Pass $deductionWeightGrams for the weight-cut case; it wins over the
+     * percentage and the equivalent percentage is derived back for the record.
+     *
+     * Effective Weight = reweighedWeight - cut   (cut = % of weight, or the fixed grams)
+     * Buyback Amount   = Effective Weight * currentRate
      */
-    public function calculateValuation(float $weightGrams, float $ratePerGram, float $deductionPercent): array
-    {
-        $deductionFraction = max(0.0, min(100.0, $deductionPercent)) / 100.0;
-        $effectiveWeight = $weightGrams * (1.0 - $deductionFraction);
+    public function calculateValuation(
+        float $weightGrams,
+        float $ratePerGram,
+        float $deductionPercent,
+        ?float $deductionWeightGrams = null,
+    ): array {
+        if ($deductionWeightGrams !== null) {
+            $cut = max(0.0, min($weightGrams, $deductionWeightGrams));
+            $effectiveWeight = $weightGrams - $cut;
+            $deductionPercent = $weightGrams > 0 ? ($cut / $weightGrams) * 100 : 0.0;
+        } else {
+            $deductionFraction = max(0.0, min(100.0, $deductionPercent)) / 100.0;
+            $effectiveWeight = $weightGrams * (1.0 - $deductionFraction);
+        }
+
         $totalAmount = round($effectiveWeight * $ratePerGram, 2);
 
         return [
             'gross_weight_grams' => $weightGrams,
-            'deduction_percent' => $deductionPercent,
+            'deduction_percent' => round($deductionPercent, 2),
+            'deduction_weight_grams' => round($weightGrams - $effectiveWeight, 3),
             'effective_weight_grams' => round($effectiveWeight, 3),
             'rate_per_gram' => $ratePerGram,
             'total_amount' => $totalAmount,

@@ -8,7 +8,7 @@ test('registration screen can be rendered', function () {
 
 test('new users can register', function () {
     $response = $this->post('/register', [
-        'name' => 'Test User',
+        'username' => 'testuser',
         'email' => 'test@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
@@ -16,4 +16,16 @@ test('new users can register', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+    $this->assertDatabaseHas('users', ['username' => 'testuser', 'email' => 'test@example.com']);
+});
+
+test('registration does not accept a full name', function () {
+    $this->post('/register', [
+        'username' => 'noname',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ])->assertRedirect(route('dashboard', absolute: false));
+
+    // full_name is no longer a column or a field
+    expect(\Illuminate\Support\Facades\Schema::hasColumn('users', 'full_name'))->toBeFalse();
 });

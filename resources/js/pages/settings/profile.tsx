@@ -23,7 +23,6 @@ export default function Profile() {
     const { auth } = usePage<SharedData>().props;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
-        full_name: auth.user.full_name,
         username: auth.user.username,
         email: auth.user.email ?? '',
     });
@@ -40,25 +39,9 @@ export default function Profile() {
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall title="Profile information" description="Update your name, username, and email address" />
+                    <HeadingSmall title="Profile information" description="Update your username and email address" />
 
                     <form onSubmit={submit} className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="full_name">Full name</Label>
-
-                            <Input
-                                id="full_name"
-                                className="mt-1 block w-full"
-                                value={data.full_name}
-                                onChange={(e) => setData('full_name', e.target.value)}
-                                required
-                                autoComplete="name"
-                                placeholder="Full name"
-                            />
-
-                            <InputError className="mt-2" message={errors.full_name} />
-                        </div>
-
                         <div className="grid gap-2">
                             <Label htmlFor="username">Username</Label>
 

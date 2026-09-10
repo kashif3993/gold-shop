@@ -1,5 +1,5 @@
 import { Head, useForm, Link } from '@inertiajs/react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { gramsToTraditional, traditionalToGrams, carryTraditional, formatNumber } from '@/utils/weight';
 import { Info, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
@@ -28,6 +28,7 @@ interface ItemEditProps {
     metals: Metal[];
     purities: Purity[];
     parties: Party[];
+    currentRates?: Record<string, string | number>;
 }
 
 const BULLION_TYPES = ['biscuit', 'nugget', 'bar', 'coin', 'piece'];
@@ -74,7 +75,9 @@ function getUnitsFromGrams(grams: number) {
     return { gram: formatNumber(num, 3), ...gramsToTraditional(num) };
 }
 
-export default function ItemEdit({ item, metals = [], purities = [], parties = [] }: ItemEditProps) {
+export default function ItemEdit({ item, metals = [], purities = [], parties = [], currentRates = {} }: ItemEditProps) {
+    // On edit we already have a saved rate — don't auto-overwrite it, just offer "use this".
+    const rateTouched = useRef(true);
     const initialGrossGrams = parseFloat(item.gross_weight_grams) || 0;
     const initialStoneGrams = parseFloat(item.stone_weight_grams) || 0;
     const initialCuttingGrams = parseFloat(item.cutting_loss_grams) || 0;
@@ -113,6 +116,12 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
         if (!data.metal_type_id) return purities;
         return purities.filter(p => String(p.metal_type_id) === String(data.metal_type_id));
     }, [purities, data.metal_type_id]);
+
+    // Today's rate for the chosen purity (from Rate Management), if any.
+    const liveRate = data.purity_id != null && data.purity_id !== ''
+        ? Number(currentRates[String(data.purity_id)])
+        : NaN;
+    const hasLiveRate = Number.isFinite(liveRate) && liveRate > 0;
 
     const handleItemTypeChange = (newType: string) => {
         const isBullionType = isBullion(newType);
@@ -495,7 +504,26 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
                             <div className="form-grid">
                                 <div className="form-group">
                                     <label className="form-label">Purchase Rate (per Gram)</label>
-                                    <input type="number" step="any" min="0" className="form-input" value={data.purchase_rate_per_gram || ''} onChange={e => setData('purchase_rate_per_gram', parseFloat(e.target.value) || 0)} />
+                                    <input
+                                        type="number" step="any" min="0" className="form-input"
+                                        value={data.purchase_rate_per_gram || ''}
+                                        onChange={e => { rateTouched.current = true; setData('purchase_rate_per_gram', parseFloat(e.target.value) || 0); }}
+                                    />
+                                    {hasLiveRate && (
+                                        <div className="rate-hint">
+                                            Today's {availablePurities.find(p => String(p.id) === String(data.purity_id))?.name} rate:{' '}
+                                            <strong>Rs {formatNumber(liveRate, 2)}</strong> / g
+                                            {Number(data.purchase_rate_per_gram) !== liveRate && (
+                                                <button
+                                                    type="button"
+                                                    className="rate-hint-use"
+                                                    onClick={() => { rateTouched.current = true; setData('purchase_rate_per_gram', liveRate); }}
+                                                >
+                                                    use this
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Labour Cost (Total)</label>

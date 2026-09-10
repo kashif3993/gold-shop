@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\MetalType;
+use App\Models\Party;
 use App\Models\Purity;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -31,16 +32,18 @@ class InventoryController extends Controller
             $query->whereDate('date_received', $request->date);
         }
 
-        $items = $query->paginate(20)->withQueryString();
+        if ($request->filled('source_party_id')) {
+            $query->where('source_party_id', $request->source_party_id);
+        }
 
-        $metals = MetalType::all();
-        $purities = Purity::all();
+        $items = $query->paginate(20)->withQueryString();
 
         return Inertia::render('inventory/index', [
             'items' => $items,
-            'filters' => $request->only(['metal_type_id', 'purity_id', 'item_type', 'date']),
-            'metals' => $metals,
-            'purities' => $purities,
+            'filters' => $request->only(['metal_type_id', 'purity_id', 'item_type', 'date', 'source_party_id']),
+            'metals' => MetalType::all(),
+            'purities' => Purity::all(),
+            'parties' => Party::whereHas('sourcedItems')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { POSProvider, usePOS } from '@/context/POSContext';
+import RateTicker from '@/components/rate-ticker';
 import { useState, useEffect } from 'react';
 import { Search, Trash2, Edit2, CheckCircle2, QrCode, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -297,8 +298,11 @@ function ExchangeForm({ metals, purities }: { metals: any[], purities: any[] }) 
         const w = parseFloat(weight);
         const d = parseFloat(deduction) || 0;
         const netW = w * (1 - d / 100);
-        // Valuation based on pure metal content
-        const valuation = netW * (purity.fineness_percent / 100) * state.goldRate;
+        // Re-weighed weight, less the melting-loss deduction, at today's rate.
+        // Same basis as the sale line and the Buy-Back service — the rate box
+        // already holds the rate for the gold being transacted (no extra
+        // fineness multiplier).
+        const valuation = netW * state.goldRate;
 
         dispatch({
             type: 'ADD_EXCHANGE',
@@ -520,7 +524,7 @@ function POSSidebar() {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-2 space-y-3">
+            <div className="mt-2 flex gap-3">
                 <button
                     onClick={async () => {
                         if (state.items.length === 0) {
@@ -556,18 +560,13 @@ function POSSidebar() {
                             }
                         }
                     }}
-                    className="pos-complete-btn"
+                    className="pos-complete-btn flex-[3] min-w-0"
                 >
                     Complete Sale
                 </button>
-                <div className="flex gap-3">
-                    <button className="flex-1 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-bold transition shadow-sm">
-                        Save
-                    </button>
-                    <button className="flex-1 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-bold transition shadow-sm">
-                        Print
-                    </button>
-                </div>
+                <button className="flex-1 min-w-0 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-bold transition shadow-sm">
+                    Print
+                </button>
             </div>
         </div>
     );
@@ -581,6 +580,7 @@ export default function POSIndex() {
 
                 <POSProvider>
                     <div className="p-2 sm:p-4 lg:p-6 w-full mx-auto">
+                        <RateTicker className="mb-4" />
                         <div className="pos-layout">
                             <div className="pos-main">
                                 <POSCart />

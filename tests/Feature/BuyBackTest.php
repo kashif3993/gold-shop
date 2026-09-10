@@ -78,6 +78,31 @@ class BuyBackTest extends TestCase
         $this->postJson('/api/v1/buyback', [])->assertStatus(401);
     }
 
+    public function test_guest_is_redirected_from_buyback_screen(): void
+    {
+        $this->get('/buyback')->assertRedirect('/login');
+    }
+
+    public function test_buyback_screen_renders_with_metals_purities_and_current_rates(): void
+    {
+        \App\Models\DailyRate::create([
+            'metal_type_id' => $this->goldMetal->id,
+            'purity_id' => $this->purity22k->id,
+            'rate_per_gram' => 22460,
+            'rate_date' => now()->toDateString(),
+            'source' => 'manual',
+            'is_current' => true,
+        ]);
+
+        $this->actingAs($this->user)->get('/buyback')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('buyback/index')
+                ->has('metals', 2)
+                ->has('purities')
+                ->where("currentRates.{$this->purity22k->id}", '22460.00'));
+    }
+
     public function test_deduction_resolution_cascade_hierarchy(): void
     {
         $service = app(BuybackDeductionService::class);
@@ -308,6 +333,66 @@ class BuyBackTest extends TestCase
 
         // Item status updated to bought_back
         $this->assertEquals('bought_back', $item->fresh()->status);
+    }
+
+    public function test_buyback_accepts_a_fixed_weight_cut_instead_of_a_percentage(): void
+    {
+        // Customer brings back a 1-tola bangle years later; jeweller cuts ~3 ratti
+        // (0.364 g) for wear/melting loss and pays for the rest at today's rate.
+        // Effective 11.664 - 0.364 = 11.300 g @ 24,000 = 271,200.00
+        $response = $this->actingAs($this->user)->postJson('/api/v1/buyback', [
+            'customer_name' => 'Returning Customer',
+            'metal_type_id' => $this->goldMetal->id,
+            'purity_id' => $this->purity22k->id,
+            'weight_grams' => 11.664,
+            'rate_per_gram' => 24000,
+            'deduction_weight_grams' => 0.364,
+            'payment_method' => 'cash',
+        ]);
+
+        $response->assertStatus(201)->assertJson([
+            'valuation' => [
+                'gross_weight_grams' => 11.664,
+                'deduction_weight_grams' => 0.364,
+                'effective_weight_grams' => 11.3,
+                'rate_per_gram' => 24000,
+                'total_amount' => 271200.00,
+            ],
+        ]);
+
+        // The equivalent percentage is derived from the cut and stored on the row.
+        $this->assertDatabaseHas('transactions', [
+            'transaction_type_id' => $this->buybackTransType->id,
+            'direction' => 'IN',
+            'weight_grams' => 11.664,
+            'rate_per_gram' => 24000.00,
+            'total_amount' => 271200.00,
+            'deduction_percent_applied' => 3.12,
+        ]);
+
+        $this->assertDatabaseHas('items', [
+            'item_type' => 'old_gold',
+            'purchase_price' => 271200.00,
+            'status' => 'bought_back',
+        ]);
+
+        $item = \App\Models\Item::where('item_type', 'old_gold')->latest('id')->first();
+        $this->assertEqualsWithDelta(0.364, (float) $item->cutting_loss_grams, 0.001);
+        $this->assertEqualsWithDelta(11.3, (float) $item->net_weight_grams, 0.001);
+    }
+
+    public function test_weight_cut_cannot_reach_or_exceed_the_reweighed_weight(): void
+    {
+        $response = $this->actingAs($this->user)->postJson('/api/v1/buyback', [
+            'metal_type_id' => $this->goldMetal->id,
+            'purity_id' => $this->purity22k->id,
+            'weight_grams' => 5,
+            'rate_per_gram' => 20000,
+            'deduction_weight_grams' => 5,
+            'payment_method' => 'cash',
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors(['deduction_weight_grams']);
     }
 
     public function test_lookup_original_sale_returns_reference_only_details(): void

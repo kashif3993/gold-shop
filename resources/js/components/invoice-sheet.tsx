@@ -48,7 +48,7 @@ export default function InvoiceSheet({ invoice, subtotal, exchangeLines = [], sh
                 </div>
                 <div>
                     <div className="inv-meta-label">Issued By</div>
-                    <div className="inv-meta-value">{invoice.created_by?.full_name || '—'}</div>
+                    <div className="inv-meta-value">{invoice.created_by?.username || '—'}</div>
                 </div>
             </div>
 

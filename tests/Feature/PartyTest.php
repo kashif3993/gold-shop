@@ -232,6 +232,34 @@ class PartyTest extends TestCase
         $this->assertStringContainsString('Payable', $ledger['balance_label']);
     }
 
+    public function test_ledger_reconciles_shop_to_shop_transfers_by_direction(): void
+    {
+        $otherShopType = PartyType::create(['name' => 'Other Shop']);
+        $shop = $this->makeParty(['name' => 'Noor Jewellers', 'party_type_id' => $otherShopType->id]);
+
+        // We lend stock out (OUT — they owe us) then take some back (IN — reduces it).
+        $this->makeTransaction($shop, 'OUT', 350000, [
+            'type_name' => 'shop_transfer',
+            'transaction_date' => now()->subDays(6),
+        ]);
+        $this->makeTransaction($shop, 'IN', 120000, [
+            'type_name' => 'shop_transfer',
+            'transaction_date' => now()->subDays(2),
+        ]);
+
+        $ledger = app(\App\Services\PartyLedgerService::class)->build($shop->fresh());
+
+        $this->assertEquals(350000.0, $ledger['total_out']);
+        $this->assertEquals(120000.0, $ledger['total_in']);
+        $this->assertEquals(230000.0, $ledger['balance']);
+        $this->assertStringContainsString('Receivable', $ledger['balance_label']);
+
+        // Running balance carries correctly with no manual adjustment.
+        $this->assertCount(2, $ledger['entries']);
+        $this->assertEquals(350000.0, $ledger['entries'][0]['balance']);
+        $this->assertEquals(230000.0, $ledger['entries'][1]['balance']);
+    }
+
     public function test_ledger_api_endpoint_returns_json(): void
     {
         $party = $this->makeParty(['name' => 'Api Party']);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DailyRate;
 use App\Models\Item;
 use App\Models\MetalType;
 use App\Models\Party;
@@ -12,12 +13,19 @@ use Inertia\Inertia;
 
 class ItemController extends Controller
 {
+    /** Current effective rate per purity_id, for the "use today's rate" helper. */
+    private function currentRates()
+    {
+        return DailyRate::where('is_current', true)->pluck('rate_per_gram', 'purity_id');
+    }
+
     public function create()
     {
         return Inertia::render('items/create', [
-            'metals'   => MetalType::all(),
-            'purities' => Purity::all(),
-            'parties'  => Party::all(),
+            'metals'       => MetalType::all(),
+            'purities'     => Purity::all(),
+            'parties'      => Party::all(),
+            'currentRates' => $this->currentRates(),
         ]);
     }
 
@@ -89,10 +97,11 @@ class ItemController extends Controller
     public function edit(Item $item)
     {
         return Inertia::render('items/edit', [
-            'item'     => $item->load(['metalType', 'purity', 'sourceParty']),
-            'metals'   => MetalType::all(),
-            'purities' => Purity::all(),
-            'parties'  => Party::all(),
+            'item'         => $item->load(['metalType', 'purity', 'sourceParty']),
+            'metals'       => MetalType::all(),
+            'purities'     => Purity::all(),
+            'parties'      => Party::all(),
+            'currentRates' => $this->currentRates(),
         ]);
     }
 

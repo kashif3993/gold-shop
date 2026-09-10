@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart, HandCoins } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -26,6 +26,11 @@ const mainNavItems: NavItem[] = [
         title: 'Item Entry',
         url: '/items/create',
         icon: SquarePen,
+    },
+    {
+        title: 'Buy-Back',
+        url: '/buyback',
+        icon: HandCoins,
     },
     {
         title: 'Parties',
