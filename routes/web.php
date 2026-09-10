@@ -30,6 +30,15 @@ Route::middleware(['auth'])->group(function () {
     Route::put('parties/{party}', [\App\Http\Controllers\PartyController::class, 'update'])->name('parties.update');
     Route::delete('parties/{party}', [\App\Http\Controllers\PartyController::class, 'destroy'])->name('parties.destroy');
 
+    // Rate Management
+    Route::get('api/v1/rates/current', [\App\Http\Controllers\Api\V1\RateController::class, 'current'])->name('rates.current');
+    Route::get('rate-management', [\App\Http\Controllers\RateManagementController::class, 'index'])->name('rate-management.index');
+    Route::post('rate-management/refresh', [\App\Http\Controllers\RateManagementController::class, 'refresh'])->name('rate-management.refresh');
+    Route::post('rate-management/fx', [\App\Http\Controllers\RateManagementController::class, 'saveFx'])->name('rate-management.fx');
+    Route::post('rate-management/manual', [\App\Http\Controllers\RateManagementController::class, 'saveManual'])->name('rate-management.manual');
+    Route::post('rate-management/adjustment', [\App\Http\Controllers\RateManagementController::class, 'saveAdjustment'])->name('rate-management.adjustment.save');
+    Route::delete('rate-management/adjustment/{adjustment}', [\App\Http\Controllers\RateManagementController::class, 'deleteAdjustment'])->name('rate-management.adjustment.delete');
+
     // Invoices (read-only — created by the POS module)
     Route::get('invoices', [\App\Http\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/{invoice}/data', [\App\Http\Controllers\InvoiceController::class, 'data'])->name('invoices.data');
@@ -45,7 +54,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('api/v1/pos/transaction', [\App\Http\Controllers\POSController::class, 'store'])->name('pos.transaction.store');
     Route::get('api/v1/items/search', [\App\Http\Controllers\Api\V1\ItemController::class, 'search'])->name('items.search');
 
-    // Buy-Back Routes (API only for now — the React screen lands on Day 18)
+    // Buy-Back
+    Route::get('buyback', function () {
+        return inertia('buyback/index', [
+            'metals' => \App\Models\MetalType::all(),
+            'purities' => \App\Models\Purity::all(),
+            'currentRates' => \App\Models\DailyRate::where('is_current', true)
+                ->pluck('rate_per_gram', 'purity_id'),
+        ]);
+    })->name('buyback.index');
     Route::get('api/v1/buyback/deduction', [\App\Http\Controllers\Api\V1\BuyBackController::class, 'resolveDeduction'])->name('buyback.deduction');
     Route::get('api/v1/buyback/lookup-sale', [\App\Http\Controllers\Api\V1\BuyBackController::class, 'lookupOriginalSale'])->name('buyback.lookup-sale');
     Route::post('api/v1/buyback', [\App\Http\Controllers\Api\V1\BuyBackController::class, 'store'])->name('buyback.store');

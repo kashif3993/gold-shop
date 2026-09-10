@@ -126,6 +126,13 @@ class BuyBackController extends Controller
                 $weightGrams = (float) $validated['weight_grams'];
                 $ratePerGram = (float) $validated['rate_per_gram'];
 
+                // The jeweller either cuts a fixed weight ("3 ratti") or applies a
+                // percentage; the fixed cut wins when given, else fall back to the
+                // supplied percentage, else resolve the shop's configured percentage.
+                $deductionWeightGrams = isset($validated['deduction_weight_grams'])
+                    ? (float) $validated['deduction_weight_grams']
+                    : null;
+
                 $deductionPercent = isset($validated['deduction_percent'])
                     ? (float) $validated['deduction_percent']
                     : $this->deductionService->resolveDeductionPercent($purityId, $metalTypeId);
@@ -133,9 +140,12 @@ class BuyBackController extends Controller
                 $valuation = $this->deductionService->calculateValuation(
                     $weightGrams,
                     $ratePerGram,
-                    $deductionPercent
+                    $deductionPercent,
+                    $deductionWeightGrams
                 );
 
+                // Store the effective percentage (derived from the cut when weight-based).
+                $deductionPercent = $valuation['deduction_percent'];
                 $buybackTotal = $valuation['total_amount'];
 
                 // 3. Payment Method normalization

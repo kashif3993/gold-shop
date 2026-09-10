@@ -1,8 +1,6 @@
 .inventory-container {
     padding: 2rem;
-    max-width: 1400px;
     width: 100%;
-    margin: 0 auto;
     box-sizing: border-box;
     /* Prevent flex-blowout from parent layouts without hiding overflows */
     min-width: 0;
@@ -210,6 +208,43 @@
     font-size: 1rem;
 }
 
+/* Aging indicator — how long a piece has sat in stock */
+.inv-age {
+    display: inline-block;
+    min-width: 44px;
+    text-align: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: monospace;
+    border: 1px solid transparent;
+}
+
+.inv-age-none {
+    color: #9ca3af;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.inv-age-fresh {
+    background: #f3f4f6;
+    color: #4b5563;
+    border-color: #e5e7eb;
+}
+
+.inv-age-aging {
+    background: #fdf6e3;
+    color: #7a5c12;
+    border-color: #e8d18a;
+}
+
+.inv-age-stale {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;
@@ -403,6 +438,24 @@
 
 .dark .empty-state {
     color: #6b7280;
+}
+
+.dark .inv-age-fresh {
+    background: #374151;
+    color: #d1d5db;
+    border-color: #4b5563;
+}
+
+.dark .inv-age-aging {
+    background: rgba(212, 175, 55, 0.16);
+    color: #f0d489;
+    border-color: rgba(212, 175, 55, 0.32);
+}
+
+.dark .inv-age-stale {
+    background: rgba(146, 64, 14, 0.22);
+    color: #fcd34d;
+    border-color: rgba(217, 119, 6, 0.4);
 }
 
 .dark .pagination {

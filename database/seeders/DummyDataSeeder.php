@@ -95,17 +95,22 @@ class DummyDataSeeder extends Seeder
         }
     }
 
+    /** Usernames this seeder owns — only these are ever removed on a re-run. */
+    private const DEMO_USERNAMES = ['shopkeeper', 'zoya'];
+
     /**
      * Remove everything this seeder creates, child tables first, so the run is
-     * idempotent. Reference data and the real `admin` user are left alone.
+     * idempotent. Reference data and every real user account (admin, and any
+     * accounts you registered yourself) are left completely untouched.
      */
     private function wipeDemoData(): void
     {
         Schema::disableForeignKeyConstraints();
-        foreach (['audit_log', 'invoice_line_items', 'transactions', 'invoices', 'items', 'daily_rates', 'parties'] as $table) {
+        foreach (['audit_log', 'invoice_line_items', 'transactions', 'invoices', 'items', 'daily_rates', 'rate_fetch_log', 'parties'] as $table) {
             DB::table($table)->truncate();
         }
-        DB::table('users')->where('username', '!=', 'admin')->delete();
+        // Never touch real accounts — only the demo users below.
+        DB::table('users')->whereIn('username', self::DEMO_USERNAMES)->delete();
         Schema::enableForeignKeyConstraints();
     }
 
@@ -121,7 +126,6 @@ class DummyDataSeeder extends Seeder
         $this->admin = User::firstOrCreate(
             ['username' => 'admin'],
             [
-                'full_name' => 'Admin User',
                 'email' => 'admin@zarnoor.test',
                 'password_hash' => 'password',
                 'role' => 'admin',
@@ -130,7 +134,6 @@ class DummyDataSeeder extends Seeder
         );
 
         $this->shopkeeper = User::create([
-            'full_name' => 'Bilal Shopkeeper',
             'username' => 'shopkeeper',
             'email' => 'bilal@zarnoor.test',
             'password_hash' => 'password',
@@ -139,7 +142,6 @@ class DummyDataSeeder extends Seeder
         ]);
 
         User::create([
-            'full_name' => 'Zoya Counter Staff',
             'username' => 'zoya',
             'email' => null,
             'password_hash' => 'password',
@@ -198,6 +200,14 @@ class DummyDataSeeder extends Seeder
                 ]);
             }
         }
+
+        // A few fetch-log rows so the Rate Management history table has content.
+        \App\Models\RateFetchLog::insert([
+            ['attempted_at' => Carbon::today()->subDays(6)->setTime(10, 0), 'success' => true, 'source_api' => 'api.gold-api.com', 'response_summary' => 'Stored 8 rates — Gold 24350.00/g, Silver 305.00/g', 'fallback_used' => false],
+            ['attempted_at' => Carbon::today()->subDays(4)->setTime(10, 0), 'success' => false, 'source_api' => 'api.gold-api.com', 'response_summary' => 'Fetch failed: XAU request returned HTTP 503', 'fallback_used' => true],
+            ['attempted_at' => Carbon::today()->subDays(1)->setTime(9, 30), 'success' => true, 'source_api' => 'manual', 'response_summary' => 'Manual rate entry — Gold 24500/g', 'fallback_used' => false],
+            ['attempted_at' => Carbon::today()->setTime(10, 5), 'success' => true, 'source_api' => 'api.gold-api.com', 'response_summary' => 'Stored 8 rates — Gold 24500.00/g, Silver 312.00/g', 'fallback_used' => false],
+        ]);
     }
 
     /* ───────────────────────── parties ───────────────────────── */

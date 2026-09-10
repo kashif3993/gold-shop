@@ -27,6 +27,7 @@ interface ItemCreateProps {
     metals: Metal[];
     purities: Purity[];
     parties: Party[];
+    currentRates?: Record<string, string | number>;
 }
 
 const BULLION_TYPES = ['biscuit', 'nugget', 'bar', 'coin', 'piece'];
@@ -193,8 +194,10 @@ function CustomSelect({ value, onValueChange, placeholder = 'Select...', options
 }
 /* ─────────────────────────────────────────────────────────────────────── */
 
-export default function ItemCreate({ metals = [], purities = [], parties = [] }: ItemCreateProps) {
+export default function ItemCreate({ metals = [], purities = [], parties = [], currentRates = {} }: ItemCreateProps) {
     const [codePreview, setCodePreview] = useState('');
+    // Once the shopkeeper types their own purchase rate, stop auto-filling it.
+    const rateTouched = useRef(false);
     const initialMetalId = metals.length > 0 ? metals[0].id : '';
     const initialItemType = 'ring';
     const initialPurityId = resolveDefaultPurityId(initialItemType, initialMetalId, purities);
@@ -239,6 +242,21 @@ export default function ItemCreate({ metals = [], purities = [], parties = [] }:
             setCodePreview(previewItemCode(metal.name, data.item_type));
         }
     }, [data.metal_type_id, data.item_type, metals]);
+
+    // Today's rate for the chosen purity (from Rate Management), if any.
+    const liveRate = data.purity_id != null && data.purity_id !== ''
+        ? Number(currentRates[String(data.purity_id)])
+        : NaN;
+    const hasLiveRate = Number.isFinite(liveRate) && liveRate > 0;
+
+    // Pre-fill the purchase rate with today's rate for the selected purity, until
+    // the shopkeeper overrides it. This keeps the summary price live.
+    useEffect(() => {
+        if (!rateTouched.current && hasLiveRate) {
+            setData('purchase_rate_per_gram', liveRate);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.purity_id, hasLiveRate, liveRate]);
 
     const handleItemTypeChange = (newType: string) => {
         const isBullionType = isBullion(newType);
@@ -562,7 +580,26 @@ export default function ItemCreate({ metals = [], purities = [], parties = [] }:
                             <div className="form-grid">
                                 <div className="form-group">
                                     <label className="form-label">Purchase Rate (per Gram)</label>
-                                    <input type="number" step="any" min="0" className="form-input" value={data.purchase_rate_per_gram || ''} onChange={e => setData('purchase_rate_per_gram', parseFloat(e.target.value) || 0)} />
+                                    <input
+                                        type="number" step="any" min="0" className="form-input"
+                                        value={data.purchase_rate_per_gram || ''}
+                                        onChange={e => { rateTouched.current = true; setData('purchase_rate_per_gram', parseFloat(e.target.value) || 0); }}
+                                    />
+                                    {hasLiveRate && (
+                                        <div className="rate-hint">
+                                            Today's {availablePurities.find(p => String(p.id) === String(data.purity_id))?.name} rate:{' '}
+                                            <strong>Rs {formatNumber(liveRate, 2)}</strong> / g
+                                            {Number(data.purchase_rate_per_gram) !== liveRate && (
+                                                <button
+                                                    type="button"
+                                                    className="rate-hint-use"
+                                                    onClick={() => { rateTouched.current = true; setData('purchase_rate_per_gram', liveRate); }}
+                                                >
+                                                    use this
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Labour Cost (Total)</label>

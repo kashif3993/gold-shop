@@ -35,7 +35,7 @@ class DashboardController extends Controller
             ->map(fn (AuditLog $log) => [
                 'field_name' => $log->field_name,
                 'reason' => $log->reason,
-                'changed_by' => $log->changedBy?->full_name,
+                'changed_by' => $log->changedBy?->username,
                 'changed_at' => $log->changed_at?->diffForHumans(),
             ]);
 

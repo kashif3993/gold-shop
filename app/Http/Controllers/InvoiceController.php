@@ -71,7 +71,7 @@ class InvoiceController extends Controller
     {
         $invoice->load([
             'party.partyType',
-            'createdBy:id,full_name',
+            'createdBy:id,username',
             'lineItems' => fn ($q) => $q->orderBy('id'),
             'lineItems.item:id,item_code,item_type,metal_type_id,purity_id',
             'lineItems.item.metalType:id,name',

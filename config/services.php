@@ -35,4 +35,23 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Gold / silver spot-rate feed
+    |--------------------------------------------------------------------------
+    | api.gold-api.com returns USD per troy ounce with no API key. We convert
+    | to PKR per gram (24K / fine) using `usd_pkr`, then the shop's configured
+    | adjustment is applied per purity. `stale_after_hours` decides when a
+    | still-current rate is flagged as possibly outdated.
+    */
+    'gold_api' => [
+        'base_url' => env('GOLD_API_URL', 'https://api.gold-api.com'),
+        // Fallback USD→PKR when the `usd_pkr` setting is unset. The live value is
+        // managed on the Rate Management screen (manual or auto-fetched).
+        'usd_pkr' => (float) env('GOLD_API_USD_PKR', 278.0),
+        'fx_url' => env('FX_RATE_URL', 'https://open.er-api.com/v6/latest/USD'),
+        'stale_after_hours' => (int) env('RATE_STALE_HOURS', 12),
+        'timeout' => (int) env('GOLD_API_TIMEOUT', 8),
+    ],
+
 ];

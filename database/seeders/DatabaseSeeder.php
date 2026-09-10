@@ -24,7 +24,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::factory()->admin()->create([
-            'full_name' => 'Admin User',
             'username' => 'admin',
         ]);
     }

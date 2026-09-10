@@ -1,7 +1,7 @@
 /* Item Entry Screen - Premium Custom CSS */
 .item-entry-container {
-    max-width: 1400px;
-    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
     padding: 2rem;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: #1a1a1a;
@@ -129,6 +129,52 @@
     border-color: #6366f1;
     background-color: #ffffff;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Today's-rate helper under the Purchase Rate field */
+.rate-hint {
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.rate-hint strong {
+    color: #b5892f;
+    font-family: monospace;
+}
+
+.rate-hint-use {
+    border: none;
+    background: #fdf6e3;
+    color: #7a5c12;
+    border: 1px solid #e8d18a;
+    border-radius: 5px;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rate-hint-use:hover {
+    background: #f8ecc9;
+}
+
+.dark .rate-hint {
+    color: #9ca3af;
+}
+
+.dark .rate-hint strong {
+    color: #f0d489;
+}
+
+.dark .rate-hint-use {
+    background: rgba(212, 175, 55, 0.16);
+    color: #f0d489;
+    border-color: rgba(212, 175, 55, 0.35);
 }
 
 /* Weight Section Grid */

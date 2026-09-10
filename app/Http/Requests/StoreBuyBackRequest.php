@@ -38,6 +38,8 @@ class StoreBuyBackRequest extends FormRequest
             'weight_grams'                  => 'required|numeric|gt:0',
             'rate_per_gram'                 => 'required|numeric|gt:0',
             'deduction_percent'             => 'nullable|numeric|min:0|max:100',
+            // Fixed weight cut ("cut 3 ratti / half a masha") — wins over the percentage.
+            'deduction_weight_grams'        => 'nullable|numeric|min:0|lt:weight_grams',
             'payment_method'                => 'required|in:cash,card,transfer,bank_transfer,credit',
             'notes'                         => 'nullable|string|max:1000',
         ];

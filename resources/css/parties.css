@@ -34,9 +34,7 @@
 .pty-page,
 .pty-form-page {
     padding: 2rem;
-    max-width: 1400px;
     width: 100%;
-    margin: 0 auto;
     box-sizing: border-box;
     min-width: 0;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;

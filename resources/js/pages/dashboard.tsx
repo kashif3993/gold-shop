@@ -4,6 +4,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { Package, Users, UserCheck, TrendingUp, DollarSign, FileText, Plus, ArrowUpRight, ArrowDownRight, Minus, Activity, Zap } from 'lucide-react';
 import { ComponentType } from 'react';
 import { cn } from '@/lib/utils';
+import RateTicker from '@/components/rate-ticker';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
@@ -112,7 +113,7 @@ function PurityRow({ label, count, max, color }: { label: string; count: number;
 
 export default function Dashboard({ stats, metalBreakdown, purities, totalPurities, recentActivity, goldRateHistory }: DashboardProps) {
     const { auth } = usePage<SharedData>().props;
-    const firstName = auth.user.full_name?.split(' ')[0] ?? 'User';
+    const firstName = auth.user.username ?? 'User';
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     const rateHistory = (goldRateHistory && goldRateHistory.length > 1) ? goldRateHistory : (() => {
@@ -145,19 +146,22 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
             <Head title="Dashboard — Gold Shop ERP" />
             <div className="flex flex-col gap-6 p-4 sm:p-6 min-h-full">
 
-                {/* ── Page header ──────────────────────────────── */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
-                    <div>
-                        <h1 className="text-[22px] font-bold tracking-tight leading-tight">Welcome back, {firstName}</h1>
-                        <p className="text-sm text-muted-foreground mt-0.5">Today is {today} &bull; Operations</p>
+                {/* ── Page header + live rate ──────────────────── */}
+                <div className="flex flex-col gap-3">
+                    <RateTicker />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
+                        <div>
+                            <h1 className="text-[22px] font-bold tracking-tight leading-tight">Welcome back, {firstName}</h1>
+                            <p className="text-sm text-muted-foreground mt-0.5">Today is {today} &bull; Operations</p>
+                        </div>
+                        <Link
+                            href="/items/create"
+                            className="inline-flex items-center gap-2 rounded-xl bg-[#b38a36] hover:bg-[#a17a2e] active:bg-[#8f6a20] text-black font-semibold px-5 py-2.5 text-[13px] shadow-sm hover:shadow-md transition-all duration-200 self-start sm:self-auto select-none"
+                        >
+                            <Plus className="h-4 w-4" />
+                            New Item Entry
+                        </Link>
                     </div>
-                    <Link
-                        href="/items/create"
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#b38a36] hover:bg-[#a17a2e] active:bg-[#8f6a20] text-black font-semibold px-5 py-2.5 text-[13px] shadow-sm hover:shadow-md transition-all duration-200 self-start sm:self-auto select-none"
-                    >
-                        <Plus className="h-4 w-4" />
-                        New Item Entry
-                    </Link>
                 </div>
 
                 {/* ── 6 KPI stat cards ─────────────────────────── */}

@@ -13,11 +13,24 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function InventoryIndex({ items, filters, metals, purities }: any) {
+/** Days a piece has sat in stock, with an aging band. Only meaningful while in_stock. */
+function agingInfo(dateReceived: string, status: string): { text: string; cls: string } {
+    if (status !== 'in_stock') return { text: '—', cls: 'inv-age-none' };
+    const received = new Date(dateReceived).getTime();
+    if (isNaN(received)) return { text: '—', cls: 'inv-age-none' };
+    const days = Math.max(0, Math.floor((Date.now() - received) / 86_400_000));
+    const text = days === 0 ? 'Today' : `${days}d`;
+    if (days <= 30) return { text, cls: 'inv-age-fresh' };
+    if (days <= 90) return { text, cls: 'inv-age-aging' };
+    return { text, cls: 'inv-age-stale' };
+}
+
+export default function InventoryIndex({ items, filters, metals, purities, parties = [] }: any) {
     const [metalFilter, setMetalFilter] = useState(filters.metal_type_id || '');
     const [purityFilter, setPurityFilter] = useState(filters.purity_id || '');
     const [typeFilter, setTypeFilter] = useState(filters.item_type || '');
     const [dateFilter, setDateFilter] = useState(filters.date || '');
+    const [sourceFilter, setSourceFilter] = useState(filters.source_party_id || '');
     const [viewItem, setViewItem] = useState<any>(null);
 
     const handleFilter = (e: any) => {
@@ -27,6 +40,7 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
             purity_id: purityFilter,
             item_type: typeFilter,
             date: dateFilter,
+            source_party_id: sourceFilter,
         }, {
             preserveState: true,
             preserveScroll: true,
@@ -38,6 +52,7 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
         setPurityFilter('');
         setTypeFilter('');
         setDateFilter('');
+        setSourceFilter('');
         router.get('/inventory');
     };
 
@@ -112,12 +127,22 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
                     </div>
 
                     <div className="filter-group">
+                        <label className="filter-label">Source Party</label>
+                        <select className="filter-input" value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}>
+                            <option value="">All Sources</option>
+                            {parties.map((p: any) => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="filter-group">
                         <label className="filter-label">Date Received</label>
                         <input type="date" className="filter-input" value={dateFilter} onChange={e => setDateFilter(e.target.value)} />
                     </div>
 
                     <button type="submit" className="filter-btn">Apply Filters</button>
-                    {(metalFilter || purityFilter || typeFilter || dateFilter) && (
+                    {(metalFilter || purityFilter || typeFilter || dateFilter || sourceFilter) && (
                         <button type="button" onClick={clearFilters} className="filter-clear">Clear</button>
                     )}
                 </form>
@@ -134,13 +159,14 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
                                 <th>Total Cost</th>
                                 <th>Status</th>
                                 <th>Date</th>
+                                <th>Age</th>
                                 <th style={{ textAlign: 'right' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {items.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="empty-state" style={{ padding: 0 }}>
+                                    <td colSpan={9} className="empty-state" style={{ padding: 0 }}>
                                         <div style={{ position: 'sticky', left: 0, width: '100%', padding: '4rem 1rem', display: 'flex', justifyContent: 'center' }}>
                                             No items found in inventory matching your filters.
                                         </div>
@@ -169,6 +195,12 @@ export default function InventoryIndex({ items, filters, metals, purities }: any
                                             </span>
                                         </td>
                                         <td>{new Date(item.date_received).toLocaleDateString()}</td>
+                                        <td>
+                                            {(() => {
+                                                const a = agingInfo(item.date_received, item.status);
+                                                return <span className={`inv-age ${a.cls}`}>{a.text}</span>;
+                                            })()}
+                                        </td>
                                         <td>
                                             <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
                                                 <button
