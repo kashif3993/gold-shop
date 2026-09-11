@@ -104,4 +104,21 @@ class InventoryTest extends TestCase
     {
         $this->get('/inventory')->assertRedirect('/login');
     }
+
+    public function test_stock_summary_totals_in_stock_and_bought_back_weight_per_metal(): void
+    {
+        $this->makeItem(['gross_weight_grams' => 10, 'net_weight_grams' => 10, 'status' => 'in_stock']);
+        $this->makeItem(['gross_weight_grams' => 5, 'net_weight_grams' => 5, 'status' => 'in_stock']);
+        $this->makeItem(['gross_weight_grams' => 3, 'net_weight_grams' => 3, 'status' => 'bought_back']);
+        $this->makeItem(['gross_weight_grams' => 100, 'net_weight_grams' => 100, 'status' => 'sold']); // excluded
+
+        $this->actingAs($this->user)->get('/inventory')
+            ->assertInertia(fn ($page) => $page
+                ->has('stockSummary', 1)
+                ->where('stockSummary.0.metal', 'Gold')
+                ->where('stockSummary.0.in_stock_grams', 15)
+                ->where('stockSummary.0.in_stock_count', 2)
+                ->where('stockSummary.0.bought_back_grams', 3)
+                ->where('stockSummary.0.bought_back_count', 1));
+    }
 }

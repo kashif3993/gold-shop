@@ -4,7 +4,7 @@ import { POSProvider, usePOS } from '@/context/POSContext';
 import RateTicker from '@/components/rate-ticker';
 import { useState, useEffect } from 'react';
 import { Search, Trash2, Edit2, CheckCircle2, QrCode, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, genId } from '@/lib/utils';
 import axios from 'axios';
 import '../../../css/pos.css';
 
@@ -307,7 +307,7 @@ function ExchangeForm({ metals, purities }: { metals: any[], purities: any[] }) 
         dispatch({
             type: 'ADD_EXCHANGE',
             payload: {
-                id: crypto.randomUUID(),
+                id: genId(),
                 metal_type_id: metal.id,
                 purity_id: purity.id,
                 metal_name: metal.name,

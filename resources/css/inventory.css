@@ -25,6 +25,85 @@
     font-size: 1rem;
 }
 
+/* ── Stock on hand — total metal physically in the shop ─────────────── */
+.inv-stock-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.inv-stock-card {
+    background: linear-gradient(135deg, #fffbf0 0%, #fef8e8 100%);
+    border: 1.5px solid #e6d5a7;
+    border-radius: 12px;
+    padding: 1.15rem 1.35rem;
+}
+
+.inv-stock-metal {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #92722c;
+    margin-bottom: 0.4rem;
+}
+
+.inv-stock-main {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.inv-stock-grams {
+    font-family: monospace;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.inv-stock-tola {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: #92722c;
+}
+
+.inv-stock-sub {
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.inv-stock-scrap {
+    margin-top: 0.3rem;
+    font-size: 0.78rem;
+    color: #92400e;
+    font-style: italic;
+}
+
+.dark .inv-stock-card {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.05));
+    border-color: rgba(212, 175, 55, 0.32);
+}
+
+.dark .inv-stock-metal,
+.dark .inv-stock-tola {
+    color: #f0d489;
+}
+
+.dark .inv-stock-grams {
+    color: #f9fafb;
+}
+
+.dark .inv-stock-sub {
+    color: #9ca3af;
+}
+
+.dark .inv-stock-scrap {
+    color: #fcd34d;
+}
+
 .filters-card {
     background: #ffffff;
     border: 1px solid #e5e7eb;

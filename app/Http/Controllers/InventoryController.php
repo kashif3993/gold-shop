@@ -44,6 +44,37 @@ class InventoryController extends Controller
             'metals' => MetalType::all(),
             'purities' => Purity::all(),
             'parties' => Party::whereHas('sourcedItems')->orderBy('name')->get(['id', 'name']),
+            'stockSummary' => $this->stockSummary(),
         ]);
+    }
+
+    /**
+     * Total gold/silver physically on hand right now, split into "ready to
+     * sell" (in_stock — new jewelry + bullion) vs "bought-back scrap" (taken
+     * in via POS exchange or Buy-Back, not yet melted/reprocessed). Both are
+     * real weight sitting in the shop, so both count toward what the owner
+     * actually holds — kept separate because only `in_stock` is sellable as-is.
+     */
+    private function stockSummary()
+    {
+        $rows = Item::query()
+            ->whereIn('status', ['in_stock', 'bought_back'])
+            ->selectRaw('metal_type_id, status, SUM(net_weight_grams) as total_grams, COUNT(*) as item_count')
+            ->groupBy('metal_type_id', 'status')
+            ->get();
+
+        return MetalType::all()->map(function (MetalType $metal) use ($rows) {
+            $forMetal = $rows->where('metal_type_id', $metal->id);
+            $inStock = $forMetal->firstWhere('status', 'in_stock');
+            $boughtBack = $forMetal->firstWhere('status', 'bought_back');
+
+            return [
+                'metal' => $metal->name,
+                'in_stock_grams' => (float) ($inStock->total_grams ?? 0),
+                'in_stock_count' => (int) ($inStock->item_count ?? 0),
+                'bought_back_grams' => (float) ($boughtBack->total_grams ?? 0),
+                'bought_back_count' => (int) ($boughtBack->item_count ?? 0),
+            ];
+        })->filter(fn ($row) => $row['in_stock_count'] > 0 || $row['bought_back_count'] > 0)->values();
     }
 }

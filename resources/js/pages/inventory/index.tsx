@@ -6,6 +6,9 @@ import { Eye, Edit, Trash2, X, Printer } from 'lucide-react';
 import '../../../css/inventory.css';
 import { formatNumber, fromGrams } from '@/utils/weight';
 
+const TOLA_GRAMS = 11.6638038;
+const gToTola = (g: number) => g / TOLA_GRAMS;
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Inventory',
@@ -25,7 +28,7 @@ function agingInfo(dateReceived: string, status: string): { text: string; cls: s
     return { text, cls: 'inv-age-stale' };
 }
 
-export default function InventoryIndex({ items, filters, metals, purities, parties = [] }: any) {
+export default function InventoryIndex({ items, filters, metals, purities, parties = [], stockSummary = [] }: any) {
     const [metalFilter, setMetalFilter] = useState(filters.metal_type_id || '');
     const [purityFilter, setPurityFilter] = useState(filters.purity_id || '');
     const [typeFilter, setTypeFilter] = useState(filters.item_type || '');
@@ -78,6 +81,28 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                         + Add New Item
                     </Link>
                 </div>
+
+                {stockSummary.length > 0 && (
+                    <div className="inv-stock-summary">
+                        {stockSummary.map((row: any) => (
+                            <div key={row.metal} className="inv-stock-card">
+                                <div className="inv-stock-metal">{row.metal} on hand</div>
+                                <div className="inv-stock-main">
+                                    <span className="inv-stock-grams">{formatNumber(row.in_stock_grams, 3)} g</span>
+                                    <span className="inv-stock-tola">≈ {formatNumber(gToTola(row.in_stock_grams), 3)} tola</span>
+                                </div>
+                                <div className="inv-stock-sub">
+                                    {row.in_stock_count} item{row.in_stock_count === 1 ? '' : 's'} ready to sell
+                                </div>
+                                {row.bought_back_count > 0 && (
+                                    <div className="inv-stock-scrap">
+                                        + {formatNumber(row.bought_back_grams, 3)} g from {row.bought_back_count} bought-back piece{row.bought_back_count === 1 ? '' : 's'} (not yet reprocessed)
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 <form className="filters-card" onSubmit={handleFilter}>
                     <div className="filter-group">
