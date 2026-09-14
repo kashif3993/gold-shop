@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\DailyRate;
 use App\Models\Item;
+use App\Models\Purity;
 use App\Models\Transaction;
 use Illuminate\Support\Collection;
 
@@ -101,6 +103,45 @@ class ReportService
             'value' => round((float) $items->sum('_value'), 2),
             'by_metal' => $byMetal,
         ];
+    }
+
+    /**
+     * One rate line per metal — the purest active purity is used as the
+     * metal's benchmark spot price. Multiple fetches on the same day are
+     * collapsed to that day's last rate, so the chart shows one point/day.
+     */
+    public function rateHistory(?string $from, ?string $to): array
+    {
+        $benchmarkPurityIds = Purity::with('metalType:id,name')
+            ->where('is_active', true)
+            ->orderByDesc('fineness_percent')
+            ->get()
+            ->groupBy('metal_type_id')
+            ->map(fn (Collection $purities) => $purities->first());
+
+        return $benchmarkPurityIds->map(function (Purity $purity) use ($from, $to) {
+            $points = DailyRate::where('purity_id', $purity->id)
+                ->when($from, fn ($q) => $q->whereDate('rate_date', '>=', $from))
+                ->when($to, fn ($q) => $q->whereDate('rate_date', '<=', $to))
+                ->orderBy('fetched_at')
+                ->get()
+                ->groupBy(fn (DailyRate $r) => $r->rate_date->toDateString())
+                ->map(fn (Collection $rows, string $day) => [
+                    'date' => $day,
+                    'rate' => (float) $rows->sortBy('fetched_at')->last()->rate_per_gram,
+                ])
+                ->sortBy('date')
+                ->values();
+
+            return [
+                'metal' => $purity->metalType->name ?? 'Unknown',
+                'purity' => $purity->name,
+                'points' => $points,
+            ];
+        })
+            ->sortBy('metal')
+            ->values()
+            ->all();
     }
 
     /** @param  callable(Collection):array  $summarize */

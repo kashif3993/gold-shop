@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\DailyRate;
 use App\Models\Item;
 use App\Models\MetalType;
 use App\Models\Party;
@@ -90,7 +91,8 @@ class ReportTest extends TestCase
                 ->has('filters')
                 ->has('sales')
                 ->has('profit')
-                ->has('stock'));
+                ->has('stock')
+                ->has('rateHistory'));
     }
 
     public function test_sales_summary_only_counts_sale_transactions_in_range(): void
@@ -168,5 +170,82 @@ class ReportTest extends TestCase
         $response->assertInertia(fn ($page) => $page
             ->where('stock.item_count', 0)
             ->where('stock.value', 0));
+    }
+
+    public function test_rate_history_uses_the_purest_active_purity_as_the_benchmark(): void
+    {
+        $g24 = Purity::create(['metal_type_id' => $this->gold->id, 'name' => '24K', 'fineness_percent' => 99.9, 'is_active' => true]);
+
+        // Lower-fineness purity — must be ignored, 24K is the purer benchmark.
+        DailyRate::create([
+            'metal_type_id' => $this->gold->id,
+            'purity_id' => $this->p22->id,
+            'rate_per_gram' => 20000,
+            'rate_date' => '2026-06-05',
+            'source' => 'manual',
+            'fetched_at' => '2026-06-05 09:00:00',
+        ]);
+
+        DailyRate::create([
+            'metal_type_id' => $this->gold->id,
+            'purity_id' => $g24->id,
+            'rate_per_gram' => 24000,
+            'rate_date' => '2026-06-05',
+            'source' => 'manual',
+            'fetched_at' => '2026-06-05 09:00:00',
+        ]);
+
+        $response = $this->actingAs($this->user)->get('/reports?date_from=2026-06-01&date_to=2026-06-30')->assertOk();
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('rateHistory.0.metal', 'Gold')
+            ->where('rateHistory.0.purity', '24K')
+            ->where('rateHistory.0.points.0.rate', 24000));
+    }
+
+    public function test_rate_history_collapses_multiple_fetches_per_day_to_the_last_one(): void
+    {
+        $g24 = Purity::create(['metal_type_id' => $this->gold->id, 'name' => '24K', 'fineness_percent' => 99.9, 'is_active' => true]);
+
+        DailyRate::create([
+            'metal_type_id' => $this->gold->id,
+            'purity_id' => $g24->id,
+            'rate_per_gram' => 24000,
+            'rate_date' => '2026-06-05',
+            'source' => 'manual',
+            'fetched_at' => '2026-06-05 09:00:00',
+        ]);
+
+        DailyRate::create([
+            'metal_type_id' => $this->gold->id,
+            'purity_id' => $g24->id,
+            'rate_per_gram' => 24500,
+            'rate_date' => '2026-06-05',
+            'source' => 'manual',
+            'fetched_at' => '2026-06-05 15:00:00',
+        ]);
+
+        $response = $this->actingAs($this->user)->get('/reports?date_from=2026-06-01&date_to=2026-06-30')->assertOk();
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('rateHistory.0.points', [['date' => '2026-06-05', 'rate' => 24500]]));
+    }
+
+    public function test_rate_history_respects_the_date_range(): void
+    {
+        $g24 = Purity::create(['metal_type_id' => $this->gold->id, 'name' => '24K', 'fineness_percent' => 99.9, 'is_active' => true]);
+
+        DailyRate::create([
+            'metal_type_id' => $this->gold->id,
+            'purity_id' => $g24->id,
+            'rate_per_gram' => 24000,
+            'rate_date' => '2026-05-01', // outside the range below
+            'source' => 'manual',
+            'fetched_at' => '2026-05-01 09:00:00',
+        ]);
+
+        $response = $this->actingAs($this->user)->get('/reports?date_from=2026-06-01&date_to=2026-06-30')->assertOk();
+
+        $response->assertInertia(fn ($page) => $page->where('rateHistory.0.points', []));
     }
 }

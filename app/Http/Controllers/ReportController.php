@@ -22,6 +22,7 @@ class ReportController extends Controller
             'sales' => $this->reports->salesSummary($from, $to),
             'profit' => $this->reports->profitSummary($from, $to),
             'stock' => $this->reports->stockValuation(),
+            'rateHistory' => $this->reports->rateHistory($from, $to),
         ]);
     }
 }

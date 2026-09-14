@@ -2,7 +2,16 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { BarChart, LineChart } from '@/components/simple-charts';
 import '../../../css/reports.css';
+
+/** Consistent per-metal line/bar color across every chart on this page. */
+const metalColor = (metal: string) => {
+    const key = metal.toLowerCase();
+    if (key === 'gold') return '#d4af37';
+    if (key === 'silver') return '#9ca3af';
+    return '#6366f1';
+};
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Reports', href: '/reports' }];
 
@@ -42,7 +51,15 @@ interface Stock {
     by_metal: MetalRow[];
 }
 
-export default function ReportsIndex({ filters, sales, profit, stock }: { filters: Filters; sales: Sales; profit: Profit; stock: Stock }) {
+interface RateSeries {
+    metal: string;
+    purity: string;
+    points: { date: string; rate: number }[];
+}
+
+export default function ReportsIndex({
+    filters, sales, profit, stock, rateHistory,
+}: { filters: Filters; sales: Sales; profit: Profit; stock: Stock; rateHistory: RateSeries[] }) {
     const [dateFrom, setDateFrom] = useState(filters.date_from);
     const [dateTo, setDateTo] = useState(filters.date_to);
 
@@ -91,6 +108,12 @@ export default function ReportsIndex({ filters, sales, profit, stock }: { filter
                             <div className="rpt-stat-value gold">{fmt(sales.revenue)}</div>
                         </div>
                     </div>
+
+                    {sales.by_day.length > 0 && (
+                        <div style={{ marginBottom: '1.25rem' }}>
+                            <LineChart series={[{ name: 'Revenue', color: '#d4af37', points: sales.by_day.map(d => ({ x: d.date, y: d.revenue })) }]} />
+                        </div>
+                    )}
 
                     <MetalTable
                         rows={sales.by_metal}
@@ -145,6 +168,12 @@ export default function ReportsIndex({ filters, sales, profit, stock }: { filter
                         </div>
                     </div>
 
+                    {profit.by_metal.length > 0 && (
+                        <div style={{ marginBottom: '1.25rem' }}>
+                            <BarChart data={profit.by_metal.map(row => ({ label: row.metal, value: row.profit, color: metalColor(row.metal) }))} />
+                        </div>
+                    )}
+
                     <MetalTable
                         rows={profit.by_metal}
                         columns={[
@@ -183,6 +212,20 @@ export default function ReportsIndex({ filters, sales, profit, stock }: { filter
                             { key: 'weight_grams', label: 'Weight', format: fmtWeight },
                             { key: 'value', label: 'Value', format: fmt },
                         ]}
+                    />
+                </section>
+
+                {/* ── Rate history ─────────────────────────────────── */}
+                <section className="rpt-card">
+                    <h2 className="rpt-card-title">Rate history</h2>
+                    <p className="rpt-card-sub">The purest active purity of each metal, one point per day, over the selected range.</p>
+
+                    <LineChart
+                        series={rateHistory.map(s => ({
+                            name: `${s.metal} (${s.purity})`,
+                            color: metalColor(s.metal),
+                            points: s.points.map(p => ({ x: p.date, y: p.rate })),
+                        }))}
                     />
                 </section>
             </div>
