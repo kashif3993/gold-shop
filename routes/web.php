@@ -39,6 +39,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('rate-management/adjustment', [\App\Http\Controllers\RateManagementController::class, 'saveAdjustment'])->name('rate-management.adjustment.save');
     Route::delete('rate-management/adjustment/{adjustment}', [\App\Http\Controllers\RateManagementController::class, 'deleteAdjustment'])->name('rate-management.adjustment.delete');
 
+    // Reports (sales / profit / stock valuation — server-computed)
+    Route::get('reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+
     // Invoices (read-only — created by the POS module)
     Route::get('invoices', [\App\Http\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/{invoice}/data', [\App\Http\Controllers\InvoiceController::class, 'data'])->name('invoices.data');

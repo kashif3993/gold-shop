@@ -1,0 +1,356 @@
+/* ============================================================================
+   Reports module — self-contained stylesheet. Classes namespaced `rpt-`.
+   Palette: white / black / gold. Red only for a negative profit figure.
+   Responsive to ~240px.
+   ============================================================================ */
+
+:root {
+    --rpt-gold: #d4af37;
+    --rpt-gold-dark: #b5952f;
+    --rpt-gold-soft: #fdf6e3;
+    --rpt-gold-soft-border: #e8d18a;
+    --rpt-gold-text: #7a5c12;
+    --rpt-ink: #1a1a1a;
+    --rpt-line: #e5e7eb;
+    --rpt-line-strong: #d1d5db;
+    --rpt-surface: #ffffff;
+    --rpt-surface-alt: #f9fafb;
+    --rpt-surface-head: #f3f4f6;
+    --rpt-muted: #6b7280;
+    --rpt-muted-2: #9ca3af;
+    --rpt-negative: #b91c1c;
+    --rpt-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --rpt-radius: 12px;
+}
+
+.rpt-page {
+    padding: 2rem;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--rpt-ink);
+}
+
+.rpt-head {
+    margin-bottom: 1.5rem;
+}
+
+.rpt-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    color: #111827;
+}
+
+.rpt-desc {
+    color: var(--rpt-muted);
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* ── filters ─────────────────────────────────────────────────────── */
+
+.rpt-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.9rem;
+    background: var(--rpt-surface);
+    border: 1px solid var(--rpt-line);
+    border-radius: var(--rpt-radius);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.rpt-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.rpt-filter-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rpt-muted);
+}
+
+.rpt-filter-input {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--rpt-line-strong);
+    border-radius: 8px;
+    background: var(--rpt-surface-alt);
+    color: #111827;
+    font-family: inherit;
+}
+
+.rpt-filter-input:focus {
+    outline: none;
+    border-color: var(--rpt-gold);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+}
+
+.rpt-filter-btn {
+    padding: 0.55rem 1.15rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: var(--rpt-gold);
+    color: #111;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.rpt-filter-btn:hover {
+    background: var(--rpt-gold-dark);
+}
+
+.rpt-filter-hint {
+    font-size: 0.78rem;
+    color: var(--rpt-muted);
+}
+
+/* ── cards ───────────────────────────────────────────────────────── */
+
+.rpt-card {
+    background: var(--rpt-surface);
+    border: 1px solid var(--rpt-line);
+    border-radius: var(--rpt-radius);
+    box-shadow: var(--rpt-shadow);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.rpt-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    color: #111827;
+}
+
+.rpt-card-sub {
+    font-size: 0.85rem;
+    color: var(--rpt-muted);
+    margin: 0 0 1.15rem;
+}
+
+/* ── stat grid ───────────────────────────────────────────────────── */
+
+.rpt-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.rpt-stat {
+    background: var(--rpt-surface-alt);
+    border: 1px solid var(--rpt-line);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+}
+
+.rpt-stat-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rpt-muted);
+    margin-bottom: 0.35rem;
+}
+
+.rpt-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--rpt-ink);
+    font-family: monospace;
+}
+
+.rpt-stat-value.gold {
+    color: var(--rpt-gold-dark);
+}
+
+.rpt-stat-value.negative {
+    color: var(--rpt-negative);
+}
+
+/* ── tables ──────────────────────────────────────────────────────── */
+
+.rpt-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--rpt-line);
+    border-radius: 10px;
+}
+
+.rpt-table {
+    width: 100%;
+    min-width: 480px;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.rpt-table th {
+    background: var(--rpt-surface-head);
+    color: #374151;
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--rpt-line);
+    white-space: nowrap;
+}
+
+.rpt-table td {
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--rpt-line);
+    color: var(--rpt-ink);
+}
+
+.rpt-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.rpt-num {
+    font-family: monospace;
+}
+
+.rpt-empty {
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--rpt-muted-2);
+    font-size: 0.9rem;
+    border: 1px dashed var(--rpt-line-strong);
+    border-radius: 10px;
+}
+
+/* ============================================================================
+   Dark mode
+   ============================================================================ */
+
+.dark .rpt-page {
+    color: #e5e7eb;
+}
+
+.dark .rpt-title,
+.dark .rpt-card-title {
+    color: #f9fafb;
+}
+
+.dark .rpt-desc,
+.dark .rpt-card-sub,
+.dark .rpt-filter-hint,
+.dark .rpt-muted {
+    color: #9ca3af;
+}
+
+.dark .rpt-filters,
+.dark .rpt-card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .rpt-stat {
+    background: #111827;
+    border-color: #374151;
+}
+
+.dark .rpt-stat-value {
+    color: #f9fafb;
+}
+
+.dark .rpt-stat-value.gold {
+    color: var(--rpt-gold);
+}
+
+.dark .rpt-stat-value.negative {
+    color: #f87171;
+}
+
+.dark .rpt-table-wrap {
+    border-color: #374151;
+}
+
+.dark .rpt-table th {
+    background: #111827;
+    color: #9ca3af;
+    border-color: #374151;
+}
+
+.dark .rpt-table td {
+    color: #e5e7eb;
+    border-color: #374151;
+}
+
+.dark .rpt-filter-input {
+    background: #111827;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+.dark .rpt-filter-input:focus {
+    background: #1f2937;
+    border-color: var(--rpt-gold);
+}
+
+.dark .rpt-empty {
+    border-color: #4b5563;
+    color: #6b7280;
+}
+
+/* ============================================================================
+   Responsive
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .rpt-page {
+        padding: 1rem;
+        max-width: 100vw;
+    }
+
+    .rpt-title {
+        font-size: 1.5rem;
+    }
+
+    .rpt-card {
+        padding: 1.15rem;
+    }
+
+    .rpt-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .rpt-filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .rpt-table {
+        min-width: 420px;
+    }
+}
+
+@media (max-width: 430px) {
+    .rpt-page {
+        padding: 0.75rem;
+    }
+
+    .rpt-title {
+        font-size: 1.3rem;
+    }
+
+    .rpt-card {
+        padding: 0.85rem;
+    }
+
+    .rpt-stat-value {
+        font-size: 1.2rem;
+    }
+}
