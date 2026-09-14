@@ -172,7 +172,8 @@ class RateManagementTest extends TestCase
                 ->has('rates', 3)
                 ->has('metals', 2)
                 ->has('shopDefault')
-                ->has('fetchLog'));
+                ->has('fetchLog')
+                ->where('autoRefreshMinutes', 15));
     }
 
     public function test_refresh_endpoint_runs_a_fetch(): void
@@ -236,6 +237,71 @@ class RateManagementTest extends TestCase
     public function test_ticker_endpoint_requires_auth(): void
     {
         $this->getJson('/api/v1/rates/current')->assertUnauthorized();
+    }
+
+    public function test_is_due_for_auto_refresh_when_no_current_rate_exists(): void
+    {
+        $this->assertTrue(app(GoldRateService::class)->isDueForAutoRefresh());
+    }
+
+    public function test_is_due_for_auto_refresh_when_current_rate_is_fresh(): void
+    {
+        app(GoldRateService::class)->storeRate($this->gold->id, $this->g22->id, 24000, 'manual', $this->user->id);
+
+        $this->assertFalse(app(GoldRateService::class)->isDueForAutoRefresh());
+    }
+
+    public function test_is_due_for_auto_refresh_when_current_rate_is_older_than_the_window(): void
+    {
+        $row = app(GoldRateService::class)->storeRate($this->gold->id, $this->g22->id, 24000, 'manual', $this->user->id);
+        $row->fresh()->forceFill(['fetched_at' => now()->subMinutes(20)])->save();
+
+        $this->assertTrue(app(GoldRateService::class)->isDueForAutoRefresh());
+    }
+
+    public function test_auto_refresh_if_due_fetches_when_stale(): void
+    {
+        $row = app(GoldRateService::class)->storeRate($this->gold->id, $this->g22->id, 24000, 'manual', $this->user->id);
+        $row->fresh()->forceFill(['fetched_at' => now()->subMinutes(20)])->save();
+
+        Http::fake([
+            '*/price/XAU' => Http::response(['price' => 2700.0]),
+            '*/price/XAG' => Http::response(['price' => 32.0]),
+        ]);
+
+        app(GoldRateService::class)->autoRefreshIfDue();
+
+        $this->assertEquals(1, RateFetchLog::count());
+    }
+
+    public function test_auto_refresh_if_due_does_nothing_when_fresh(): void
+    {
+        app(GoldRateService::class)->storeRate($this->gold->id, $this->g22->id, 24000, 'manual', $this->user->id);
+
+        Http::fake([
+            '*/price/XAU' => Http::response(['price' => 2700.0]),
+            '*/price/XAG' => Http::response(['price' => 32.0]),
+        ]);
+
+        app(GoldRateService::class)->autoRefreshIfDue();
+
+        Http::assertNothingSent();
+        $this->assertEquals(0, RateFetchLog::count());
+    }
+
+    public function test_ticker_endpoint_triggers_auto_refresh_when_due(): void
+    {
+        $row = app(GoldRateService::class)->storeRate($this->gold->id, $this->g22->id, 24000, 'manual', $this->user->id);
+        $row->fresh()->forceFill(['fetched_at' => now()->subMinutes(20)])->save();
+
+        Http::fake([
+            '*/price/XAU' => Http::response(['price' => 2700.0]),
+            '*/price/XAG' => Http::response(['price' => 32.0]),
+        ]);
+
+        $this->actingAs($this->user)->getJson('/api/v1/rates/current')->assertOk();
+
+        $this->assertEquals(1, RateFetchLog::count());
     }
 
     public function test_usd_pkr_setting_overrides_the_config_default(): void

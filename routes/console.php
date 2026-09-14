@@ -9,7 +9,10 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Pull the spot rate through the day; the shop can still "Refresh" manually.
+// Only fires while a real server cron runs `php artisan schedule:run` every
+// minute — GoldRateService::autoRefreshIfDue() (triggered by the rate ticker
+// on any open screen) covers the same 15-minute cadence without needing one.
 Schedule::command('rates:fetch')
-    ->hourly()
+    ->everyFifteenMinutes()
     ->between('8:00', '21:00')
     ->withoutOverlapping();

@@ -15,6 +15,11 @@ class RateController extends Controller
     /** Current effective rates for the ticker — per gram and per tola. */
     public function current(GoldRateService $rates): JsonResponse
     {
+        // Piggyback the auto-refresh check on this endpoint: it's polled every
+        // couple of minutes from whatever screen is open, so the live price
+        // stays current without needing a working server cron.
+        $rates->autoRefreshIfDue();
+
         $list = $rates->currentRates()
             ->map(fn ($r) => [
                 'metal' => $r->metalType->name ?? '',

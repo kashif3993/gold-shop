@@ -56,6 +56,11 @@
     margin: 0;
 }
 
+.rm-auto-note {
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+}
+
 .rm-ticker {
     margin-bottom: 1.25rem;
 }

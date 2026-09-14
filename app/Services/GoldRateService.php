@@ -9,6 +9,7 @@ use App\Models\RateFetchLog;
 use App\Models\Setting;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -55,6 +56,43 @@ class GoldRateService
     public function staleAfterHours(): int
     {
         return (int) config('services.gold_api.stale_after_hours', 12);
+    }
+
+    public function autoRefreshMinutes(): int
+    {
+        return (int) config('services.gold_api.auto_refresh_minutes', 15);
+    }
+
+    /** True once the newest current rate is older than the auto-refresh window. */
+    public function isDueForAutoRefresh(): bool
+    {
+        $newest = DailyRate::where('is_current', true)->max('fetched_at');
+        if (! $newest) {
+            return true;
+        }
+
+        return Carbon::parse($newest)->lt(now()->subMinutes($this->autoRefreshMinutes()));
+    }
+
+    /**
+     * Opportunistically re-fetch from the API if the rate is due for a refresh.
+     * Meant to be called cheaply from a frequently-polled endpoint (the rate
+     * ticker) so the shop gets a live-feeling price during business hours even
+     * without a working server cron. A non-blocking lock keeps two screens
+     * polling at the same moment from both triggering the fetch.
+     */
+    public function autoRefreshIfDue(): void
+    {
+        if (! $this->isDueForAutoRefresh()) {
+            return;
+        }
+
+        Cache::lock('rates:auto-refresh', 30)->get(function () {
+            // Re-check inside the lock — another request may have just refreshed.
+            if ($this->isDueForAutoRefresh()) {
+                $this->refreshFromApi();
+            }
+        });
     }
 
     /** The USD→PKR rate the conversion uses: the stored setting, else the config default. */

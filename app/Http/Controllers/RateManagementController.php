@@ -70,6 +70,7 @@ class RateManagementController extends Controller
             'fetchLog' => RateFetchLog::latest('attempted_at')->limit(15)->get(),
             'feedStale' => $this->rates->isFeedStale(),
             'staleAfterHours' => $this->rates->staleAfterHours(),
+            'autoRefreshMinutes' => $this->rates->autoRefreshMinutes(),
             'fx' => $this->rates->fxState(),
         ]);
     }

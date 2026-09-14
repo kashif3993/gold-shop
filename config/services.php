@@ -52,6 +52,11 @@ return [
         'fx_url' => env('FX_RATE_URL', 'https://open.er-api.com/v6/latest/USD'),
         'stale_after_hours' => (int) env('RATE_STALE_HOURS', 12),
         'timeout' => (int) env('GOLD_API_TIMEOUT', 8),
+        // How often the live rate is allowed to auto-refresh from the API.
+        // Triggered opportunistically whenever the rate ticker is polled from
+        // any open screen — so it self-refreshes during business hours even
+        // without a working server cron.
+        'auto_refresh_minutes' => (int) env('RATE_AUTO_REFRESH_MINUTES', 15),
     ],
 
 ];

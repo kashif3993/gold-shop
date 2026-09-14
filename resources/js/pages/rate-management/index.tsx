@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { RefreshCw, AlertTriangle, Trash2 } from 'lucide-react';
@@ -28,7 +28,7 @@ const adjLabel = (type?: string | null, value?: number | null) => {
     return <span className={cls}>{type === 'percent' ? `${sign}${value}%` : `${sign}${fmt(value)}`}</span>;
 };
 
-export default function RateManagement({ rates, metals, shopDefault, overrides, fetchLog, feedStale, staleAfterHours, fx }: any) {
+export default function RateManagement({ rates, metals, shopDefault, overrides, fetchLog, feedStale, staleAfterHours, fx, autoRefreshMinutes }: any) {
     const { flash } = usePage().props as any;
 
     const refresh = useForm({});
@@ -53,6 +53,24 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
         () => metals.find((m: any) => String(m.id) === String(ovr.data.metal_type_id))?.purities ?? [],
         [metals, ovr.data.metal_type_id],
     );
+
+    // The rate ticker (mounted below) polls the API every 2 minutes and
+    // opportunistically triggers a real fetch once the rate is due (every
+    // ~15 min — see GoldRateService::autoRefreshIfDue). This just re-reads
+    // that fresh DB state into the page every minute so the table and fetch
+    // log below update on their own, without a manual "Refresh now".
+    const reloading = useRef(false);
+    useEffect(() => {
+        const id = window.setInterval(() => {
+            if (reloading.current) return;
+            reloading.current = true;
+            router.reload({
+                only: ['rates', 'fetchLog', 'feedStale'],
+                onFinish: () => { reloading.current = false; },
+            });
+        }, 60_000);
+        return () => window.clearInterval(id);
+    }, []);
 
     const submitRefresh = () => refresh.post('/rate-management/refresh', { preserveScroll: true });
     const submitFx = (e: React.FormEvent) => {
@@ -96,6 +114,7 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                     <div>
                         <h1 className="rm-title">Rate Management</h1>
                         <p className="rm-desc">Today's gold &amp; silver rate — fetched, adjusted for your counter margin, and used across POS and buy-back.</p>
+                        <p className="rm-desc rm-auto-note">Auto-refreshes from the API roughly every {autoRefreshMinutes} minutes while this or any other screen is open — no need to click Refresh.</p>
                     </div>
                     <button type="button" className="rm-btn rm-btn-gold" onClick={submitRefresh} disabled={refresh.processing}>
                         <RefreshCw size={15} /> {refresh.processing ? 'Fetching…' : 'Refresh now'}
