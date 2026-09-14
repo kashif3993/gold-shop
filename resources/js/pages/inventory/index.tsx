@@ -355,206 +355,106 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
 
                 {/* Quick View Item Modal */}
                 {viewItem && (
-                    <div style={{
-                        position: 'fixed',
-                        inset: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-                        backdropFilter: 'blur(4px)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 9999,
-                        padding: '1rem'
-                    }}>
-                        <div style={{
-                            backgroundColor: '#ffffff',
-                            borderRadius: '12px',
-                            maxWidth: '650px',
-                            width: '100%',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
-                            overflow: 'hidden',
-                            animation: 'fadeIn 0.2s ease-out'
-                        }}>
+                    <div className="item-modal-overlay" onMouseDown={() => setViewItem(null)}>
+                        <div className="item-modal" onMouseDown={e => e.stopPropagation()}>
                             {/* Modal Header */}
-                            <div style={{
-                                padding: '1.25rem 1.5rem',
-                                borderBottom: '1px solid #e5e7eb',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                backgroundColor: '#f9fafb'
-                            }}>
+                            <div className="item-modal-head">
                                 <div>
-                                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#111827' }}>
-                                        {viewItem.item_code}
-                                    </h3>
-                                    <span style={{ textTransform: 'capitalize', fontSize: '0.85rem', color: '#6b7280' }}>
+                                    <h3 className="item-modal-code">{viewItem.item_code}</h3>
+                                    <span className="item-modal-meta">
                                         {viewItem.item_type} • {viewItem.metal_type?.name} ({viewItem.purity?.name})
                                     </span>
                                 </div>
-                                <button
-                                    onClick={() => setViewItem(null)}
-                                    style={{
-                                        border: 'none',
-                                        background: 'transparent',
-                                        cursor: 'pointer',
-                                        padding: '0.25rem',
-                                        color: '#6b7280',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        borderRadius: '4px'
-                                    }}
-                                >
+                                <button type="button" className="item-modal-close" onClick={() => setViewItem(null)} aria-label="Close">
                                     <X size={20} />
                                 </button>
                             </div>
 
                             {/* Modal Body */}
-                            <div style={{ padding: '1.5rem', maxHeight: '70vh', overflowY: 'auto' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                                    <div style={{ padding: '0.75rem', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
-                                        <div style={{ fontSize: '0.75rem', color: '#6b7280', textTransform: 'uppercase', fontWeight: 600 }}>Gross Weight</div>
-                                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', marginTop: '0.25rem' }}>{formatNumber(viewItem.gross_weight_grams, 3)} g</div>
+                            <div className="item-modal-body">
+                                <div className="item-modal-stats">
+                                    <div className="item-modal-stat">
+                                        <div className="item-modal-stat-label">Gross Weight</div>
+                                        <div className="item-modal-stat-value">{formatNumber(viewItem.gross_weight_grams, 3)} g</div>
                                     </div>
-                                    <div style={{ padding: '0.75rem', backgroundColor: '#fef2f2', borderRadius: '8px' }}>
-                                        <div style={{ fontSize: '0.75rem', color: '#ef4444', textTransform: 'uppercase', fontWeight: 600 }}>Stone Weight</div>
-                                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#991b1b', marginTop: '0.25rem' }}>{formatNumber(viewItem.stone_weight_grams, 3)} g</div>
+                                    <div className="item-modal-stat negative">
+                                        <div className="item-modal-stat-label">Stone Weight</div>
+                                        <div className="item-modal-stat-value">{formatNumber(viewItem.stone_weight_grams, 3)} g</div>
                                     </div>
-                                    <div style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: '8px' }}>
-                                        <div style={{ fontSize: '0.75rem', color: '#f59e0b', textTransform: 'uppercase', fontWeight: 600 }}>Cutting Loss</div>
-                                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#92400e', marginTop: '0.25rem' }}>{formatNumber(viewItem.cutting_loss_grams, 3)} g</div>
+                                    <div className="item-modal-stat negative">
+                                        <div className="item-modal-stat-label">Cutting Loss</div>
+                                        <div className="item-modal-stat-value">{formatNumber(viewItem.cutting_loss_grams, 3)} g</div>
                                     </div>
-                                    <div style={{ padding: '0.75rem', backgroundColor: '#ecfdf5', borderRadius: '8px' }}>
-                                        <div style={{ fontSize: '0.75rem', color: '#10b981', textTransform: 'uppercase', fontWeight: 600 }}>Net Weight</div>
-                                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#065f46', marginTop: '0.25rem' }}>{formatNumber(viewItem.net_weight_grams, 3)} g</div>
+                                    <div className="item-modal-stat gold">
+                                        <div className="item-modal-stat-label">Net Weight</div>
+                                        <div className="item-modal-stat-value">{formatNumber(viewItem.net_weight_grams, 3)} g</div>
                                     </div>
                                 </div>
 
                                 {/* Net Weight breakdown in all units */}
-                                <div style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>
-                                        Net Weight in Traditional Units
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', fontSize: '0.85rem', color: '#4b5563' }}>
-                                        <div>Tola: <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'tola'), 3)}</strong></div>
-                                        <div>Masha: <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'masha'), 3)}</strong></div>
-                                        <div>Ratti: <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'ratti'), 3)}</strong></div>
-                                        <div>Point: <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'point'), 3)}</strong></div>
+                                <div className="item-modal-trad">
+                                    <div className="item-modal-trad-title">Net Weight in Traditional Units</div>
+                                    <div className="item-modal-trad-grid">
+                                        <div>Tola <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'tola'), 3)}</strong></div>
+                                        <div>Masha <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'masha'), 3)}</strong></div>
+                                        <div>Ratti <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'ratti'), 3)}</strong></div>
+                                        <div>Point <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'point'), 3)}</strong></div>
                                     </div>
                                 </div>
 
                                 {/* Financial Details */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                                <div className="item-modal-fin">
                                     <div>
-                                        <span style={{ color: '#6b7280' }}>Purchase Rate: </span>
+                                        <span className="item-modal-fin-label">Purchase Rate</span>
                                         <strong>Rs {formatNumber(viewItem.purchase_rate_per_gram, 2)} / g</strong>
                                     </div>
                                     <div>
-                                        <span style={{ color: '#6b7280' }}>Labour Cost: </span>
+                                        <span className="item-modal-fin-label">Labour Cost</span>
                                         <strong>Rs {formatNumber(viewItem.labour_cost, 2)}</strong>
                                     </div>
                                     <div>
-                                        <span style={{ color: '#6b7280' }}>Polish Cost: </span>
+                                        <span className="item-modal-fin-label">Polish Cost</span>
                                         <strong>Rs {formatNumber(viewItem.polish_cost, 2)}</strong>
                                     </div>
                                     <div>
-                                        <span style={{ color: '#6b7280' }}>Total Cost: </span>
-                                        <strong style={{ color: '#2563eb', fontSize: '1.05rem' }}>Rs {formatNumber(viewItem.purchase_price, 2)}</strong>
+                                        <span className="item-modal-fin-label">Total Cost</span>
+                                        <strong className="item-modal-total">Rs {formatNumber(viewItem.purchase_price, 2)}</strong>
                                     </div>
                                 </div>
 
-                                <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.85rem' }}>
+                                <div className="item-modal-extra">
                                     <div>
-                                        <span style={{ color: '#6b7280' }}>Source Party: </span>
+                                        <span className="item-modal-fin-label">Source Party</span>
                                         <strong>{viewItem.source_party?.name || 'N/A'}</strong>
                                     </div>
                                     <div>
-                                        <span style={{ color: '#6b7280' }}>Date Received: </span>
+                                        <span className="item-modal-fin-label">Date Received</span>
                                         <strong>{new Date(viewItem.date_received).toLocaleDateString()}</strong>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Modal Footer */}
-                            <div style={{
-                                padding: '1rem 1.5rem',
-                                borderTop: '1px solid #e5e7eb',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                backgroundColor: '#f9fafb'
-                            }}>
+                            <div className="item-modal-footer">
                                 <button
                                     type="button"
+                                    className="item-modal-btn item-modal-btn-danger"
                                     onClick={() => {
                                         const itemToDel = viewItem;
                                         setViewItem(null);
                                         handleDelete(itemToDel);
                                     }}
-                                    style={{
-                                        border: 'none',
-                                        background: '#fee2e2',
-                                        color: '#b91c1c',
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '6px',
-                                        fontSize: '0.875rem',
-                                        cursor: 'pointer',
-                                        fontWeight: 600,
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.35rem'
-                                    }}
                                 >
                                     <Trash2 size={15} /> Delete Item
                                 </button>
-                                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                    <Link
-                                        href={`/items/${viewItem.id}/edit`}
-                                        style={{
-                                            backgroundColor: '#4f46e5',
-                                            color: '#ffffff',
-                                            padding: '0.5rem 1.25rem',
-                                            borderRadius: '6px',
-                                            fontSize: '0.875rem',
-                                            textDecoration: 'none',
-                                            fontWeight: 600,
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '0.35rem'
-                                        }}
-                                    >
+                                <div className="item-modal-footer-actions">
+                                    <Link href={`/items/${viewItem.id}/edit`} className="item-modal-btn item-modal-btn-gold">
                                         <Edit size={15} /> Edit Item
                                     </Link>
-                                    <Link
-                                        href={`/items/${viewItem.id}/tag`}
-                                        style={{
-                                            backgroundColor: '#6366f1',
-                                            color: '#ffffff',
-                                            padding: '0.5rem 1.25rem',
-                                            borderRadius: '6px',
-                                            fontSize: '0.875rem',
-                                            textDecoration: 'none',
-                                            fontWeight: 600,
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '0.35rem'
-                                        }}
-                                    >
+                                    <Link href={`/items/${viewItem.id}/tag`} className="item-modal-btn item-modal-btn-ghost-gold">
                                         <Printer size={15} /> Print Tag
                                     </Link>
-                                    <button
-                                        type="button"
-                                        onClick={() => setViewItem(null)}
-                                        style={{
-                                            border: '1px solid #d1d5db',
-                                            background: '#ffffff',
-                                            color: '#374151',
-                                            padding: '0.5rem 1rem',
-                                            borderRadius: '6px',
-                                            fontSize: '0.875rem',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
+                                    <button type="button" className="item-modal-btn item-modal-btn-ghost" onClick={() => setViewItem(null)}>
                                         Close
                                     </button>
                                 </div>
