@@ -3,8 +3,88 @@ import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Eye, Edit, Trash2, X, Printer } from 'lucide-react';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import '../../../css/inventory.css';
 import { formatNumber, fromGrams } from '@/utils/weight';
+
+/** Sentinel for Radix's "no value selected" — it can't accept an empty string. */
+const ALL = '__all__';
+
+interface SelectOption {
+    value: string;
+    label: string;
+}
+
+interface SelectOptionGroup {
+    label: string;
+    options: SelectOption[];
+}
+
+/**
+ * Filter dropdown built on Radix's popover-based Select instead of a native
+ * <select> — a native select's option list is rendered by the OS, not the
+ * page, so it ignores our sizing/theme and can render huge at some Windows
+ * display-scaling settings. This one is a real DOM popup we control.
+ */
+function FilterSelect({
+    value, onChange, placeholder, options, groups,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder: string;
+    options?: SelectOption[];
+    groups?: SelectOptionGroup[];
+}) {
+    return (
+        <Select value={value || ALL} onValueChange={v => onChange(v === ALL ? '' : v)}>
+            <SelectTrigger className="inv-select-trigger">
+                <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent className="inv-select-content">
+                <SelectItem className="inv-select-item" value={ALL}>{placeholder}</SelectItem>
+                {options?.map(o => (
+                    <SelectItem key={o.value} className="inv-select-item" value={o.value}>{o.label}</SelectItem>
+                ))}
+                {groups?.map(g => (
+                    <SelectGroup key={g.label}>
+                        <SelectLabel className="inv-select-group-label">{g.label}</SelectLabel>
+                        {g.options.map(o => (
+                            <SelectItem key={o.value} className="inv-select-item" value={o.value}>{o.label}</SelectItem>
+                        ))}
+                    </SelectGroup>
+                ))}
+            </SelectContent>
+        </Select>
+    );
+}
+
+const ITEM_TYPE_GROUPS: SelectOptionGroup[] = [
+    {
+        label: 'Jewelry',
+        options: [
+            { value: 'ring', label: 'Ring' },
+            { value: 'bangle', label: 'Bangle' },
+            { value: 'necklace', label: 'Necklace' },
+            { value: 'earring', label: 'Earring' },
+            { value: 'bracelet', label: 'Bracelet' },
+            { value: 'chain', label: 'Chain' },
+            { value: 'pendant', label: 'Pendant' },
+            { value: 'locket', label: 'Locket' },
+            { value: 'nose_pin', label: 'Nose Pin' },
+            { value: 'tops', label: 'Tops' },
+            { value: 'other', label: 'Other Jewelry' },
+        ],
+    },
+    {
+        label: 'Bullion & Raw',
+        options: [
+            { value: 'biscuit', label: 'Biscuit / Bar' },
+            { value: 'nugget', label: 'Nugget' },
+            { value: 'coin', label: 'Coin' },
+            { value: 'piece', label: 'Raw Gold / Lagdi' },
+        ],
+    },
+];
 
 const TOLA_GRAMS = 11.6638038;
 const gToTola = (g: number) => g / TOLA_GRAMS;
@@ -107,58 +187,42 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                 <form className="filters-card" onSubmit={handleFilter}>
                     <div className="filter-group">
                         <label className="filter-label">Metal</label>
-                        <select className="filter-input" value={metalFilter} onChange={e => setMetalFilter(e.target.value)}>
-                            <option value="">All Metals</option>
-                            {metals.map((m: any) => (
-                                <option key={m.id} value={m.id}>{m.name}</option>
-                            ))}
-                        </select>
+                        <FilterSelect
+                            value={metalFilter}
+                            onChange={setMetalFilter}
+                            placeholder="All Metals"
+                            options={metals.map((m: any) => ({ value: String(m.id), label: m.name }))}
+                        />
                     </div>
-                    
+
                     <div className="filter-group">
                         <label className="filter-label">Purity</label>
-                        <select className="filter-input" value={purityFilter} onChange={e => setPurityFilter(e.target.value)}>
-                            <option value="">All Purities</option>
-                            {purities.map((p: any) => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                            ))}
-                        </select>
+                        <FilterSelect
+                            value={purityFilter}
+                            onChange={setPurityFilter}
+                            placeholder="All Purities"
+                            options={purities.map((p: any) => ({ value: String(p.id), label: p.name }))}
+                        />
                     </div>
 
                     <div className="filter-group">
                         <label className="filter-label">Item Type</label>
-                        <select className="filter-input" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
-                            <option value="">All Types</option>
-                            <optgroup label="Jewelry">
-                                <option value="ring">Ring</option>
-                                <option value="bangle">Bangle</option>
-                                <option value="necklace">Necklace</option>
-                                <option value="earring">Earring</option>
-                                <option value="bracelet">Bracelet</option>
-                                <option value="chain">Chain</option>
-                                <option value="pendant">Pendant</option>
-                                <option value="locket">Locket</option>
-                                <option value="nose_pin">Nose Pin</option>
-                                <option value="tops">Tops</option>
-                                <option value="other">Other Jewelry</option>
-                            </optgroup>
-                            <optgroup label="Bullion & Raw">
-                                <option value="biscuit">Biscuit / Bar</option>
-                                <option value="nugget">Nugget</option>
-                                <option value="coin">Coin</option>
-                                <option value="piece">Raw Gold / Lagdi</option>
-                            </optgroup>
-                        </select>
+                        <FilterSelect
+                            value={typeFilter}
+                            onChange={setTypeFilter}
+                            placeholder="All Types"
+                            groups={ITEM_TYPE_GROUPS}
+                        />
                     </div>
 
                     <div className="filter-group">
                         <label className="filter-label">Source Party</label>
-                        <select className="filter-input" value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}>
-                            <option value="">All Sources</option>
-                            {parties.map((p: any) => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                            ))}
-                        </select>
+                        <FilterSelect
+                            value={sourceFilter}
+                            onChange={setSourceFilter}
+                            placeholder="All Sources"
+                            options={parties.map((p: any) => ({ value: String(p.id), label: p.name }))}
+                        />
                     </div>
 
                     <div className="filter-group">

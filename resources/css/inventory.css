@@ -157,6 +157,60 @@
     height: 42px;
 }
 
+/* ── custom Select (replaces native <select> so the popup is ours to size,
+   not the OS's — a native select's list can render huge at some Windows
+   display-scaling settings and ignores our theme entirely) ──────────── */
+
+.filter-group .inv-select-trigger.inv-select-trigger {
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    color: #111827;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    height: auto;
+    width: 100%;
+}
+
+.filter-group .inv-select-trigger.inv-select-trigger:focus {
+    outline: none;
+    border-color: #d4af37;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+}
+
+.inv-select-content.inv-select-content {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    max-height: min(320px, 60vh);
+    overflow-y: auto;
+    z-index: 60;
+}
+
+.inv-select-item.inv-select-item {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem 0.5rem 1.9rem;
+    border-radius: 6px;
+    color: #111827;
+    cursor: pointer;
+}
+
+.inv-select-item.inv-select-item[data-highlighted] {
+    background: #fdf6e3;
+    color: #7a5c12;
+}
+
+.inv-select-group-label.inv-select-group-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #9ca3af;
+    padding: 0.5rem 0.75rem 0.3rem 1.9rem;
+}
+
 .filter-btn:hover {
     background: #b5952f;
 }
@@ -428,6 +482,10 @@
         max-width: calc(100vw - 2rem);
     }
 
+    .inv-select-content.inv-select-content {
+        max-height: min(260px, 50vh);
+    }
+
     .inventory-title {
         font-size: 1.5rem;
     }
@@ -482,6 +540,35 @@
 .dark .filter-input:focus {
     background: #1f2937;
     border-color: #d4af37;
+}
+
+.dark .filter-group .inv-select-trigger.inv-select-trigger {
+    background: #111827;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+.dark .filter-group .inv-select-trigger.inv-select-trigger:focus {
+    background: #1f2937;
+    border-color: #d4af37;
+}
+
+.dark .inv-select-content.inv-select-content {
+    background: #1f2937;
+    border-color: #4b5563;
+}
+
+.dark .inv-select-item.inv-select-item {
+    color: #f9fafb;
+}
+
+.dark .inv-select-item.inv-select-item[data-highlighted] {
+    background: rgba(212, 175, 55, 0.14);
+    color: #f0d489;
+}
+
+.dark .inv-select-group-label.inv-select-group-label {
+    color: #6b7280;
 }
 
 .dark .filter-clear {
