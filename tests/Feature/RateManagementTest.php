@@ -387,4 +387,27 @@ class RateManagementTest extends TestCase
         $this->artisan('rates:fetch')->assertExitCode(0);
         $this->assertEquals(1, RateFetchLog::where('success', true)->count());
     }
+
+    public function test_scheduled_fetch_job_stores_the_rate(): void
+    {
+        Http::fake([
+            '*/price/XAU' => Http::response(['price' => 2700.0]),
+            '*/price/XAG' => Http::response(['price' => 32.0]),
+        ]);
+
+        app(\App\Jobs\FetchGoldRatesJob::class)->handle(app(GoldRateService::class));
+
+        $this->assertEquals(1, RateFetchLog::where('success', true)->count());
+    }
+
+    public function test_scheduled_fetch_job_logs_a_warning_on_failure(): void
+    {
+        Http::fake(['*' => Http::response('', 503)]);
+
+        \Illuminate\Support\Facades\Log::shouldReceive('warning')->once();
+
+        app(\App\Jobs\FetchGoldRatesJob::class)->handle(app(GoldRateService::class));
+
+        $this->assertEquals(1, RateFetchLog::where('success', false)->count());
+    }
 }
