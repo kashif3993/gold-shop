@@ -7,12 +7,15 @@ use App\Models\Item;
 use App\Models\MetalType;
 use App\Models\Party;
 use App\Models\Purity;
+use App\Services\AuditLogger;
 use App\Services\ItemTagService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ItemController extends Controller
 {
+    public function __construct(private AuditLogger $audit) {}
+
     /** Current effective rate per purity_id, for the "use today's rate" helper. */
     private function currentRates()
     {
@@ -123,6 +126,7 @@ class ItemController extends Controller
             'source_party_id'        => 'nullable|exists:parties,id',
             'date_received'          => 'required|date',
             'status'                 => 'required|in:in_stock,sold,bought_back',
+            'edit_reason'            => 'nullable|string|max:255',
         ], [
             'gross_weight_grams.min' => 'Gross weight must be greater than 0.',
         ]);
@@ -135,10 +139,27 @@ class ItemController extends Controller
             return back()->withErrors(['purity_id' => 'Ring items cannot use 24K purity.'])->withInput();
         }
 
+        $reason = trim((string) ($validated['edit_reason'] ?? '')) ?: 'Item details updated via Edit screen';
+        unset($validated['edit_reason']);
+
+        // Snapshot the protected fields before they change, for the audit trail below.
+        $original = $item->only(['purchase_rate_per_gram', 'purchase_price', 'gross_weight_grams', 'stone_weight_grams', 'cutting_loss_grams']);
+
         // net_weight_grams is a generated column — omit from explicit update
         unset($validated['net_weight_grams']);
 
         $item->update($validated);
+
+        $auditedFields = [
+            'purchase_rate_per_gram' => 'item_price',
+            'purchase_price' => 'item_price',
+            'gross_weight_grams' => 'transaction_weight',
+            'stone_weight_grams' => 'transaction_weight',
+            'cutting_loss_grams' => 'transaction_weight',
+        ];
+        foreach ($auditedFields as $field => $entityType) {
+            $this->audit->logIfChanged($entityType, $item->id, $field, $original[$field], $item->$field, $reason);
+        }
 
         // Regenerate QR payload if item details changed
         $item->qr_payload = ItemTagService::generateQrPayload($item->fresh(['metalType', 'purity']));

@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
 use App\Models\MetalType;
 use App\Models\Purity;
 use App\Models\RateAdjustmentSetting;
 use App\Models\RateFetchLog;
 use App\Models\Setting;
+use App\Services\AuditLogger;
 use App\Services\GoldRateService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class RateManagementController extends Controller
 {
-    public function __construct(private GoldRateService $rates) {}
+    public function __construct(private GoldRateService $rates, private AuditLogger $audit) {}
 
     public function index()
     {
@@ -88,15 +88,7 @@ class RateManagementController extends Controller
         Setting::put('usd_pkr', $data['usd_pkr'], auth()->id());
         Setting::put('usd_pkr_auto', (bool) ($data['auto'] ?? false), auth()->id());
 
-        AuditLog::create([
-            'entity_type' => 'rate',
-            'entity_id' => 0,
-            'field_name' => 'usd_pkr',
-            'old_value' => (string) $old,
-            'new_value' => $data['usd_pkr'] . (($data['auto'] ?? false) ? ' (auto)' : ''),
-            'reason' => 'USD→PKR rate updated',
-            'changed_by_user_id' => auth()->id(),
-        ]);
+        $this->audit->log('rate', 0, 'usd_pkr', (string) $old, $data['usd_pkr'] . (($data['auto'] ?? false) ? ' (auto)' : ''), 'USD→PKR rate updated');
 
         // Re-fetch so the change takes effect on the current rates immediately.
         $log = $this->rates->refreshFromApi(auth()->id());
@@ -138,15 +130,7 @@ class RateManagementController extends Controller
 
         $count = $this->rates->applyManual($bases, auth()->id());
 
-        AuditLog::create([
-            'entity_type' => 'rate',
-            'entity_id' => 0,
-            'field_name' => 'manual_spot',
-            'old_value' => null,
-            'new_value' => collect($bases)->map(fn ($v, $k) => "{$k} {$v}/g")->implode(', '),
-            'reason' => 'Manual rate entry',
-            'changed_by_user_id' => auth()->id(),
-        ]);
+        $this->audit->log('rate', 0, 'manual_spot', null, collect($bases)->map(fn ($v, $k) => "{$k} {$v}/g")->implode(', '), 'Manual rate entry');
 
         return back()->with('success', "Updated {$count} rates from the manual entry.");
     }
@@ -185,15 +169,7 @@ class RateManagementController extends Controller
 
         $this->rates->reapplyAdjustments();
 
-        AuditLog::create([
-            'entity_type' => 'rate',
-            'entity_id' => $setting->id,
-            'field_name' => "adjustment.{$data['scope']}",
-            'old_value' => $oldLabel,
-            'new_value' => "{$data['adjustment_type']} {$data['adjustment_value']}",
-            'reason' => $data['reason'] ?: 'Rate adjustment updated',
-            'changed_by_user_id' => auth()->id(),
-        ]);
+        $this->audit->log('rate', $setting->id, "adjustment.{$data['scope']}", $oldLabel, "{$data['adjustment_type']} {$data['adjustment_value']}", $data['reason'] ?: 'Rate adjustment updated');
 
         return back()->with('success', 'Rate adjustment saved and applied to current rates.');
     }
@@ -204,15 +180,7 @@ class RateManagementController extends Controller
             return back()->with('error', 'The shop default cannot be deleted — set it to 0 instead.');
         }
 
-        AuditLog::create([
-            'entity_type' => 'rate',
-            'entity_id' => $adjustment->id,
-            'field_name' => 'adjustment.removed',
-            'old_value' => "{$adjustment->adjustment_type} {$adjustment->adjustment_value}",
-            'new_value' => 'removed',
-            'reason' => 'Rate adjustment override removed',
-            'changed_by_user_id' => auth()->id(),
-        ]);
+        $this->audit->log('rate', $adjustment->id, 'adjustment.removed', "{$adjustment->adjustment_type} {$adjustment->adjustment_value}", 'removed', 'Rate adjustment override removed');
 
         $adjustment->delete();
         $this->rates->reapplyAdjustments();

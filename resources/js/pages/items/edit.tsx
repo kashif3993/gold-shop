@@ -110,6 +110,7 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
         polish_cost: parseFloat(item.polish_cost) || 0,
         purchase_rate_per_gram: parseFloat(item.purchase_rate_per_gram) || 0,
         purchase_price: parseFloat(item.purchase_price) || 0,
+        edit_reason: '',
     });
 
     const availablePurities = useMemo(() => {
@@ -578,7 +579,23 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
                                 <span className="summary-value">{totalPrice.toFixed(2)}</span>
                             </div>
 
-                            <div className="form-actions" style={{marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
+                            <div className="form-group" style={{marginTop: '1.5rem'}}>
+                                <label className="form-label">Reason for change (optional)</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={data.edit_reason}
+                                    onChange={e => setData('edit_reason', e.target.value)}
+                                    placeholder="e.g. corrected a weighing error"
+                                    maxLength={255}
+                                />
+                                {errors.edit_reason && <div className="text-red-500 text-xs mt-1">{errors.edit_reason}</div>}
+                                <span style={{ fontSize: '0.78rem', opacity: 0.75, marginTop: '0.35rem', display: 'block' }}>
+                                    Only matters if you're changing the price or weight — it's saved to the audit trail.
+                                </span>
+                            </div>
+
+                            <div className="form-actions" style={{marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
                                 <button type="submit" className="btn-primary" style={{width: '100%'}} disabled={processing}>
                                     {processing ? 'Updating...' : 'Update Item'}
                                 </button>

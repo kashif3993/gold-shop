@@ -10,11 +10,14 @@ use App\Models\Party;
 use App\Models\PartyType;
 use App\Models\Transaction;
 use App\Models\TransactionType;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class POSController extends Controller
 {
+    public function __construct(private AuditLogger $audit) {}
+
     public function store(StorePOSTransactionRequest $request)
     {
         $validated = $request->validated();
@@ -135,6 +138,17 @@ class POSController extends Controller
                     'payment_method' => $dbPaymentMethod,
                     'created_by_user_id' => auth()->id(),
                 ]);
+
+                if ($actualDiscount > 0) {
+                    $this->audit->log(
+                        'discount',
+                        $invoice->id,
+                        'total_discount',
+                        null,
+                        (string) $actualDiscount,
+                        $validated['discount_reason'] ?? 'No reason provided',
+                    );
+                }
 
                 // 4. Create Transactions & Line Items
                 $saleTransactionType = TransactionType::where('name', 'sale')->firstOrFail();
