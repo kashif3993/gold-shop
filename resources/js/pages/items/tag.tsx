@@ -1,8 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import Barcode from 'react-barcode';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Printer, ArrowLeft, Download, Package, QrCode } from 'lucide-react';
+
+/** Small physical pieces where the standard tag card is too big to attach. */
+const SMALL_ITEM_TYPES = ['ring', 'earring', 'nose_pin', 'tops'];
+
+type TagSize = 'standard' | 'compact';
 
 interface Item {
     id: number;
@@ -44,6 +49,10 @@ export default function ItemTag({ item }: TagProps) {
     const qrValue = item.qr_payload || item.item_code;
     const netWeight = parseFloat(item.net_weight_grams || '0');
     const purchasePrice = parseFloat(item.purchase_price || '0');
+
+    const [tagSize, setTagSize] = useState<TagSize>(
+        SMALL_ITEM_TYPES.includes(item.item_type.toLowerCase()) ? 'compact' : 'standard'
+    );
 
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const barcodeWrapperRef = useRef<HTMLDivElement>(null);
@@ -136,14 +145,34 @@ export default function ItemTag({ item }: TagProps) {
                     Item <strong>{item.item_code}</strong> created successfully. Print the tag below.
                 </div>
 
-                {/* Preview label */}
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium tracking-wide uppercase">
-                    Tag Preview
-                </p>
+                {/* Preview label + size toggle */}
+                <div className="flex items-center gap-3">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium tracking-wide uppercase">
+                        Tag Preview
+                    </p>
+                    <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden text-sm">
+                        <button
+                            type="button"
+                            onClick={() => setTagSize('standard')}
+                            className={`px-3 py-1 font-medium transition-colors ${tagSize === 'standard' ? 'bg-gold text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
+                        >
+                            Standard
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setTagSize('compact')}
+                            className={`px-3 py-1 font-medium transition-colors ${tagSize === 'compact' ? 'bg-gold text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
+                        >
+                            Compact (rings, earrings)
+                        </button>
+                    </div>
+                </div>
 
                 {/* ─── TAG CARD ─── */}
-                <div className="tag-card">
-                    <TagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
+                <div className={`tag-card ${tagSize === 'compact' ? 'compact' : ''}`}>
+                    {tagSize === 'compact'
+                        ? <CompactTagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
+                        : <TagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />}
                 </div>
 
                 {/* Item details summary */}
@@ -265,11 +294,16 @@ export default function ItemTag({ item }: TagProps) {
                         width: 100%;
                     }
                 }
+                .tag-card.compact {
+                    max-width: 240px;
+                }
             `}</style>
 
             {/* Print-only standalone tag (outside screen container) */}
             <div className="print-only">
-                <TagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
+                {tagSize === 'compact'
+                    ? <CompactTagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
+                    : <TagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />}
             </div>
         </>
     );
@@ -405,6 +439,65 @@ function TagCard({ item, qrValue, netWeight, purchasePrice }: {
             }}>
                 <span>ID #{item.id}</span>
                 <span>Gross: {parseFloat(item.gross_weight_grams).toFixed(3)}g &nbsp;|&nbsp; Stone: {parseFloat(item.stone_weight_grams).toFixed(3)}g &nbsp;|&nbsp; Cut: {parseFloat(item.cutting_loss_grams).toFixed(3)}g</span>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Small physical pieces (rings, earrings, nose pins, tops) can't carry a
+ * card-sized tag — this is a tiny, vertically-stacked alternative with just
+ * the essentials: code, metal/purity/weight, QR, barcode, price.
+ */
+function CompactTagCard({ item, qrValue, netWeight, purchasePrice }: {
+    item: Item;
+    qrValue: string;
+    netWeight: number;
+    purchasePrice: number;
+}) {
+    return (
+        <div style={{ fontFamily: 'Inter, system-ui, sans-serif', background: 'white', color: '#111827', width: '100%', maxWidth: '220px', margin: '0 auto' }}>
+            <div style={{ background: '#1a1a1a', padding: '5px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#f5c842', fontWeight: 700, fontSize: '9px', letterSpacing: '0.05em' }}>ZAR &amp; NOOR</span>
+                <span style={{ color: '#9ca3af', fontSize: '7px', textTransform: 'uppercase' }}>
+                    {item.status === 'in_stock' ? 'In Stock' : item.status}
+                </span>
+            </div>
+
+            <div style={{ padding: '10px', textAlign: 'center' }}>
+                <div style={{
+                    fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', letterSpacing: '0.02em', marginBottom: '3px',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                    {item.item_code}
+                </div>
+                <div style={{ fontSize: '9px', color: '#4b5563', marginBottom: '8px' }}>
+                    {[item.metal_type?.name, item.purity?.name].filter(Boolean).join(' ')} · {netWeight.toFixed(3)}g
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+                    <div style={{ padding: '4px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
+                        <QRCodeSVG value={qrValue} size={56} bgColor="#ffffff" fgColor="#111827" level="M" />
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', overflow: 'hidden' }}>
+                    <Barcode
+                        value={item.item_code}
+                        width={0.75}
+                        height={22}
+                        fontSize={8}
+                        margin={0}
+                        displayValue={true}
+                        background="#ffffff"
+                        lineColor="#111827"
+                        format="CODE128"
+                    />
+                </div>
+
+                <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '13px', color: '#b45309' }}>
+                    PKR {purchasePrice.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </div>
             </div>
         </div>
     );
