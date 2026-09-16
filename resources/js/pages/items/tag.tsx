@@ -315,76 +315,81 @@ function TagCard({ item, qrValue, netWeight, purchasePrice }: {
             </div>
 
             {/* Body */}
-            <div style={{ padding: '16px 18px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                {/* Left: info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    {/* Item code */}
-                    <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '17px', color: '#111', letterSpacing: '0.04em', marginBottom: '10px' }}>
-                        {item.item_code}
-                    </div>
-
-                    {/* Details grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', fontSize: '12px' }}>
-                        <InfoRow label="Type" value={item.item_type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} />
-                        <InfoRow label="Metal" value={item.metal_type?.name ?? '—'} />
-                        <InfoRow label="Purity" value={item.purity?.name ?? '—'} />
-                        <InfoRow label="Date" value={item.date_received ? new Date(item.date_received).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'} />
-                    </div>
-
-                    {/* Weight highlight */}
-                    <div style={{
-                        marginTop: '12px',
-                        background: '#fffbeb',
-                        border: '1px solid #fde68a',
-                        borderRadius: '8px',
-                        padding: '8px 12px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}>
-                        <div>
-                            <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Net Weight</div>
-                            <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '18px', color: '#b45309' }}>
-                                {netWeight.toFixed(3)} g
-                            </div>
+            <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                    {/* Left: info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        {/* Item code */}
+                        <div style={{
+                            fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: '#111',
+                            letterSpacing: '0.03em', marginBottom: '10px',
+                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>
+                            {item.item_code}
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '9px', color: '#374151', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Price</div>
-                            <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '13px', color: '#111' }}>
-                                PKR {purchasePrice.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                            </div>
+
+                        {/* Details grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', fontSize: '12px' }}>
+                            <InfoRow label="Type" value={item.item_type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} />
+                            <InfoRow label="Metal" value={item.metal_type?.name ?? '—'} />
+                            <InfoRow label="Purity" value={item.purity?.name ?? '—'} />
+                            <InfoRow label="Date" value={item.date_received ? new Date(item.date_received).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'} />
+                        </div>
+                    </div>
+
+                    {/* Right: QR only — the barcode gets its own full-width row below so it
+                        never has to compete with the QR for space and shrink unpredictably */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                        <div style={{ padding: '6px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
+                            <QRCodeSVG
+                                value={qrValue}
+                                size={78}
+                                bgColor="#ffffff"
+                                fgColor="#111827"
+                                level="M"
+                            />
+                        </div>
+                        <div style={{ fontSize: '8px', color: '#6b7280', textAlign: 'center' }}>Scan for details</div>
+                    </div>
+                </div>
+
+                {/* Weight highlight */}
+                <div style={{
+                    background: '#fffbeb',
+                    border: '1px solid #fde68a',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                }}>
+                    <div>
+                        <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Net Weight</div>
+                        <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '18px', color: '#b45309' }}>
+                            {netWeight.toFixed(3)} g
+                        </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '9px', color: '#374151', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Price</div>
+                        <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '13px', color: '#111' }}>
+                            PKR {purchasePrice.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </div>
                     </div>
                 </div>
 
-                {/* Right: QR + Barcode */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    {/* QR Code */}
-                    <div style={{ padding: '6px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                        <QRCodeSVG
-                            value={qrValue}
-                            size={90}
-                            bgColor="#ffffff"
-                            fgColor="#111827"
-                            level="M"
-                        />
-                    </div>
-                    <div style={{ fontSize: '8px', color: '#6b7280', textAlign: 'center' }}>Scan for details</div>
-
-                    {/* Barcode */}
-                    <div style={{ background: 'white', padding: '4px 6px', border: '1px solid #e5e7eb', borderRadius: '6px' }}>
-                        <Barcode
-                            value={item.item_code}
-                            width={1.2}
-                            height={36}
-                            fontSize={9}
-                            margin={0}
-                            displayValue={true}
-                            background="#ffffff"
-                            lineColor="#111827"
-                            format="CODE128"
-                        />
-                    </div>
+                {/* Barcode — full card width so it always has room to render legibly */}
+                <div style={{ background: 'white', padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: '6px', textAlign: 'center', overflow: 'hidden' }}>
+                    <Barcode
+                        value={item.item_code}
+                        width={1}
+                        height={32}
+                        fontSize={10}
+                        margin={0}
+                        displayValue={true}
+                        background="#ffffff"
+                        lineColor="#111827"
+                        format="CODE128"
+                    />
                 </div>
             </div>
 

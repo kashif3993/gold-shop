@@ -81,8 +81,8 @@ class ItemController extends Controller
         $item->qr_payload = ItemTagService::generateQrPayload($item);
         $item->saveQuietly();
 
-        return redirect()->route('items.tag', $item)
-            ->with('success', 'Item created successfully.');
+        return redirect()->route('inventory.index')
+            ->with('success', "Item {$item->item_code} created successfully.");
     }
 
     /**
