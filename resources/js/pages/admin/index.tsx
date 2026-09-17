@@ -34,6 +34,10 @@ export default function AdminIndex() {
                         <h2 className="adm-link-card-title">Manual price override</h2>
                         <p className="adm-link-card-sub">On the Rate Management screen — override a purity's current rate directly, with a required reason.</p>
                     </Link>
+                    <Link href="/admin/payment" className="adm-link-card">
+                        <h2 className="adm-link-card-title">Bank QR payment</h2>
+                        <p className="adm-link-card-sub">Upload your bank/JazzCash/Easypaisa account QR — shown at POS checkout. Confirming a payment also stays admin-only.</p>
+                    </Link>
                 </div>
             </div>
         </AppLayout>

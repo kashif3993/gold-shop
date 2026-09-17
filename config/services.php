@@ -59,4 +59,18 @@ return [
         'auto_refresh_minutes' => (int) env('RATE_AUTO_REFRESH_MINUTES', 15),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Bank QR payments
+    |--------------------------------------------------------------------------
+    |
+    | Manual bank-transfer payments at POS: the shop's own static account QR
+    | (uploaded once, admin-only) is shown with a per-sale reference number
+    | and amount. `expiry_minutes` is how long that reference stays
+    | confirmable before it's permanently retired — see BankQrPayment.
+    */
+    'bank_qr' => [
+        'expiry_minutes' => (int) env('BANK_QR_EXPIRY_MINUTES', 15),
+    ],
+
 ];

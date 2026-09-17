@@ -37,7 +37,7 @@ export interface CartState {
     customer_name: string;
     customer_phone: string;
     goldRate: number; // Today's gold rate per gram
-    paymentMethod: 'Cash' | 'Card' | 'Transfer';
+    paymentMethod: 'Cash' | 'Card' | 'Transfer' | 'Bank QR';
 }
 
 export type CartAction =

@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { POSProvider, usePOS } from '@/context/POSContext';
 import RateTicker from '@/components/rate-ticker';
+import BankQrPaymentModal from '@/components/bank-qr-payment-modal';
 import { useState, useEffect } from 'react';
 import { Search, Trash2, Edit2, CheckCircle2, QrCode, Plus } from 'lucide-react';
 import { cn, genId } from '@/lib/utils';
@@ -360,6 +361,7 @@ function ExchangeForm({ metals, purities }: { metals: any[], purities: any[] }) 
 function POSSidebar() {
     const { state, dispatch } = usePOS();
     const [discountInput, setDiscountInput] = useState(state.discount.toString());
+    const [bankQrPayload, setBankQrPayload] = useState<Record<string, any> | null>(null);
 
     const handleRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
@@ -511,7 +513,7 @@ function POSSidebar() {
             <div>
                 <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Payment Method</h3>
                 <div className="pos-payment-tabs">
-                    {['Cash', 'Card', 'Transfer'].map((method) => (
+                    {['Cash', 'Card', 'Transfer', 'Bank QR'].map((method) => (
                         <button
                             key={method}
                             onClick={() => dispatch({ type: 'SET_PAYMENT_METHOD', payload: method as any })}
@@ -532,17 +534,26 @@ function POSSidebar() {
                             return;
                         }
 
+                        const payload = {
+                            customer_name: state.customer_name,
+                            customer_phone: state.customer_phone,
+                            goldRate: state.goldRate,
+                            discount: state.discount,
+                            discountType: state.discountType,
+                            discount_reason: state.discount_reason,
+                            items: state.items,
+                            exchanges: state.exchanges,
+                        };
+
+                        if (state.paymentMethod === 'Bank QR') {
+                            setBankQrPayload(payload);
+                            return;
+                        }
+
                         try {
                             const response = await axios.post('/api/v1/pos/transaction', {
-                                customer_name: state.customer_name,
-                                customer_phone: state.customer_phone,
-                                goldRate: state.goldRate,
-                                discount: state.discount,
-                                discountType: state.discountType,
-                                discount_reason: state.discount_reason,
+                                ...payload,
                                 paymentMethod: state.paymentMethod,
-                                items: state.items,
-                                exchanges: state.exchanges
                             });
 
                             if (response.data.success) {
@@ -568,6 +579,18 @@ function POSSidebar() {
                     Print
                 </button>
             </div>
+
+            {bankQrPayload && (
+                <BankQrPaymentModal
+                    startPayload={bankQrPayload}
+                    onClose={() => setBankQrPayload(null)}
+                    onCompleted={(invoiceNumber) => {
+                        alert(`Sale Completed! Invoice ${invoiceNumber} created.`);
+                        dispatch({ type: 'CLEAR_CART' });
+                        setBankQrPayload(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

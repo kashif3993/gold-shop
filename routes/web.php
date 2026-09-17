@@ -51,6 +51,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('daily-rates', [\App\Http\Controllers\Admin\DailyRateController::class, 'index'])->name('daily-rates.index');
 
         Route::post('rate-management/override', [\App\Http\Controllers\RateManagementController::class, 'overrideRate'])->name('rate-management.override');
+
+        Route::get('payment', [\App\Http\Controllers\Admin\PaymentSettingsController::class, 'edit'])->name('payment.edit');
+        Route::post('payment', [\App\Http\Controllers\Admin\PaymentSettingsController::class, 'update'])->name('payment.update');
+
+        Route::post('pos/bank-qr/{reference}/confirm', [\App\Http\Controllers\Api\V1\BankQrPaymentController::class, 'confirm'])->name('pos.bank-qr.confirm');
     });
 
     // Reports (sales / profit / stock valuation — server-computed)
@@ -70,6 +75,11 @@ Route::middleware(['auth'])->group(function () {
     // POS API Routes
     Route::post('api/v1/pos/transaction', [\App\Http\Controllers\POSController::class, 'store'])->name('pos.transaction.store');
     Route::get('api/v1/items/search', [\App\Http\Controllers\Api\V1\ItemController::class, 'search'])->name('items.search');
+
+    // Bank QR payment — starting an attempt and checking its status are open to
+    // any cashier; confirming it is admin-only (see the admin group above).
+    Route::post('api/v1/pos/bank-qr', [\App\Http\Controllers\Api\V1\BankQrPaymentController::class, 'start'])->name('pos.bank-qr.start');
+    Route::get('api/v1/pos/bank-qr/{reference}', [\App\Http\Controllers\Api\V1\BankQrPaymentController::class, 'show'])->name('pos.bank-qr.show');
 
     // Buy-Back
     Route::get('buyback', function () {
