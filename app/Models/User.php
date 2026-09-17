@@ -53,4 +53,9 @@ class User extends Authenticatable
     {
         return $this->password_hash;
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 }

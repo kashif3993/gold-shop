@@ -174,6 +174,28 @@ class RateManagementController extends Controller
         return back()->with('success', 'Rate adjustment saved and applied to current rates.');
     }
 
+    /**
+     * Admin-only: override a purity's effective rate to an exact typed value,
+     * bypassing the fetch/adjustment pipeline. Always requires a reason.
+     */
+    public function overrideRate(Request $request)
+    {
+        $data = $request->validate([
+            'purity_id' => 'required|exists:purities,id',
+            'new_rate' => 'required|numeric|min:0.01|max:100000000',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $purity = Purity::findOrFail($data['purity_id']);
+        $old = $this->rates->currentRates()->get($purity->id)?->rate_per_gram;
+
+        $this->rates->overrideRate($purity->id, (float) $data['new_rate'], auth()->id());
+
+        $this->audit->log('rate', $purity->id, 'manual_override', $old !== null ? (string) $old : null, (string) $data['new_rate'], $data['reason']);
+
+        return back()->with('success', "Rate for {$purity->name} manually overridden.");
+    }
+
     public function deleteAdjustment(RateAdjustmentSetting $adjustment)
     {
         if ($adjustment->is_shop_default) {

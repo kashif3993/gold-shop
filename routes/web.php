@@ -39,6 +39,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('rate-management/adjustment', [\App\Http\Controllers\RateManagementController::class, 'saveAdjustment'])->name('rate-management.adjustment.save');
     Route::delete('rate-management/adjustment/{adjustment}', [\App\Http\Controllers\RateManagementController::class, 'deleteAdjustment'])->name('rate-management.adjustment.delete');
 
+    // Admin Panel (role=admin only): purity management, full rate history, manual overrides
+    Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminController::class, 'index'])->name('index');
+
+        Route::get('purities', [\App\Http\Controllers\Admin\PurityController::class, 'index'])->name('purities.index');
+        Route::post('purities', [\App\Http\Controllers\Admin\PurityController::class, 'store'])->name('purities.store');
+        Route::put('purities/{purity}', [\App\Http\Controllers\Admin\PurityController::class, 'update'])->name('purities.update');
+        Route::post('purities/{purity}/toggle', [\App\Http\Controllers\Admin\PurityController::class, 'toggle'])->name('purities.toggle');
+
+        Route::get('daily-rates', [\App\Http\Controllers\Admin\DailyRateController::class, 'index'])->name('daily-rates.index');
+
+        Route::post('rate-management/override', [\App\Http\Controllers\RateManagementController::class, 'overrideRate'])->name('rate-management.override');
+    });
+
     // Reports (sales / profit / stock valuation — server-computed)
     Route::get('reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
 

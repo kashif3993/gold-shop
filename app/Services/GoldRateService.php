@@ -149,6 +149,40 @@ class GoldRateService
     }
 
     /**
+     * Admin override: set a purity's effective rate to an exact typed value,
+     * bypassing the fetch → fineness → adjustment pipeline entirely. Used when
+     * the computed number needs to be corrected directly (see Rate
+     * Management's "Override" action) — the audit row recording why is
+     * written by the caller, since it needs a required reason.
+     */
+    public function overrideRate(int $purityId, float $newRatePerGram, ?int $userId = null): DailyRate
+    {
+        $purity = Purity::findOrFail($purityId);
+
+        return DB::transaction(function () use ($purity, $newRatePerGram, $userId) {
+            DailyRate::where('metal_type_id', $purity->metal_type_id)
+                ->where('purity_id', $purity->id)
+                ->where('is_current', true)
+                ->update(['is_current' => false]);
+
+            return DailyRate::create([
+                'metal_type_id' => $purity->metal_type_id,
+                'purity_id' => $purity->id,
+                'api_raw_rate_per_gram' => null,
+                'adjustment_type_used' => null,
+                'adjustment_value_used' => null,
+                'rate_per_gram' => round($newRatePerGram, 2),
+                'rate_date' => now()->toDateString(),
+                'source' => 'manual',
+                'fetched_at' => now(),
+                'is_current' => true,
+                'is_stale' => false,
+                'entered_by_user_id' => $userId,
+            ]);
+        });
+    }
+
+    /**
      * Manual entry: shopkeeper types the pure (24K / fine) PKR-per-gram base for
      * a metal; every active purity of that metal is derived from its fineness.
      *

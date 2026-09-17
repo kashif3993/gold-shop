@@ -343,6 +343,26 @@
     font-family: monospace;
 }
 
+/* ── admin manual override (inline row form) ────────────────────────── */
+
+.rm-override-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.rm-override-old {
+    font-family: monospace;
+    color: var(--rm-muted-2);
+    font-size: 0.85rem;
+}
+
+.rm-override-input {
+    min-width: 110px;
+    padding: 0.35rem 0.6rem;
+}
+
 /* ============================================================================
    Dark mode
    ============================================================================ */

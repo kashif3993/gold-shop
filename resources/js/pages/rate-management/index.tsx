@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { RefreshCw, AlertTriangle, Trash2 } from 'lucide-react';
@@ -29,7 +29,8 @@ const adjLabel = (type?: string | null, value?: number | null) => {
 };
 
 export default function RateManagement({ rates, metals, shopDefault, overrides, fetchLog, feedStale, staleAfterHours, fx, autoRefreshMinutes }: any) {
-    const { flash } = usePage().props as any;
+    const { flash, auth } = usePage().props as any;
+    const isAdmin = auth?.user?.role === 'admin';
 
     const refresh = useForm({});
     const fxForm = useForm({ usd_pkr: String(fx?.value ?? ''), auto: Boolean(fx?.auto) });
@@ -98,6 +99,26 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
         }
     };
 
+    // ── Admin-only: override a purity's effective rate directly, required reason ──
+    const [overrideId, setOverrideId] = useState<number | null>(null);
+    const overrideForm = useForm({ purity_id: '', new_rate: '', reason: '' });
+
+    const startOverride = (r: any) => {
+        setOverrideId(r.purity_id);
+        overrideForm.setData({ purity_id: String(r.purity_id), new_rate: r.effective != null ? String(r.effective) : '', reason: '' });
+    };
+    const cancelOverride = () => {
+        setOverrideId(null);
+        overrideForm.clearErrors();
+    };
+    const submitOverrideRate = (e: React.FormEvent) => {
+        e.preventDefault();
+        overrideForm.post('/admin/rate-management/override', {
+            preserveScroll: true,
+            onSuccess: () => setOverrideId(null),
+        });
+    };
+
     // live preview for the shop default on a sample official rate
     const sample = rates.find((r: any) => r.raw)?.raw ?? 24000;
     const previewDefault = useMemo(() => {
@@ -152,6 +173,7 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                                     <th>Effective / g</th>
                                     <th>Source</th>
                                     <th>Updated</th>
+                                    {isAdmin && <th>Admin override</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -172,6 +194,37 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                                             {r.is_stale && <span className="rm-badge rm-badge-stale" style={{ marginRight: 6 }}>stale</span>}
                                             <span className="rm-muted">{ago(r.fetched_at)}</span>
                                         </td>
+                                        {isAdmin && (
+                                            <td>
+                                                {overrideId === r.purity_id ? (
+                                                    <form className="rm-override-row" onSubmit={submitOverrideRate}>
+                                                        <span className="rm-override-old"><s>{fmt(r.effective)}</s></span>
+                                                        <input
+                                                            type="number" step="0.01" min="0.01" className="rm-input rm-override-input"
+                                                            value={overrideForm.data.new_rate}
+                                                            onChange={e => overrideForm.setData('new_rate', e.target.value)}
+                                                            placeholder="New rate"
+                                                            autoFocus
+                                                        />
+                                                        <input
+                                                            className="rm-input rm-override-input"
+                                                            value={overrideForm.data.reason}
+                                                            onChange={e => overrideForm.setData('reason', e.target.value)}
+                                                            placeholder="Reason (required)"
+                                                        />
+                                                        <button type="submit" className="rm-btn rm-btn-gold" disabled={overrideForm.processing}>Save</button>
+                                                        <button type="button" className="rm-btn rm-btn-ghost" onClick={cancelOverride}>Cancel</button>
+                                                        {(overrideForm.errors.new_rate || overrideForm.errors.reason) && (
+                                                            <div className="rm-error">{overrideForm.errors.new_rate || overrideForm.errors.reason}</div>
+                                                        )}
+                                                    </form>
+                                                ) : (
+                                                    <button type="button" className="rm-btn rm-btn-ghost" onClick={() => startOverride(r)}>
+                                                        Override
+                                                    </button>
+                                                )}
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>

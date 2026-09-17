@@ -2,8 +2,8 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart, HandCoins } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart, HandCoins, ShieldCheck } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -60,6 +60,13 @@ const mainNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props as any;
+    const isAdmin = auth?.user?.role === 'admin';
+
+    const items = isAdmin
+        ? [...mainNavItems, { title: 'Admin', url: '/admin', icon: ShieldCheck }]
+        : mainNavItems;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -75,7 +82,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={items} />
             </SidebarContent>
 
             <SidebarFooter>
