@@ -10,6 +10,7 @@ use App\Models\Purity;
 use App\Models\Setting;
 use App\Models\TransactionType;
 use App\Models\User;
+use App\Services\GoldRateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -33,6 +34,11 @@ class BankQrPaymentTest extends TestCase
         TransactionType::create(['name' => 'sale']);
         $this->gold = MetalType::create(['name' => 'Gold']);
         $this->purity = Purity::create(['metal_type_id' => $this->gold->id, 'name' => '22K', 'fineness_percent' => 91.6, 'is_active' => true]);
+
+        // Pricing is always resolved server-side from the purity's current
+        // rate — never trusted from the request. 25000/g matches every
+        // amount assertion below: (10g * 25000) + 1500 + 300 = 251800.
+        app(GoldRateService::class)->storeRate($this->gold->id, $this->purity->id, 25000, 'manual', $this->admin->id);
     }
 
     private function makeItem(): Item
@@ -58,7 +64,6 @@ class BankQrPaymentTest extends TestCase
     private function cartPayload(Item $item): array
     {
         return [
-            'goldRate' => 25000,
             'discount' => 0,
             'discountType' => 'flat',
             'items' => [['id' => $item->id]],

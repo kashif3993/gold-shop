@@ -14,10 +14,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('inventory', [\App\Http\Controllers\InventoryController::class, 'index'])->name('inventory.index');
     
     Route::get('items/create', [\App\Http\Controllers\ItemController::class, 'create'])->name('items.create');
-    Route::get('pos', function () {
+    Route::get('pos', function (\App\Services\GoldRateService $rates) {
         return inertia('pos/index', [
             'metals' => \App\Models\MetalType::all(),
-            'purities' => \App\Models\Purity::all()
+            'purities' => \App\Models\Purity::all(),
+            // Keyed by purity_id — lets the POS screen price each cart item at
+            // its own purity's live rate the moment it's added, instead of one
+            // shared manually-typed number applied to everything.
+            'currentRates' => $rates->currentRates()->map(fn ($r) => [
+                'rate_per_gram' => (float) $r->rate_per_gram,
+                'is_stale' => (bool) $r->is_stale,
+            ]),
         ]);
     })->name('pos.index');
 

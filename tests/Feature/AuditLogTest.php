@@ -9,6 +9,7 @@ use App\Models\Purity;
 use App\Models\TransactionType;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\GoldRateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -168,10 +169,10 @@ class AuditLogTest extends TestCase
 
     public function test_a_discounted_sale_writes_an_audit_row(): void
     {
+        app(GoldRateService::class)->storeRate($this->gold->id, $this->purity->id, 25000, 'manual', $this->user->id);
         $item = $this->makeItem();
 
         $payload = [
-            'goldRate' => 25000,
             'discount' => 5500,
             'discount_reason' => 'VIP customer',
             'discountType' => 'flat',
@@ -191,10 +192,10 @@ class AuditLogTest extends TestCase
 
     public function test_a_sale_with_no_discount_writes_nothing(): void
     {
+        app(GoldRateService::class)->storeRate($this->gold->id, $this->purity->id, 25000, 'manual', $this->user->id);
         $item = $this->makeItem();
 
         $payload = [
-            'goldRate' => 25000,
             'discount' => 0,
             'discountType' => 'flat',
             'paymentMethod' => 'Cash',

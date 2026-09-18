@@ -23,7 +23,7 @@ const formatPKR = (amount: number) => {
 
 function POSCart() {
     const { state, dispatch } = usePOS();
-    const { metals, purities } = usePage().props as any;
+    const { metals, purities, currentRates } = usePage().props as any;
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -55,6 +55,15 @@ function POSCart() {
             return;
         }
 
+        // Detect this item's own live rate from its own purity — never a
+        // shared number typed for the whole cart. A 22K ring and a 24K bar
+        // each get priced from their own purity's current rate.
+        const detectedRate = currentRates?.[item.purity_id];
+        if (!detectedRate) {
+            alert(`No current rate is set for ${item.purity_name || 'this item\'s'} purity. Set one in Rate Management first.`);
+            return;
+        }
+
         dispatch({
             type: 'ADD_ITEM',
             payload: {
@@ -69,6 +78,7 @@ function POSCart() {
                 net_weight_grams: parseFloat(item.net_weight_grams) || 0,
                 labour_cost: parseFloat(item.labour_cost) || 0,
                 polish_cost: parseFloat(item.polish_cost) || 0,
+                rate_per_gram: detectedRate.rate_per_gram,
             }
         });
         setSearchQuery('');
@@ -161,7 +171,7 @@ function POSCart() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
                             {state.items.map((item, index) => {
-                                const itemGoldValue = item.net_weight_grams * state.goldRate;
+                                const itemGoldValue = item.net_weight_grams * item.rate_per_gram;
                                 const lineTotal = itemGoldValue + item.labour_cost + item.polish_cost;
 
                                 return (
@@ -171,12 +181,15 @@ function POSCart() {
                                         </td>
                                         <td className="px-6 py-5">
                                             <div className="text-sm font-bold text-gray-900 mb-1.5">{item.purity_name} {item.metal_name} {item.item_type}</div>
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 items-center flex-wrap">
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-800">
                                                     {item.item_code}
                                                 </span>
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-100">
                                                     {item.purity_name} Hallmark
+                                                </span>
+                                                <span className="text-[10px] text-gray-400 tabular-nums">
+                                                    Rate: {formatPKR(item.rate_per_gram)}/g
                                                 </span>
                                             </div>
                                         </td>
@@ -284,7 +297,8 @@ function POSCart() {
 }
 
 function ExchangeForm({ metals, purities }: { metals: any[], purities: any[] }) {
-    const { state, dispatch } = usePOS();
+    const { dispatch } = usePOS();
+    const { currentRates } = usePage().props as any;
     const [metalId, setMetalId] = useState('');
     const [purityId, setPurityId] = useState('');
     const [weight, setWeight] = useState('');
@@ -296,14 +310,22 @@ function ExchangeForm({ metals, purities }: { metals: any[], purities: any[] }) 
         const purity = purities.find((p) => p.id === parseInt(purityId));
         if (!metal || !purity) return;
 
+        // Detect this exchange's own live rate from the purity actually
+        // selected — not a shared rate typed for the whole cart.
+        const detectedRate = currentRates?.[purity.id];
+        if (!detectedRate) {
+            alert(`No current rate is set for ${purity.name}'s purity. Set one in Rate Management first.`);
+            return;
+        }
+
         const w = parseFloat(weight);
         const d = parseFloat(deduction) || 0;
         const netW = w * (1 - d / 100);
-        // Re-weighed weight, less the melting-loss deduction, at today's rate.
-        // Same basis as the sale line and the Buy-Back service — the rate box
-        // already holds the rate for the gold being transacted (no extra
-        // fineness multiplier).
-        const valuation = netW * state.goldRate;
+        // Re-weighed weight, less the melting-loss deduction, at this
+        // purity's own live rate. Same basis as the sale line and the
+        // Buy-Back service (no extra fineness multiplier — the purity's rate
+        // already accounts for fineness).
+        const valuation = netW * detectedRate.rate_per_gram;
 
         dispatch({
             type: 'ADD_EXCHANGE',
@@ -317,6 +339,7 @@ function ExchangeForm({ metals, purities }: { metals: any[], purities: any[] }) 
                 weight_grams: w,
                 deduction_percent: d,
                 net_weight_grams: netW,
+                rate_per_gram: detectedRate.rate_per_gram,
                 valuation: Math.round(valuation)
             }
         });
@@ -363,11 +386,6 @@ function POSSidebar() {
     const [discountInput, setDiscountInput] = useState(state.discount.toString());
     const [bankQrPayload, setBankQrPayload] = useState<Record<string, any> | null>(null);
 
-    const handleRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
-        dispatch({ type: 'SET_GOLD_RATE', payload: val });
-    };
-
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setDiscountInput(e.target.value);
         const val = parseFloat(e.target.value) || 0;
@@ -380,32 +398,22 @@ function POSSidebar() {
 
     return (
         <div className="pos-sidebar-container">
-            {/* Gold Rate Box */}
+            {/* Rates are detected per item from its own purity (see the ticker
+                above and the "Rate:" tag on each cart line) — no manual entry. */}
             <div className="pos-gold-rate-box">
                 <div className="pos-gold-rate-header">
                     <h3 className="pos-gold-rate-title">
                         <span className="pos-gold-rate-icon">₹</span>
-                        Today's Gold Rate
+                        Pricing
                     </h3>
                     <div className="pos-gold-rate-status">
                         <div className="pos-gold-rate-status-dot" />
-                        STABLE
+                        AUTO
                     </div>
                 </div>
-                <div className="pos-input-wrapper">
-                    <div className="pos-input-prefix">
-                        <span>Rs.</span>
-                    </div>
-                    <input
-                        type="text"
-                        className="pos-gold-rate-input"
-                        value={state.goldRate.toLocaleString()}
-                        onChange={handleRateChange}
-                    />
-                    <div className="pos-input-suffix">
-                        <span>/ gram</span>
-                    </div>
-                </div>
+                <p className="text-xs text-gray-500 px-1 pb-1">
+                    Each item is priced at its own purity's live rate automatically — see the rate shown on every cart line.
+                </p>
             </div>
 
             {/* Customer Details */}
@@ -537,7 +545,6 @@ function POSSidebar() {
                         const payload = {
                             customer_name: state.customer_name,
                             customer_phone: state.customer_phone,
-                            goldRate: state.goldRate,
                             discount: state.discount,
                             discountType: state.discountType,
                             discount_reason: state.discount_reason,

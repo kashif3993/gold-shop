@@ -12,6 +12,7 @@ use App\Models\Purity;
 use App\Models\Transaction;
 use App\Models\TransactionType;
 use App\Models\User;
+use App\Services\GoldRateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -63,6 +64,12 @@ class POSTransactionTest extends TestCase
         ]);
     }
 
+    /** Seed a purity's live rate — pricing is always resolved server-side from this, never from the request. */
+    private function setRate(Purity $purity, float $ratePerGram): void
+    {
+        app(GoldRateService::class)->storeRate($purity->metal_type_id, $purity->id, $ratePerGram, 'manual', $this->user->id);
+    }
+
     private function createInStockItem(array $attributes = []): Item
     {
         $gross = $attributes['gross_weight_grams'] ?? 10.0;
@@ -97,6 +104,8 @@ class POSTransactionTest extends TestCase
 
     public function test_successful_multi_item_sale_with_flat_discount_and_walk_in_customer(): void
     {
+        $this->setRate($this->purity22k, 25000);
+
         // 3 items in stock
         // Item 1: Net = 10g, Labour = 2000, Polish = 500. Rate = 25000/g => Metal = 250,000, Line = 252,500
         $item1 = $this->createInStockItem([
@@ -127,7 +136,6 @@ class POSTransactionTest extends TestCase
         // Flat discount = 5,500 => Grand Total = 575,000
 
         $payload = [
-            'goldRate' => 25000,
             'discount' => 5500,
             'discount_reason' => 'VIP Customer discount',
             'discountType' => 'flat',
@@ -195,6 +203,8 @@ class POSTransactionTest extends TestCase
 
     public function test_successful_multi_item_sale_with_percentage_discount_and_named_customer(): void
     {
+        $this->setRate($this->purity22k, 20000);
+
         $item1 = $this->createInStockItem([
             'gross_weight_grams' => 4,
             'labour_cost' => 1000,
@@ -216,7 +226,6 @@ class POSTransactionTest extends TestCase
         $payload = [
             'customer_name' => 'Ahmed Khan',
             'customer_phone' => '+923001234567',
-            'goldRate' => 20000,
             'discount' => 10, // 10%
             'discountType' => 'percentage',
             'discount_reason' => 'Eid special promo',
@@ -249,6 +258,8 @@ class POSTransactionTest extends TestCase
 
     public function test_sale_with_old_gold_exchange_deduction(): void
     {
+        $this->setRate($this->purity22k, 25000);
+
         $item = $this->createInStockItem([
             'gross_weight_grams' => 10,
             'labour_cost' => 2000,
@@ -262,7 +273,6 @@ class POSTransactionTest extends TestCase
         $payload = [
             'customer_name' => 'Sara Ali',
             'customer_phone' => '03111222333',
-            'goldRate' => 25000,
             'discount' => 0,
             'discountType' => 'flat',
             'paymentMethod' => 'Transfer',
@@ -275,7 +285,6 @@ class POSTransactionTest extends TestCase
                     'purity_id' => $this->purity22k->id,
                     'weight_grams' => 5.0,
                     'deduction_percent' => 10,
-                    'valuation' => 112500,
                 ],
             ],
         ];
@@ -308,10 +317,61 @@ class POSTransactionTest extends TestCase
         ]);
     }
 
+    /** A 22K item and a 24K item in the same cart must each price at their own purity's rate — the core bug this pricing model fixes. */
+    public function test_items_of_different_purity_in_the_same_cart_each_use_their_own_rate(): void
+    {
+        $this->setRate($this->purity22k, 22000);
+        $this->setRate($this->purity24k, 24500);
+
+        $ring22k = $this->createInStockItem([
+            'purity_id' => $this->purity22k->id,
+            'gross_weight_grams' => 10,
+            'labour_cost' => 0,
+            'polish_cost' => 0,
+        ]);
+        $bar24k = $this->createInStockItem([
+            'purity_id' => $this->purity24k->id,
+            'gross_weight_grams' => 10,
+            'labour_cost' => 0,
+            'polish_cost' => 0,
+        ]);
+
+        $payload = [
+            'discount' => 0,
+            'discountType' => 'flat',
+            'paymentMethod' => 'Cash',
+            'items' => [['id' => $ring22k->id], ['id' => $bar24k->id]],
+        ];
+
+        $this->actingAs($this->user)->postJson('/api/v1/pos/transaction', $payload)->assertStatus(201);
+
+        $this->assertDatabaseHas('invoice_line_items', ['item_id' => $ring22k->id, 'rate_per_gram' => 22000.00, 'metal_cost' => 220000.00]);
+        $this->assertDatabaseHas('invoice_line_items', ['item_id' => $bar24k->id, 'rate_per_gram' => 24500.00, 'metal_cost' => 245000.00]);
+    }
+
+    public function test_sale_is_rejected_when_the_items_purity_has_no_current_rate(): void
+    {
+        // No rate ever set for purity22k.
+        $item = $this->createInStockItem();
+
+        $payload = [
+            'discount' => 0,
+            'discountType' => 'flat',
+            'paymentMethod' => 'Cash',
+            'items' => [['id' => $item->id]],
+        ];
+
+        $this->actingAs($this->user)->postJson('/api/v1/pos/transaction', $payload)
+            ->assertStatus(400)
+            ->assertJsonPath('success', false);
+
+        $this->assertEquals(0, Invoice::count());
+        $this->assertEquals('in_stock', $item->fresh()->status);
+    }
+
     public function test_validation_failure_when_items_and_exchanges_are_both_missing(): void
     {
         $payload = [
-            'goldRate' => 25000,
             'discount' => 0,
             'discountType' => 'flat',
             'paymentMethod' => 'Cash',
@@ -323,12 +383,11 @@ class POSTransactionTest extends TestCase
         $response->assertJsonValidationErrors(['items']);
     }
 
-    public function test_validation_failure_for_invalid_payment_method_and_gold_rate(): void
+    public function test_validation_failure_for_invalid_payment_method_and_discount(): void
     {
         $item = $this->createInStockItem();
 
         $payload = [
-            'goldRate' => -500, // Invalid negative rate
             'discount' => -10, // Invalid negative discount
             'discountType' => 'invalid_type',
             'paymentMethod' => 'Bitcoin', // Invalid method
@@ -341,7 +400,6 @@ class POSTransactionTest extends TestCase
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors([
-            'goldRate',
             'discount',
             'discountType',
             'paymentMethod',
@@ -351,7 +409,6 @@ class POSTransactionTest extends TestCase
     public function test_validation_failure_when_cart_item_does_not_exist(): void
     {
         $payload = [
-            'goldRate' => 25000,
             'discount' => 0,
             'discountType' => 'flat',
             'paymentMethod' => 'Cash',
@@ -368,6 +425,8 @@ class POSTransactionTest extends TestCase
 
     public function test_rejection_and_rollback_when_item_is_already_sold(): void
     {
+        $this->setRate($this->purity22k, 25000);
+
         $inStockItem = $this->createInStockItem(['gross_weight_grams' => 5]);
         $soldItem = $this->createInStockItem([
             'gross_weight_grams' => 8,
@@ -375,7 +434,6 @@ class POSTransactionTest extends TestCase
         ]);
 
         $payload = [
-            'goldRate' => 25000,
             'discount' => 0,
             'discountType' => 'flat',
             'paymentMethod' => 'Cash',
@@ -407,14 +465,13 @@ class POSTransactionTest extends TestCase
      */
     public function test_invoice_totals_reconcile_exactly_with_line_items(): void
     {
-        $rate = 19850.33;
+        $this->setRate($this->purity22k, 19850.33);
 
         $item1 = $this->createInStockItem(['gross_weight_grams' => 3.337, 'labour_cost' => 1234.50, 'polish_cost' => 210.75]);
         $item2 = $this->createInStockItem(['gross_weight_grams' => 7.771, 'labour_cost' => 999.00, 'polish_cost' => 0.00]);
         $item3 = $this->createInStockItem(['gross_weight_grams' => 1.119, 'labour_cost' => 480.25, 'polish_cost' => 66.60]);
 
         $payload = [
-            'goldRate' => $rate,
             'discount' => 7.5, // percent
             'discountType' => 'percentage',
             'discount_reason' => 'Loyalty',
@@ -425,7 +482,6 @@ class POSTransactionTest extends TestCase
                 'purity_id' => $this->purity22k->id,
                 'weight_grams' => 4.213,
                 'deduction_percent' => 8,
-                'valuation' => 76543.21,
             ]],
         ];
 

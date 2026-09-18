@@ -11,16 +11,16 @@ const initialState: CartState = {
     total: 0,
     customer_name: '',
     customer_phone: '',
-    goldRate: 25000, // Default fallback PKR rate
     paymentMethod: 'Cash',
 };
 
-// Helper to recalculate totals
-const calculateTotals = (items: CartItem[], exchanges: ExchangeItem[], discount: number, discountType: 'flat' | 'percentage', goldRate: number) => {
+// Helper to recalculate totals. Each item/exchange already carries its own
+// detected rate (from its own purity) — there's no shared rate to multiply by.
+const calculateTotals = (items: CartItem[], exchanges: ExchangeItem[], discount: number, discountType: 'flat' | 'percentage') => {
     // 1. Calculate each item's total dynamically
     let subtotal = 0;
     items.forEach(item => {
-        const itemGoldValue = item.net_weight_grams * goldRate;
+        const itemGoldValue = item.net_weight_grams * item.rate_per_gram;
         const lineTotal = itemGoldValue + item.labour_cost + item.polish_cost;
         subtotal += lineTotal;
     });
@@ -55,17 +55,17 @@ const posReducer = (state: CartState, action: CartAction): CartState => {
                 return state;
             }
             const newItems = [...state.items, action.payload];
-            const { subtotal, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType, state.goldRate);
+            const { subtotal, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType);
             return { ...state, items: newItems, subtotal, total };
         }
         case 'REMOVE_ITEM': {
             const newItems = state.items.filter(i => i.id !== action.payload.id);
-            const { subtotal, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType, state.goldRate);
+            const { subtotal, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType);
             return { ...state, items: newItems, subtotal, total };
         }
         case 'SET_DISCOUNT': {
             const { value, type } = action.payload;
-            const { subtotal, total } = calculateTotals(state.items, state.exchanges, value, type, state.goldRate);
+            const { subtotal, total } = calculateTotals(state.items, state.exchanges, value, type);
             return { ...state, discount: value, discountType: type, subtotal, total };
         }
         case 'SET_DISCOUNT_REASON': {
@@ -78,26 +78,20 @@ const posReducer = (state: CartState, action: CartAction): CartState => {
                 customer_phone: action.payload.phone,
             };
         }
-        case 'SET_GOLD_RATE': {
-            const newRate = action.payload;
-            const { subtotal, total } = calculateTotals(state.items, state.exchanges, state.discount, state.discountType, newRate);
-            return { ...state, goldRate: newRate, subtotal, total };
-        }
         case 'SET_PAYMENT_METHOD': {
             return { ...state, paymentMethod: action.payload };
         }
         case 'CLEAR_CART': {
-            // Keep the gold rate when clearing cart
-            return { ...initialState, goldRate: state.goldRate };
+            return { ...initialState };
         }
         case 'ADD_EXCHANGE': {
             const newExchanges = [...state.exchanges, action.payload];
-            const { subtotal, total } = calculateTotals(state.items, newExchanges, state.discount, state.discountType, state.goldRate);
+            const { subtotal, total } = calculateTotals(state.items, newExchanges, state.discount, state.discountType);
             return { ...state, exchanges: newExchanges, subtotal, total };
         }
         case 'REMOVE_EXCHANGE': {
             const newExchanges = state.exchanges.filter(e => e.id !== action.payload.id);
-            const { subtotal, total } = calculateTotals(state.items, newExchanges, state.discount, state.discountType, state.goldRate);
+            const { subtotal, total } = calculateTotals(state.items, newExchanges, state.discount, state.discountType);
             return { ...state, exchanges: newExchanges, subtotal, total };
         }
         default:

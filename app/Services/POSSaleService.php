@@ -9,13 +9,19 @@ use App\Models\Party;
 use App\Models\PartyType;
 use App\Models\Transaction;
 use App\Models\TransactionType;
+use Illuminate\Support\Collection;
 
 /**
  * The actual "sell these items, create the invoice" logic — shared by the
  * normal POS checkout (cash/card/credit, paid instantly) and the Bank QR
  * flow (where the sale is only created once an admin confirms the transfer
- * arrived, via GoldRateService... err, via this same service, replaying the
- * cart payload that was snapshotted when the QR was first shown).
+ * arrived, replaying the cart payload that was snapshotted when the QR was
+ * first shown).
+ *
+ * Pricing is never trusted from the client: every item and every old-gold
+ * exchange line is priced here from Rate Management's current rate for its
+ * own purity — a 22K ring and a 24K bar in the same cart each get their own
+ * correct number, not one rate typed into a box and applied to everything.
  */
 class POSSaleService
 {
@@ -28,22 +34,23 @@ class POSSaleService
         'credit' => 'credit',
     ];
 
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(private AuditLogger $audit, private GoldRateService $rates) {}
 
     /**
      * Compute what this cart would cost, without touching the database.
      * Used both right before creating the real sale, and to show the
      * expected amount when a Bank QR payment attempt is started.
      *
-     * @throws \InvalidArgumentException if an item is missing/not in stock
+     * @throws \InvalidArgumentException if an item is missing/not in stock,
+     *                                    or has no current rate set for its purity
      */
     public function computeTotals(array $validated, bool $lockItems = false): array
     {
+        $currentRates = $this->rates->currentRates(); // keyed by purity_id
+
         $totalMetalCost = 0;
         $totalLabourCost = 0;
         $totalPolishCost = 0;
-
-        $goldRate = (float) $validated['goldRate'];
         $validItems = [];
 
         foreach ($validated['items'] ?? [] as $cartItem) {
@@ -60,7 +67,9 @@ class POSSaleService
                 throw new \InvalidArgumentException("Item {$itemModel->item_code} is no longer in stock.");
             }
 
-            $metalCost = round($itemModel->net_weight_grams * $goldRate, 2);
+            $ratePerGram = $this->ratePerGramFor($currentRates, $itemModel->purity_id, $itemModel->item_code);
+
+            $metalCost = round($itemModel->net_weight_grams * $ratePerGram, 2);
             $labourCost = round((float) $itemModel->labour_cost, 2);
             $polishCost = round((float) $itemModel->polish_cost, 2);
             $lineTotal = round($metalCost + $labourCost + $polishCost, 2);
@@ -71,6 +80,7 @@ class POSSaleService
 
             $validItems[] = [
                 'model' => $itemModel,
+                'ratePerGram' => $ratePerGram,
                 'metalCost' => $metalCost,
                 'labourCost' => $labourCost,
                 'polishCost' => $polishCost,
@@ -85,9 +95,24 @@ class POSSaleService
             ? round(($subtotal * $discountAmount) / 100, 2)
             : round($discountAmount, 2);
 
+        $validExchanges = [];
         $totalExchangeValuation = 0;
         foreach ($validated['exchanges'] ?? [] as $exc) {
-            $totalExchangeValuation += round((float) $exc['valuation'], 2);
+            $ratePerGram = $this->ratePerGramFor($currentRates, (int) $exc['purity_id'], 'this exchange item');
+            $netWeight = (float) $exc['weight_grams'] * (1 - ((float) $exc['deduction_percent'] / 100));
+            $valuation = round($netWeight * $ratePerGram, 2);
+
+            $totalExchangeValuation += $valuation;
+
+            $validExchanges[] = [
+                'metal_type_id' => $exc['metal_type_id'],
+                'purity_id' => $exc['purity_id'],
+                'weight_grams' => (float) $exc['weight_grams'],
+                'deduction_percent' => (float) $exc['deduction_percent'],
+                'net_weight_grams' => $netWeight,
+                'ratePerGram' => $ratePerGram,
+                'valuation' => $valuation,
+            ];
         }
         $totalExchangeValuation = round($totalExchangeValuation, 2);
 
@@ -95,6 +120,7 @@ class POSSaleService
 
         return [
             'validItems' => $validItems,
+            'validExchanges' => $validExchanges,
             'totalMetalCost' => $totalMetalCost,
             'totalLabourCost' => $totalLabourCost,
             'totalPolishCost' => $totalPolishCost,
@@ -109,14 +135,14 @@ class POSSaleService
      * the one real "this sale happened" write. Must run inside a DB
      * transaction (the caller's), since it locks item rows.
      *
-     * @throws \InvalidArgumentException if an item is missing/not in stock
+     * @throws \InvalidArgumentException if an item is missing/not in stock,
+     *                                    or has no current rate set for its purity
      */
     public function createSale(array $validated, int $userId): Invoice
     {
         $totals = $this->computeTotals($validated, lockItems: true);
 
         $partyId = $this->resolveParty($validated);
-        $goldRate = (float) $validated['goldRate'];
         $dbPaymentMethod = self::PAYMENT_METHOD_MAP[strtolower($validated['paymentMethod'])] ?? 'cash';
 
         $dateStr = now()->format('Ymd');
@@ -166,7 +192,7 @@ class POSSaleService
                 'metal_type_id' => $item->metal_type_id,
                 'purity_id' => $item->purity_id,
                 'weight_grams' => $item->net_weight_grams,
-                'rate_per_gram' => $goldRate,
+                'rate_per_gram' => $data['ratePerGram'],
                 'metal_cost' => $data['metalCost'],
                 'labour_cost' => $data['labourCost'],
                 'polish_cost' => $data['polishCost'],
@@ -186,7 +212,7 @@ class POSSaleService
                 'transaction_id' => $transaction->id,
                 'weight_grams' => $item->net_weight_grams,
                 'purity_id' => $item->purity_id,
-                'rate_per_gram' => $goldRate,
+                'rate_per_gram' => $data['ratePerGram'],
                 'metal_cost' => $data['metalCost'],
                 'labour_cost' => $data['labourCost'],
                 'polish_cost' => $data['polishCost'],
@@ -194,13 +220,10 @@ class POSSaleService
             ]);
         }
 
-        $exchangesData = $validated['exchanges'] ?? [];
-        if (count($exchangesData) > 0) {
+        if (count($totals['validExchanges']) > 0) {
             $exchangeTransactionType = TransactionType::where('name', 'old_gold_exchange')->firstOrFail();
 
-            foreach ($exchangesData as $exc) {
-                $netWeight = $exc['weight_grams'] * (1 - ($exc['deduction_percent'] / 100));
-
+            foreach ($totals['validExchanges'] as $exc) {
                 $exchangeItem = Item::create([
                     'item_code' => 'EXC-'.strtoupper(uniqid()),
                     'item_type' => 'old_gold',
@@ -208,10 +231,10 @@ class POSSaleService
                     'purity_id' => $exc['purity_id'],
                     'gross_weight_grams' => $exc['weight_grams'],
                     'stone_weight_grams' => 0,
-                    'cutting_loss_grams' => $exc['weight_grams'] - $netWeight,
+                    'cutting_loss_grams' => $exc['weight_grams'] - $exc['net_weight_grams'],
                     'labour_cost' => 0,
                     'polish_cost' => 0,
-                    'purchase_rate_per_gram' => $goldRate,
+                    'purchase_rate_per_gram' => $exc['ratePerGram'],
                     'purchase_price' => $exc['valuation'],
                     'source_party_id' => $partyId,
                     'date_received' => now(),
@@ -227,7 +250,7 @@ class POSSaleService
                     'metal_type_id' => $exc['metal_type_id'],
                     'purity_id' => $exc['purity_id'],
                     'weight_grams' => $exc['weight_grams'],
-                    'rate_per_gram' => $goldRate,
+                    'rate_per_gram' => $exc['ratePerGram'],
                     'metal_cost' => $exc['valuation'],
                     'labour_cost' => 0,
                     'polish_cost' => 0,
@@ -244,6 +267,18 @@ class POSSaleService
         }
 
         return $invoice;
+    }
+
+    /** @throws \InvalidArgumentException if no current rate is set for this purity */
+    private function ratePerGramFor(Collection $currentRates, int $purityId, string $label): float
+    {
+        $rate = $currentRates->get($purityId);
+
+        if (! $rate) {
+            throw new \InvalidArgumentException("No current rate is set for {$label}'s purity — set one in Rate Management first.");
+        }
+
+        return (float) $rate->rate_per_gram;
     }
 
     private function resolveParty(array $validated): int

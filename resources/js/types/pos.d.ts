@@ -10,7 +10,9 @@ export interface CartItem {
     net_weight_grams: number;
     labour_cost: number;
     polish_cost: number;
-    // line_total is now computed on the fly based on the global gold rate
+    // The live rate for this item's own purity, detected the moment it was
+    // added to the cart — each item can carry a different rate.
+    rate_per_gram: number;
 }
 
 export interface ExchangeItem {
@@ -23,6 +25,7 @@ export interface ExchangeItem {
     weight_grams: number;
     deduction_percent: number;
     net_weight_grams: number;
+    rate_per_gram: number;
     valuation: number;
 }
 
@@ -30,13 +33,12 @@ export interface CartState {
     items: CartItem[];
     exchanges: ExchangeItem[];
     subtotal: number; // Before discount
-    discount: number; 
+    discount: number;
     discountType: 'flat' | 'percentage';
     discount_reason?: string;
     total: number; // After discount and exchanges
     customer_name: string;
     customer_phone: string;
-    goldRate: number; // Today's gold rate per gram
     paymentMethod: 'Cash' | 'Card' | 'Transfer' | 'Bank QR';
 }
 
@@ -48,6 +50,5 @@ export type CartAction =
     | { type: 'SET_DISCOUNT'; payload: { value: number; type: 'flat' | 'percentage' } }
     | { type: 'SET_DISCOUNT_REASON'; payload: string }
     | { type: 'SET_CUSTOMER'; payload: { name: string; phone: string } }
-    | { type: 'SET_GOLD_RATE'; payload: number }
-    | { type: 'SET_PAYMENT_METHOD'; payload: 'Cash' | 'Card' | 'Transfer' }
+    | { type: 'SET_PAYMENT_METHOD'; payload: 'Cash' | 'Card' | 'Transfer' | 'Bank QR' }
     | { type: 'CLEAR_CART' };
