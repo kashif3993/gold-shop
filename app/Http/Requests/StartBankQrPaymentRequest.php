@@ -25,9 +25,11 @@ class StartBankQrPaymentRequest extends FormRequest
             'discountType' => 'required|in:flat,percentage',
             'items' => 'required_without:exchanges|array',
             'items.*.id' => 'required|exists:items,id',
+            'items.*.rate_override' => 'nullable|numeric|min:0.01',
 
             // Pricing is resolved server-side per purity (see POSSaleService) —
-            // nothing priced here is trusted from the client.
+            // nothing priced here is trusted from the client, other than an
+            // explicit per-line rate_override, which is always audited.
             'exchanges' => 'nullable|array',
             'exchanges.*.metal_type_id' => 'required_with:exchanges|exists:metal_types,id',
             'exchanges.*.purity_id' => 'required_with:exchanges|exists:purities,id',

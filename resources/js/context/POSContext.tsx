@@ -63,6 +63,13 @@ const posReducer = (state: CartState, action: CartAction): CartState => {
             const { subtotal, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType);
             return { ...state, items: newItems, subtotal, total };
         }
+        case 'UPDATE_ITEM_RATE': {
+            const newItems = state.items.map(i =>
+                i.id === action.payload.id ? { ...i, rate_per_gram: action.payload.rate_per_gram } : i
+            );
+            const { subtotal, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType);
+            return { ...state, items: newItems, subtotal, total };
+        }
         case 'SET_DISCOUNT': {
             const { value, type } = action.payload;
             const { subtotal, total } = calculateTotals(state.items, state.exchanges, value, type);

@@ -78,6 +78,7 @@ function POSCart() {
                 net_weight_grams: parseFloat(item.net_weight_grams) || 0,
                 labour_cost: parseFloat(item.labour_cost) || 0,
                 polish_cost: parseFloat(item.polish_cost) || 0,
+                detected_rate_per_gram: detectedRate.rate_per_gram,
                 rate_per_gram: detectedRate.rate_per_gram,
             }
         });
@@ -188,9 +189,11 @@ function POSCart() {
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-100">
                                                     {item.purity_name} Hallmark
                                                 </span>
-                                                <span className="text-[10px] text-gray-400 tabular-nums">
-                                                    Rate: {formatPKR(item.rate_per_gram)}/g
-                                                </span>
+                                                <EditableRate
+                                                    detectedRate={item.detected_rate_per_gram}
+                                                    rate={item.rate_per_gram}
+                                                    onChange={(rate) => dispatch({ type: 'UPDATE_ITEM_RATE', payload: { id: item.id, rate_per_gram: rate } })}
+                                                />
                                             </div>
                                         </td>
                                         <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-900 font-bold text-right tabular-nums">
@@ -293,6 +296,66 @@ function POSCart() {
                 </div>
             </div>
         </div>
+    );
+}
+
+/**
+ * The rate detected for this cart line, editable inline for a negotiated
+ * price. Starts equal to the live rate; any edit away from it is flagged
+ * ("edited") and audited server-side when the sale goes through. "Reset"
+ * puts it back to the system-detected rate.
+ */
+function EditableRate({ detectedRate, rate, onChange }: { detectedRate: number; rate: number; onChange: (rate: number) => void }) {
+    const [editing, setEditing] = useState(false);
+    const [draft, setDraft] = useState(String(rate));
+    const isOverridden = rate !== detectedRate;
+
+    const commit = () => {
+        const parsed = parseFloat(draft);
+        onChange(Number.isFinite(parsed) && parsed > 0 ? parsed : detectedRate);
+        setEditing(false);
+    };
+
+    if (editing) {
+        return (
+            <span className="inline-flex items-center gap-1">
+                <input
+                    autoFocus
+                    type="number"
+                    step="0.01"
+                    value={draft}
+                    onChange={e => setDraft(e.target.value)}
+                    onBlur={commit}
+                    onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false); }}
+                    className="w-20 text-[10px] px-1 py-0.5 border border-[#b38a36] rounded tabular-nums"
+                />
+                <span className="text-[10px] text-gray-400">/g</span>
+            </span>
+        );
+    }
+
+    return (
+        <span className="inline-flex items-center gap-1">
+            <button
+                type="button"
+                onClick={() => { setDraft(String(rate)); setEditing(true); }}
+                className={cn(
+                    'text-[10px] tabular-nums underline decoration-dotted underline-offset-2',
+                    isOverridden ? 'text-[#b38a36] font-semibold' : 'text-gray-400 hover:text-gray-600',
+                )}
+                title="Click to edit this item's rate"
+            >
+                Rate: {formatPKR(rate)}/g
+            </button>
+            {isOverridden && (
+                <>
+                    <span className="text-[9px] px-1 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-medium">edited</span>
+                    <button type="button" onClick={() => onChange(detectedRate)} className="text-[9px] text-gray-400 hover:text-gray-600 underline">
+                        reset
+                    </button>
+                </>
+            )}
+        </span>
     );
 }
 
@@ -548,7 +611,13 @@ function POSSidebar() {
                             discount: state.discount,
                             discountType: state.discountType,
                             discount_reason: state.discount_reason,
-                            items: state.items,
+                            // Only send an override when the shopkeeper actually edited a
+                            // line's rate away from the detected one — otherwise the
+                            // server just prices from Rate Management as normal.
+                            items: state.items.map(item => ({
+                                id: item.id,
+                                ...(item.rate_per_gram !== item.detected_rate_per_gram ? { rate_override: item.rate_per_gram } : {}),
+                            })),
                             exchanges: state.exchanges,
                         };
 

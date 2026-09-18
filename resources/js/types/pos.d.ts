@@ -11,7 +11,11 @@ export interface CartItem {
     labour_cost: number;
     polish_cost: number;
     // The live rate for this item's own purity, detected the moment it was
-    // added to the cart — each item can carry a different rate.
+    // added to the cart — kept so an edit can be told apart from the system
+    // value and reset back to it.
+    detected_rate_per_gram: number;
+    // The rate actually used for pricing — starts equal to detected_rate_per_gram,
+    // editable per line (e.g. a negotiated price), audited server-side if changed.
     rate_per_gram: number;
 }
 
@@ -45,6 +49,7 @@ export interface CartState {
 export type CartAction =
     | { type: 'ADD_ITEM'; payload: CartItem }
     | { type: 'REMOVE_ITEM'; payload: { id: number } }
+    | { type: 'UPDATE_ITEM_RATE'; payload: { id: number; rate_per_gram: number } }
     | { type: 'ADD_EXCHANGE'; payload: ExchangeItem }
     | { type: 'REMOVE_EXCHANGE'; payload: { id: string } }
     | { type: 'SET_DISCOUNT'; payload: { value: number; type: 'flat' | 'percentage' } }

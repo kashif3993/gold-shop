@@ -31,11 +31,14 @@ class StorePOSTransactionRequest extends FormRequest
             'paymentMethod'  => 'required|in:Cash,Card,Transfer,cash,card,bank_transfer,credit',
             'items'          => 'required_without:exchanges|array',
             'items.*.id'     => 'required|exists:items,id',
+            // Optional negotiated rate for this one line — everything else is
+            // priced server-side from Rate Management's current rate for the
+            // item's own purity_id (see POSSaleService). A present override is
+            // used instead of the detected rate and always audited.
+            'items.*.rate_override' => 'nullable|numeric|min:0.01',
 
-            // Pricing is never taken from the client — every item and exchange
-            // line is priced server-side from Rate Management's current rate
-            // for its own purity_id (see POSSaleService). `valuation`, if sent,
-            // is only ever a client-side preview and is recomputed here.
+            // `valuation`, if sent, is only ever a client-side preview and is
+            // recomputed here from each exchange's own purity's current rate.
             'exchanges'                      => 'nullable|array',
             'exchanges.*.metal_type_id'      => 'required_with:exchanges|exists:metal_types,id',
             'exchanges.*.purity_id'          => 'required_with:exchanges|exists:purities,id',

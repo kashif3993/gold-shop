@@ -67,7 +67,13 @@ class POSSaleService
                 throw new \InvalidArgumentException("Item {$itemModel->item_code} is no longer in stock.");
             }
 
-            $ratePerGram = $this->ratePerGramFor($currentRates, $itemModel->purity_id, $itemModel->item_code);
+            $detectedRate = $this->ratePerGramFor($currentRates, $itemModel->purity_id, $itemModel->item_code);
+
+            // A shopkeeper can negotiate a line's rate for a specific sale —
+            // the detected rate stays the baseline everyone sees, an override
+            // is a deliberate deviation from it and always audited below.
+            $overrideRate = isset($cartItem['rate_override']) ? (float) $cartItem['rate_override'] : null;
+            $ratePerGram = $overrideRate ?? $detectedRate;
 
             $metalCost = round($itemModel->net_weight_grams * $ratePerGram, 2);
             $labourCost = round((float) $itemModel->labour_cost, 2);
@@ -81,6 +87,8 @@ class POSSaleService
             $validItems[] = [
                 'model' => $itemModel,
                 'ratePerGram' => $ratePerGram,
+                'detectedRate' => $detectedRate,
+                'overridden' => $overrideRate !== null && round($overrideRate, 2) !== round($detectedRate, 2),
                 'metalCost' => $metalCost,
                 'labourCost' => $labourCost,
                 'polishCost' => $polishCost,
@@ -218,6 +226,18 @@ class POSSaleService
                 'polish_cost' => $data['polishCost'],
                 'line_total' => $data['lineTotal'],
             ]);
+
+            if ($data['overridden']) {
+                $this->audit->log(
+                    'item_price',
+                    $item->id,
+                    'rate_per_gram',
+                    (string) $data['detectedRate'],
+                    (string) $data['ratePerGram'],
+                    "Manual rate override during sale (invoice {$invoice->invoice_number})",
+                    $userId,
+                );
+            }
         }
 
         if (count($totals['validExchanges']) > 0) {

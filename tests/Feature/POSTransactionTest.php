@@ -349,6 +349,55 @@ class POSTransactionTest extends TestCase
         $this->assertDatabaseHas('invoice_line_items', ['item_id' => $bar24k->id, 'rate_per_gram' => 24500.00, 'metal_cost' => 245000.00]);
     }
 
+    /** A shopkeeper can negotiate a line's rate for one sale — it's used instead of the detected rate, and audited. */
+    public function test_a_negotiated_rate_override_is_used_and_audited(): void
+    {
+        $this->setRate($this->purity22k, 22000);
+
+        $item = $this->createInStockItem([
+            'gross_weight_grams' => 10,
+            'labour_cost' => 0,
+            'polish_cost' => 0,
+        ]);
+
+        $payload = [
+            'discount' => 0,
+            'discountType' => 'flat',
+            'paymentMethod' => 'Cash',
+            'items' => [['id' => $item->id, 'rate_override' => 21000]],
+        ];
+
+        $this->actingAs($this->user)->postJson('/api/v1/pos/transaction', $payload)->assertStatus(201);
+
+        $this->assertDatabaseHas('invoice_line_items', ['item_id' => $item->id, 'rate_per_gram' => 21000.00, 'metal_cost' => 210000.00]);
+        $this->assertDatabaseHas('audit_log', [
+            'entity_type' => 'item_price',
+            'entity_id' => $item->id,
+            'field_name' => 'rate_per_gram',
+            'old_value' => '22000',
+            'new_value' => '21000',
+        ]);
+    }
+
+    /** Sending the same value as the detected rate isn't a real override and shouldn't be audited as one. */
+    public function test_an_override_matching_the_detected_rate_is_not_audited(): void
+    {
+        $this->setRate($this->purity22k, 22000);
+
+        $item = $this->createInStockItem(['gross_weight_grams' => 10, 'labour_cost' => 0, 'polish_cost' => 0]);
+
+        $payload = [
+            'discount' => 0,
+            'discountType' => 'flat',
+            'paymentMethod' => 'Cash',
+            'items' => [['id' => $item->id, 'rate_override' => 22000]],
+        ];
+
+        $this->actingAs($this->user)->postJson('/api/v1/pos/transaction', $payload)->assertStatus(201);
+
+        $this->assertDatabaseCount('audit_log', 0);
+    }
+
     public function test_sale_is_rejected_when_the_items_purity_has_no_current_rate(): void
     {
         // No rate ever set for purity22k.
