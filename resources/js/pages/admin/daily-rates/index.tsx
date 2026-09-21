@@ -1,13 +1,22 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
+import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
+import { LineChart } from '@/components/simple-charts';
 import '../../../../css/admin.css';
+import '../../../../css/simple-charts.css';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admin', href: '/admin' }, { title: 'Daily Rates', href: '/admin/daily-rates' }];
 
 const fmt = (n: number | string | null) =>
     n == null ? '—' : 'Rs ' + new Intl.NumberFormat('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n));
+
+const metalColor = (metal: string) => {
+    const key = metal.toLowerCase();
+    if (key === 'gold') return '#d4af37';
+    if (key === 'silver') return '#9ca3af';
+    return '#6366f1';
+};
 
 interface Metal {
     id: number;
@@ -15,7 +24,13 @@ interface Metal {
     purities: { id: number; name: string; metal_type_id: number }[];
 }
 
-export default function DailyRatesIndex({ rates, filters, metals }: { rates: any; filters: any; metals: Metal[] }) {
+interface ChartSeries {
+    metal: string;
+    purity: string;
+    points: { date: string; rate: number }[];
+}
+
+export default function DailyRatesIndex({ rates, filters, metals, chartSeries }: { rates: any; filters: any; metals: Metal[]; chartSeries: ChartSeries[] }) {
     const { flash } = usePage().props as any;
     const [metalId, setMetalId] = useState(filters.metal_type_id || '');
     const [purityId, setPurityId] = useState(filters.purity_id || '');
@@ -40,7 +55,7 @@ export default function DailyRatesIndex({ rates, filters, metals }: { rates: any
     const hasFilters = metalId || purityId || source || dateFrom || dateTo;
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AdminLayout breadcrumbs={breadcrumbs}>
             <Head title="Daily Rate History" />
 
             <div className="adm-page">
@@ -86,6 +101,18 @@ export default function DailyRatesIndex({ rates, filters, metals }: { rates: any
                     <button type="submit" className="adm-btn adm-btn-gold">Apply</button>
                     {hasFilters && <button type="button" className="adm-btn adm-btn-ghost" onClick={clearFilters}>Clear</button>}
                 </form>
+
+                <div className="adm-card">
+                    <h2 className="adm-card-title">Rate trend</h2>
+                    <p className="adm-card-sub">One line per purity currently in view, matching the filters above.</p>
+                    <LineChart
+                        series={chartSeries.map(s => ({
+                            name: `${s.metal} (${s.purity})`,
+                            color: metalColor(s.metal),
+                            points: s.points.map(p => ({ x: p.date, y: p.rate })),
+                        }))}
+                    />
+                </div>
 
                 <div className="adm-card">
                     <div className="adm-table-wrap">
@@ -142,6 +169,6 @@ export default function DailyRatesIndex({ rates, filters, metals }: { rates: any
                     )}
                 </div>
             </div>
-        </AppLayout>
+        </AdminLayout>
     );
 }

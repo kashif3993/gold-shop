@@ -128,6 +128,20 @@ class AdminPanelTest extends TestCase
         $filtered->assertInertia(fn ($page) => $page->has('rates.data', 1));
     }
 
+    public function test_daily_rate_history_chart_collapses_same_day_fetches_to_one_point(): void
+    {
+        app(GoldRateService::class)->storeRate($this->gold->id, $this->purity->id, 24000, 'api', $this->admin->id);
+        app(GoldRateService::class)->storeRate($this->gold->id, $this->purity->id, 25000, 'manual', $this->admin->id);
+
+        $this->actingAs($this->admin)->get('/admin/daily-rates')
+            ->assertInertia(fn ($page) => $page
+                ->has('chartSeries', 1)
+                ->where('chartSeries.0.metal', 'Gold')
+                ->where('chartSeries.0.purity', '22K')
+                ->has('chartSeries.0.points', 1)
+                ->where('chartSeries.0.points.0.rate', 25000));
+    }
+
     /* ── manual price override ────────────────────────────────────── */
 
     public function test_admin_can_override_a_rate_with_a_required_reason(): void

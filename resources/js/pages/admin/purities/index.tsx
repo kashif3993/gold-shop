@@ -1,6 +1,6 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
+import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Pencil, X, Check } from 'lucide-react';
 import '../../../../css/admin.css';
@@ -62,7 +62,7 @@ export default function PuritiesIndex({ metals }: { metals: Metal[] }) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AdminLayout breadcrumbs={breadcrumbs}>
             <Head title="Purities" />
 
             <div className="adm-page">
@@ -173,6 +173,6 @@ export default function PuritiesIndex({ metals }: { metals: Metal[] }) {
                     </div>
                 ))}
             </div>
-        </AppLayout>
+        </AdminLayout>
     );
 }

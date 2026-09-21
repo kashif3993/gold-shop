@@ -63,6 +63,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('payment', [\App\Http\Controllers\Admin\PaymentSettingsController::class, 'update'])->name('payment.update');
 
         Route::post('pos/bank-qr/{reference}/confirm', [\App\Http\Controllers\Api\V1\BankQrPaymentController::class, 'confirm'])->name('pos.bank-qr.confirm');
+
+        Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+        Route::post('users/{user}/role', [\App\Http\Controllers\Admin\UserController::class, 'updateRole'])->name('users.role');
+        Route::post('users/{user}/toggle-active', [\App\Http\Controllers\Admin\UserController::class, 'toggleActive'])->name('users.toggle-active');
+
+        Route::get('audit-log', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-log.index');
     });
 
     // Reports (sales / profit / stock valuation — server-computed)

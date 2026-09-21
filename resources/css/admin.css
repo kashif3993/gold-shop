@@ -25,6 +25,23 @@
     --adm-radius: 12px;
 }
 
+/* ── admin zone shell ────────────────────────────────────────────────
+   Wraps the admin layout's sidebar/header (not its page content, which
+   keeps using the tokens above). Pins the sidebar to a dark/gold scheme
+   permanently, regardless of the site's own light/dark toggle, so Admin
+   reads as its own zone rather than another page in the same app. */
+
+.admin-zone {
+    --sidebar-background: hsl(0, 0%, 7%);
+    --sidebar-foreground: hsl(0, 0%, 80%);
+    --sidebar-primary: hsl(43, 80%, 55%);
+    --sidebar-primary-foreground: hsl(0, 0%, 8%);
+    --sidebar-accent: hsl(43, 40%, 16%);
+    --sidebar-accent-foreground: hsl(43, 80%, 70%);
+    --sidebar-border: hsl(0, 0%, 15.9%);
+    --sidebar-ring: hsl(43, 80%, 55%);
+}
+
 .adm-page {
     padding: 2rem;
     width: 100%;

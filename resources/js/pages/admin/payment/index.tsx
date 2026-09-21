@@ -1,6 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
+import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
 import '../../../../css/admin.css';
 
@@ -38,7 +38,7 @@ export default function PaymentSettings({ bank }: { bank: Bank }) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AdminLayout breadcrumbs={breadcrumbs}>
             <Head title="Payment Settings" />
 
             <div className="adm-page">
@@ -103,6 +103,6 @@ export default function PaymentSettings({ bank }: { bank: Bank }) {
                     This is a static account QR, not a per-sale payment link — the amount and a reference number are shown next to it at checkout, and the customer includes that reference in their own bank transfer. Confirming that a payment actually arrived stays admin-only, from the POS screen.
                 </p>
             </div>
-        </AppLayout>
+        </AdminLayout>
     );
 }

@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
 import '../../../css/admin.css';
 
@@ -9,7 +9,7 @@ export default function AdminIndex() {
     const { flash } = usePage().props as any;
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AdminLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin" />
 
             <div className="adm-page">
@@ -38,8 +38,16 @@ export default function AdminIndex() {
                         <h2 className="adm-link-card-title">Bank QR payment</h2>
                         <p className="adm-link-card-sub">Upload your bank/JazzCash/Easypaisa account QR — shown at POS checkout. Confirming a payment also stays admin-only.</p>
                     </Link>
+                    <Link href="/admin/users" className="adm-link-card">
+                        <h2 className="adm-link-card-title">Users</h2>
+                        <p className="adm-link-card-sub">Every login the shop has — promote to admin, or deactivate an account, with built-in protection against locking yourself out.</p>
+                    </Link>
+                    <Link href="/admin/audit-log" className="adm-link-card">
+                        <h2 className="adm-link-card-title">Audit log</h2>
+                        <p className="adm-link-card-sub">Every rate edit, price/weight override, discount, and purity change ever recorded — who, when, and why.</p>
+                    </Link>
                 </div>
             </div>
-        </AppLayout>
+        </AdminLayout>
     );
 }
