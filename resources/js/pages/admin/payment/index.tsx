@@ -69,7 +69,7 @@ export default function PaymentSettings({ bank }: { bank: Bank }) {
                             <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div className="adm-field">
                                     <label className="adm-label" htmlFor="qr_image">Bank QR image</label>
-                                    <input id="qr_image" type="file" accept="image/*" onChange={onFileChange} />
+                                    <input id="qr_image" type="file" accept="image/*" className="adm-file" onChange={onFileChange} />
                                     {form.errors.qr_image && <span className="adm-error">{form.errors.qr_image}</span>}
                                 </div>
                                 <div className="adm-field">

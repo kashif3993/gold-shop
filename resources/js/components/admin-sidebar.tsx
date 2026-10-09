@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutDashboard, Gem, Landmark, History, ShieldCheck, Users, ArrowLeftCircle } from 'lucide-react';
+import { LayoutDashboard, Gem, Landmark, History, ShieldCheck, Users, ArrowLeftCircle, SlidersHorizontal, DatabaseBackup } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const adminNavItems: NavItem[] = [
@@ -13,6 +13,8 @@ const adminNavItems: NavItem[] = [
     { title: 'Bank QR Payment', url: '/admin/payment', icon: Landmark },
     { title: 'Users', url: '/admin/users', icon: Users },
     { title: 'Audit Log', url: '/admin/audit-log', icon: ShieldCheck },
+    { title: 'Backups', url: '/admin/backups', icon: DatabaseBackup },
+    { title: 'Settings', url: '/admin/settings', icon: SlidersHorizontal },
 ];
 
 /**

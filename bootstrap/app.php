@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\CheckMaintenanceMode;
+use App\Http\Middleware\EnsureCanConfirmBankQr;
+use App\Http\Middleware\EnsureFeatureEnabled;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -18,12 +21,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            CheckMaintenanceMode::class,
         ]);
 
         $middleware->statefulApi();
 
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'feature' => EnsureFeatureEnabled::class,
+            'bank-qr-confirm' => EnsureCanConfirmBankQr::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

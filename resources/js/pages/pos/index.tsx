@@ -7,7 +7,10 @@ import { useState, useEffect } from 'react';
 import { Search, Trash2, Edit2, CheckCircle2, QrCode, Plus } from 'lucide-react';
 import { cn, genId } from '@/lib/utils';
 import axios from 'axios';
+import { toast } from 'sonner';
+import PosPrintSlip from '@/components/pos-print-slip';
 import '../../../css/pos.css';
+import '../../../css/pos-print.css';
 
 // --- Utility to format currency as PKR ---
 const formatPKR = (amount: number) => {
@@ -23,7 +26,8 @@ const formatPKR = (amount: number) => {
 
 function POSCart() {
     const { state, dispatch } = usePOS();
-    const { metals, purities, currentRates } = usePage().props as any;
+    const { metals, purities, currentRates, features } = usePage().props as any;
+    const exchangeEnabled = features?.exchange_enabled ?? true;
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -235,14 +239,15 @@ function POSCart() {
                 </div>
             </div>
 
-            {/* Exchanges (Old Gold) Section */}
+            {/* Exchanges (Old Gold) Section — hidden entirely when the module is off (Admin → Settings) */}
+            {exchangeEnabled && (
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col mt-4">
                 <div className="bg-gray-50/50 px-6 py-3 border-b border-gray-200 flex justify-between items-center">
                     <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Old Gold / Silver Exchange</h3>
                 </div>
                 <div className="p-4">
                     <ExchangeForm metals={metals} purities={purities} />
-                    
+
                     {state.exchanges.length > 0 && (
                         <div className="mt-4">
                             <table className="min-w-full divide-y divide-gray-200">
@@ -281,6 +286,7 @@ function POSCart() {
                     )}
                 </div>
             </div>
+            )}
 
             {/* Bottom Actions */}
             <div className="flex justify-between items-center text-sm text-gray-500 font-medium">
@@ -446,8 +452,21 @@ function ExchangeForm({ metals, purities }: { metals: any[], purities: any[] }) 
 
 function POSSidebar() {
     const { state, dispatch } = usePOS();
+    const { features, tax, shop, printerType } = usePage().props as any;
+    const bankQrEnabled = features?.bank_qr_enabled ?? true;
+    const exchangeEnabled = features?.exchange_enabled ?? true;
     const [discountInput, setDiscountInput] = useState(state.discount.toString());
     const [bankQrPayload, setBankQrPayload] = useState<Record<string, any> | null>(null);
+
+    // Tax config lives in Admin → Settings — load it into the cart preview once.
+    useEffect(() => {
+        dispatch({ type: 'SET_TAX_CONFIG', payload: { enabled: !!tax?.enabled, ratePercent: Number(tax?.rate_percent) || 0 } });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const discountAmount = state.discountType === 'percentage'
+        ? (state.subtotal * state.discount) / 100
+        : Math.min(state.subtotal, state.discount);
 
     const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setDiscountInput(e.target.value);
@@ -518,13 +537,15 @@ function POSSidebar() {
                         <span className="pos-bill-row-value">{formatPKR(state.subtotal)}</span>
                     </div>
 
-                    {/* Exchanges */}
-                    <div className="pos-bill-row">
-                        <span className="pos-bill-row-label">Exchanges</span>
-                        <span className="pos-bill-row-value pos-bill-row-value--gold">
-                            -{formatPKR(state.exchanges.reduce((sum, e) => sum + e.valuation, 0))}
-                        </span>
-                    </div>
+                    {/* Exchanges — row hidden entirely when the module is off */}
+                    {exchangeEnabled && (
+                        <div className="pos-bill-row">
+                            <span className="pos-bill-row-label">Exchanges</span>
+                            <span className="pos-bill-row-value pos-bill-row-value--gold">
+                                -{formatPKR(state.exchanges.reduce((sum, e) => sum + e.valuation, 0))}
+                            </span>
+                        </div>
+                    )}
 
                     <hr className="pos-bill-divider" />
 
@@ -555,7 +576,7 @@ function POSSidebar() {
                                 onChange={handleDiscountChange}
                             />
                             <span className="pos-discount-amount">
-                                -{formatPKR(state.subtotal - state.total)}
+                                -{formatPKR(discountAmount)}
                             </span>
                         </div>
                     </div>
@@ -568,6 +589,13 @@ function POSSidebar() {
                             value={state.discount_reason}
                             onChange={(e) => dispatch({ type: 'SET_DISCOUNT_REASON', payload: e.target.value })}
                         />
+                    )}
+
+                    {state.taxEnabled && (
+                        <div className="pos-bill-row">
+                            <span className="pos-bill-row-label">Tax ({state.taxRatePercent}%)</span>
+                            <span className="pos-bill-row-value">+{formatPKR(state.taxAmount)}</span>
+                        </div>
                     )}
                 </div>
             </div>
@@ -584,7 +612,7 @@ function POSSidebar() {
             <div>
                 <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Payment Method</h3>
                 <div className="pos-payment-tabs">
-                    {['Cash', 'Card', 'Transfer', 'Bank QR'].map((method) => (
+                    {(['Cash', 'Card', 'Transfer', 'Bank QR'] as const).filter(m => m !== 'Bank QR' || bankQrEnabled).map((method) => (
                         <button
                             key={method}
                             onClick={() => dispatch({ type: 'SET_PAYMENT_METHOD', payload: method as any })}
@@ -633,7 +661,9 @@ function POSSidebar() {
                             });
 
                             if (response.data.success) {
-                                alert(`Sale Completed! Invoice ${response.data.invoice.invoice_number} created.`);
+                                toast.success('Sale completed', {
+                                    description: `Invoice ${response.data.invoice.invoice_number} created.`,
+                                });
                                 dispatch({ type: 'CLEAR_CART' });
                             }
                         } catch (error: any) {
@@ -651,17 +681,29 @@ function POSSidebar() {
                 >
                     Complete Sale
                 </button>
-                <button className="flex-1 min-w-0 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-bold transition shadow-sm">
+                <button
+                    type="button"
+                    disabled={state.items.length === 0}
+                    onClick={() => window.print()}
+                    className="flex-1 min-w-0 py-1 bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-gray-700 rounded-lg text-sm font-bold transition shadow-sm"
+                >
                     Print
                 </button>
             </div>
+
+            {/* Off-screen until @media print — see pos-print.css. Always a
+                quotation, never a receipt: Print works straight from the
+                live cart, whether or not a sale has actually been completed. */}
+            <PosPrintSlip shop={shop} printerType={printerType} />
 
             {bankQrPayload && (
                 <BankQrPaymentModal
                     startPayload={bankQrPayload}
                     onClose={() => setBankQrPayload(null)}
                     onCompleted={(invoiceNumber) => {
-                        alert(`Sale Completed! Invoice ${invoiceNumber} created.`);
+                        toast.success('Sale completed', {
+                            description: `Invoice ${invoiceNumber} created.`,
+                        });
                         dispatch({ type: 'CLEAR_CART' });
                         setBankQrPayload(null);
                     }}

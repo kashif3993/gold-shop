@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart, HandCoins, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart, HandCoins, ShieldCheck, Calculator } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -48,6 +48,11 @@ const mainNavItems: NavItem[] = [
         icon: BarChart2,
     },
     {
+        title: 'Zakat',
+        url: '/zakat',
+        icon: Calculator,
+    },
+    {
         title: 'Rate Management',
         url: '/rate-management',
         icon: TrendingUp,
@@ -60,12 +65,18 @@ const mainNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { auth } = usePage().props as any;
+    const { auth, features } = usePage().props as any;
     const isAdmin = auth?.user?.role === 'admin';
 
+    const visibleItems = mainNavItems.filter(item => {
+        if (item.url === '/buyback') return features?.buyback_enabled ?? true;
+        if (item.url === '/zakat') return features?.zakat_enabled ?? true;
+        return true;
+    });
+
     const items = isAdmin
-        ? [...mainNavItems, { title: 'Admin', url: '/admin', icon: ShieldCheck }]
-        : mainNavItems;
+        ? [...visibleItems, { title: 'Admin', url: '/admin', icon: ShieldCheck }]
+        : visibleItems;
 
     return (
         <Sidebar collapsible="icon" variant="inset">

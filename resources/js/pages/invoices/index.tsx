@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useCallback, useEffect, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Eye, Printer, X } from 'lucide-react';
+import { Eye, Printer, Receipt, X } from 'lucide-react';
 import InvoiceSheet from '@/components/invoice-sheet';
 import '../../../css/invoices.css';
 
@@ -18,6 +18,7 @@ interface Detail {
     subtotal: number;
     exchangeLines: any[];
     shop: any;
+    bankQrSlipUrl: string | null;
 }
 
 export default function InvoicesIndex({ invoices, filters, paymentMethods, summary }: any) {
@@ -161,15 +162,32 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
                                             <td>{new Date(inv.invoice_date).toLocaleDateString()}</td>
                                             <td>{inv.party?.name || <span className="inv-muted">-</span>}</td>
                                             <td>{inv.line_items_count}</td>
-                                            <td><span className={`inv-pay-badge ${inv.payment_method}`}>{prettyMethod(inv.payment_method)}</span></td>
+                                            <td>
+                                                <span className={`inv-pay-badge ${inv.payment_method}`}>{prettyMethod(inv.payment_method)}</span>
+                                                {inv.bank_txn_id && (
+                                                    <div className="inv-muted" style={{ fontSize: '0.72rem', marginTop: '0.2rem', fontFamily: 'monospace' }}>
+                                                        Txn: {inv.bank_txn_id}
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td style={{ textAlign: 'right' }} className="inv-money">
                                                 {Number(inv.total_discount) > 0 ? fmt(inv.total_discount) : <span className="inv-muted">-</span>}
                                             </td>
                                             <td style={{ textAlign: 'right' }} className="inv-money">{fmt(inv.grand_total)}</td>
                                             <td style={{ textAlign: 'right' }}>
-                                                <button type="button" className="inv-view-btn" onClick={() => openInvoice(inv.id)}>
-                                                    <Eye size={14} /> View
-                                                </button>
+                                                <div style={{ display: 'inline-flex', gap: '0.4rem' }}>
+                                                    {inv.bank_qr_slip_url && (
+                                                        <a
+                                                            href={inv.bank_qr_slip_url} target="_blank" rel="noopener noreferrer"
+                                                            className="inv-view-btn" title="View payment slip"
+                                                        >
+                                                            <Receipt size={14} />
+                                                        </a>
+                                                    )}
+                                                    <button type="button" className="inv-view-btn" onClick={() => openInvoice(inv.id)}>
+                                                        <Eye size={14} /> View
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -205,6 +223,11 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
                             <div className="inv-modal-head">
                                 <h3>Invoice</h3>
                                 <div className="inv-modal-head-actions">
+                                    {detail?.bankQrSlipUrl && (
+                                        <a href={detail.bankQrSlipUrl} target="_blank" rel="noopener noreferrer" className="inv-btn inv-btn-ghost">
+                                            <Receipt size={14} /> Slip
+                                        </a>
+                                    )}
                                     {detail && (
                                         <button type="button" className="inv-btn inv-btn-gold" onClick={() => window.print()}>
                                             <Printer size={14} /> Print

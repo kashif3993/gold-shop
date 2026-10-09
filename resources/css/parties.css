@@ -334,6 +334,7 @@
 
 .pty-pagination-links {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
 }
@@ -357,6 +358,13 @@
     opacity: 0.5;
     cursor: not-allowed;
     background: var(--pty-surface-alt);
+}
+
+.pty-page-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.65rem;
 }
 
 .pty-page-link.active {

@@ -2,7 +2,7 @@ import { Head, router, Link, usePage, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Eye, Edit, Trash2, Plus, X } from 'lucide-react';
+import { Eye, Edit, Trash2, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import PartyForm from '@/components/party-form';
 import '../../../css/parties.css';
 
@@ -13,12 +13,13 @@ export function partyTypeClass(name?: string): string {
     return `pty-type-badge pty-type-${key}`;
 }
 
-export default function PartiesIndex({ parties, partyTypes, filters }: any) {
+export default function PartiesIndex({ parties, partyTypes, filters, perPage, perPageOptions }: any) {
     const { flash } = usePage().props as any;
     const [typeFilter, setTypeFilter] = useState(filters.party_type_id || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const [search, setSearch] = useState(filters.search || '');
     const [showCreate, setShowCreate] = useState(false);
+    const rowsOptions: number[] = perPageOptions || [10, 20, 50, 100];
 
     const createForm = useForm({
         party_type_id: '',
@@ -49,6 +50,7 @@ export default function PartiesIndex({ parties, partyTypes, filters }: any) {
             party_type_id: typeFilter,
             status: statusFilter,
             search: search,
+            per_page: perPage,
         }, { preserveState: true, preserveScroll: true });
     };
 
@@ -56,7 +58,16 @@ export default function PartiesIndex({ parties, partyTypes, filters }: any) {
         setTypeFilter('');
         setStatusFilter('');
         setSearch('');
-        router.get('/parties');
+        router.get('/parties', { per_page: perPage }, { preserveScroll: true });
+    };
+
+    const changeRowsPerPage = (value: string) => {
+        router.get('/parties', {
+            party_type_id: typeFilter,
+            status: statusFilter,
+            search: search,
+            per_page: value,
+        }, { preserveState: true, preserveScroll: true });
     };
 
     const handleDelete = (party: any) => {
@@ -106,6 +117,15 @@ export default function PartiesIndex({ parties, partyTypes, filters }: any) {
                     <div className="pty-filter-group">
                         <label className="pty-filter-label">Search (name / phone)</label>
                         <input className="pty-filter-input" value={search} onChange={e => setSearch(e.target.value)} placeholder="e.g. Ahmed or 0300..." />
+                    </div>
+
+                    <div className="pty-filter-group">
+                        <label className="pty-filter-label">Rows per page</label>
+                        <select className="pty-filter-input" value={perPage} onChange={e => changeRowsPerPage(e.target.value)}>
+                            {rowsOptions.map((n: number) => (
+                                <option key={n} value={n}>{n}</option>
+                            ))}
+                        </select>
                     </div>
 
                     <button type="submit" className="pty-filter-btn">Apply Filters</button>
@@ -174,23 +194,42 @@ export default function PartiesIndex({ parties, partyTypes, filters }: any) {
                     </table>
                     </div>
 
-                    {parties.links && parties.links.length > 3 && (
-                        <div className="pty-pagination">
-                            <div>
-                                Showing {parties.from || 0} to {parties.to || 0} of {parties.total} parties
-                            </div>
-                            <div className="pty-pagination-links">
-                                {parties.links.map((link: any, index: number) => (
-                                    <Link
-                                        key={index}
-                                        href={link.url || '#'}
-                                        className={`pty-page-link ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ))}
-                            </div>
+                    <div className="pty-pagination">
+                        <span>Showing {parties.from || 0} to {parties.to || 0} of {parties.total} parties</span>
+
+                        <div className="pty-pagination-links">
+                            <Link
+                                href={parties.prev_page_url || '#'}
+                                preserveScroll
+                                aria-label="Previous page"
+                                onClick={e => { if (!parties.prev_page_url) e.preventDefault(); }}
+                                className={`pty-page-link pty-page-nav ${!parties.prev_page_url ? 'disabled' : ''}`}
+                            >
+                                <ChevronLeft size={15} />
+                            </Link>
+
+                            {parties.links && parties.links.slice(1, -1).map((link: any, index: number) => (
+                                <Link
+                                    key={index}
+                                    href={link.url || '#'}
+                                    preserveScroll
+                                    onClick={e => { if (!link.url) e.preventDefault(); }}
+                                    className={`pty-page-link ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
+                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                            ))}
+
+                            <Link
+                                href={parties.next_page_url || '#'}
+                                preserveScroll
+                                aria-label="Next page"
+                                onClick={e => { if (!parties.next_page_url) e.preventDefault(); }}
+                                className={`pty-page-link pty-page-nav ${!parties.next_page_url ? 'disabled' : ''}`}
+                            >
+                                <ChevronRight size={15} />
+                            </Link>
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 {showCreate && (

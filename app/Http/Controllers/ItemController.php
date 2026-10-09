@@ -25,7 +25,7 @@ class ItemController extends Controller
     public function create()
     {
         return Inertia::render('items/create', [
-            'metals'       => MetalType::all(),
+            'metals'       => MetalType::active()->get(),
             'purities'     => Purity::all(),
             'parties'      => Party::all(),
             'currentRates' => $this->currentRates(),
@@ -99,9 +99,16 @@ class ItemController extends Controller
 
     public function edit(Item $item)
     {
+        // Active metals, plus this item's own metal even if it's since been
+        // switched off — editing an existing item must never lose its metal
+        // from the dropdown.
+        $metals = MetalType::where('is_active', true)
+            ->orWhere('id', $item->metal_type_id)
+            ->get();
+
         return Inertia::render('items/edit', [
             'item'         => $item->load(['metalType', 'purity', 'sourceParty']),
-            'metals'       => MetalType::all(),
+            'metals'       => $metals,
             'purities'     => Purity::all(),
             'parties'      => Party::all(),
             'currentRates' => $this->currentRates(),

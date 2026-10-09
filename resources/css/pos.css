@@ -306,34 +306,40 @@
 }
 
 /* ── Grand Total ─────────────────────────── */
+/* Label stacked above the value (not side-by-side) so a large total never
+   has to fight the label for width inside the fixed 310px sidebar column —
+   that's what was pushing big numbers (6-7 digits) past the box's edge. */
 .pos-grand-total {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
     background: linear-gradient(135deg, #fffbf0 0%, #fef8e8 100%);
     border: 1.5px solid #e6d5a7;
     border-radius: 0.75rem;
-    padding: 0.4rem 1rem;
-    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    min-width: 0;
 }
 
 .pos-grand-total-label {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 800;
     color: #374151;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     white-space: nowrap;
 }
 
 .pos-grand-total-value {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-family: Georgia, 'Times New Roman', serif;
     font-weight: 700;
     color: #b38a36;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
-    line-height: 1;
-    white-space: nowrap;
+    line-height: 1.15;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 /* ── Payment Method ──────────────────────── */

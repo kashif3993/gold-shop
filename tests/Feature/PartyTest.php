@@ -98,6 +98,39 @@ class PartyTest extends TestCase
             ->assertDontSee('Ahmed Khan');
     }
 
+    public function test_index_paginates_and_the_rows_per_page_picker_is_respected(): void
+    {
+        for ($i = 1; $i <= 25; $i++) {
+            $this->makeParty(['name' => "Party {$i}"]);
+        }
+
+        // Default page size.
+        $this->actingAs($this->user)
+            ->get('/parties')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('perPage', 20)
+                ->where('perPageOptions', [10, 20, 50, 100])
+                ->has('parties.data', 20)
+                ->where('parties.total', 25));
+
+        // A supported page size shrinks the page.
+        $this->actingAs($this->user)
+            ->get('/parties?per_page=10')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('perPage', 10)
+                ->has('parties.data', 10));
+
+        // An unsupported value silently falls back to the default rather than erroring.
+        $this->actingAs($this->user)
+            ->get('/parties?per_page=999')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('perPage', 20)
+                ->has('parties.data', 20));
+    }
+
     public function test_can_create_party(): void
     {
         $payload = [

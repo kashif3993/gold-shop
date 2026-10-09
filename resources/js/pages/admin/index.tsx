@@ -46,6 +46,14 @@ export default function AdminIndex() {
                         <h2 className="adm-link-card-title">Audit log</h2>
                         <p className="adm-link-card-sub">Every rate edit, price/weight override, discount, and purity change ever recorded — who, when, and why.</p>
                     </Link>
+                    <Link href="/admin/backups" className="adm-link-card">
+                        <h2 className="adm-link-card-title">Backups</h2>
+                        <p className="adm-link-card-sub">Automatic nightly database backup, stored locally — works with or without internet. See what's saved, or back up on demand.</p>
+                    </Link>
+                    <Link href="/admin/settings" className="adm-link-card">
+                        <h2 className="adm-link-card-title">Settings</h2>
+                        <p className="adm-link-card-sub">Shop profile shown on invoices, module on/off switches, sales tax, and the maintenance-mode emergency stop.</p>
+                    </Link>
                 </div>
             </div>
         </AdminLayout>

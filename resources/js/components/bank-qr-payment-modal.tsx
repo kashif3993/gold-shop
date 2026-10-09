@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { X, Lock, CheckCircle2, Clock } from 'lucide-react';
+import { X, Lock, CheckCircle2, Clock, Upload } from 'lucide-react';
 
 interface BankInfo {
     qr_image: string | null;
@@ -24,15 +24,6 @@ interface Payment {
 const formatPKR = (amount: number) =>
     'Rs ' + new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 }).format(amount);
 
-function formatCountdown(expiresAt: string): string {
-    const ms = new Date(expiresAt).getTime() - Date.now();
-    if (ms <= 0) return '00:00';
-    const totalSeconds = Math.floor(ms / 1000);
-    const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-    const s = (totalSeconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-}
-
 export default function BankQrPaymentModal({
     startPayload, onClose, onCompleted,
 }: {
@@ -41,16 +32,24 @@ export default function BankQrPaymentModal({
     onCompleted: (invoiceNumber: string) => void;
 }) {
     const { auth } = usePage().props as any;
-    const isAdmin = auth?.user?.role === 'admin';
+    const canConfirm = auth?.can_confirm_bank_qr === true;
 
     const [payment, setPayment] = useState<Payment | null>(null);
     const [stage, setStage] = useState<'starting' | 'showing' | 'confirming' | 'error'>('starting');
     const [error, setError] = useState('');
     const [txnId, setTxnId] = useState('');
     const [confirming, setConfirming] = useState(false);
-    const [, forceTick] = useState(0);
+    const [scanning, setScanning] = useState(false);
+    const [scanNote, setScanNote] = useState('');
+    const [slipPreview, setSlipPreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const pollRef = useRef<number | null>(null);
+
+    // Release the blob URL once it's no longer shown, and always on unmount.
+    useEffect(() => {
+        return () => { if (slipPreview) URL.revokeObjectURL(slipPreview); };
+    }, [slipPreview]);
 
     const start = () => {
         setStage('starting');
@@ -85,11 +84,29 @@ export default function BankQrPaymentModal({
         return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
     }, [payment?.reference, payment?.status]);
 
-    // Tick every second just to re-render the countdown.
-    useEffect(() => {
-        const id = window.setInterval(() => forceTick(t => t + 1), 1000);
-        return () => window.clearInterval(id);
-    }, []);
+    const scanSlip = (file: File) => {
+        if (!payment) return;
+        setScanning(true);
+        setScanNote('');
+        setError('');
+        // A local preview of exactly what's being uploaded — this is a
+        // client-side blob URL, never sent anywhere; the actual stored copy
+        // is whatever the server saved from this same file.
+        setSlipPreview(URL.createObjectURL(file));
+        const form = new FormData();
+        form.append('slip', file);
+        axios.post(`/admin/pos/bank-qr/${payment.reference}/scan-slip`, form)
+            .then(({ data }) => {
+                if (data.transaction_id) {
+                    setTxnId(data.transaction_id);
+                    setScanNote(`Detected from the slip: ${data.transaction_id} — check it, then confirm.`);
+                } else {
+                    setScanNote("Couldn't find a transaction ID on that image — please type it in below.");
+                }
+            })
+            .catch((err) => setError(err.response?.data?.message || 'Could not scan that image.'))
+            .finally(() => setScanning(false));
+    };
 
     const submitConfirm = (e: React.FormEvent) => {
         e.preventDefault();
@@ -105,6 +122,8 @@ export default function BankQrPaymentModal({
     const restart = () => {
         setPayment(null);
         setTxnId('');
+        setSlipPreview(null);
+        setScanNote('');
         start();
     };
 
@@ -173,10 +192,7 @@ export default function BankQrPaymentModal({
     return (
         <ModalShell onClose={onClose} title="Scan to pay">
             <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
-                    <span>Show this screen to the customer</span>
-                    <span className="tabular-nums">Expires in {formatCountdown(payment.expires_at)}</span>
-                </div>
+                <div className="text-xs font-semibold text-gray-500">Show this screen to the customer</div>
 
                 <div className="flex gap-4 items-center bg-gray-50 border border-gray-200 rounded-xl p-4">
                     <div className="w-28 h-28 flex-shrink-0 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
@@ -210,7 +226,7 @@ export default function BankQrPaymentModal({
                         </button>
                         <button onClick={onClose} className="px-4 py-2.5 rounded-lg border border-gray-200 text-sm font-medium">Cancel</button>
                     </div>
-                ) : isAdmin ? (
+                ) : canConfirm ? (
                     <form onSubmit={submitConfirm} className="flex flex-col gap-3">
                         <div>
                             <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">
@@ -225,6 +241,30 @@ export default function BankQrPaymentModal({
                                 className="w-full font-mono text-sm border border-gray-300 rounded-lg px-3 py-2"
                             />
                         </div>
+
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => { const f = e.target.files?.[0]; if (f) scanSlip(f); e.target.value = ''; }}
+                        />
+                        <button
+                            type="button"
+                            disabled={scanning}
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition"
+                        >
+                            <Upload className="h-3.5 w-3.5" />
+                            {scanning ? 'Scanning slip…' : 'Or upload the bank slip to auto-fill the ID'}
+                        </button>
+                        {slipPreview && (
+                            <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-lg p-2">
+                                <img src={slipPreview} alt="Uploaded slip" className="h-14 w-14 object-cover rounded border border-gray-200 flex-shrink-0" />
+                                <p className="text-[11px] text-gray-500 leading-snug">{scanNote || 'Scanning…'}</p>
+                            </div>
+                        )}
+
                         {error && <p className="text-xs text-red-600">{error}</p>}
                         <p className="text-[11px] text-gray-400">Confirming locks this invoice as paid immediately — it can&rsquo;t be undone or repeated.</p>
                         <div className="flex gap-2">
@@ -241,8 +281,8 @@ export default function BankQrPaymentModal({
                 ) : (
                     <div className="flex flex-col items-center gap-2 text-center bg-gray-50 border border-dashed border-gray-300 rounded-xl p-5">
                         <Lock className="h-6 w-6 text-gray-400" />
-                        <h4 className="text-sm font-bold text-gray-800">Only an admin can confirm this</h4>
-                        <p className="text-xs text-gray-500 max-w-[26ch]">The customer has been shown the pay screen. Ask an admin to sign in and enter the bank transaction ID to complete this sale.</p>
+                        <h4 className="text-sm font-bold text-gray-800">Only an admin (or an authorized manager) can confirm this</h4>
+                        <p className="text-xs text-gray-500 max-w-[26ch]">The customer has been shown the pay screen. Ask an admin, or a manager with this permission, to sign in and confirm the bank transaction to complete this sale.</p>
                         <p className="text-[11px] text-gray-400">This screen updates automatically once it's confirmed.</p>
                     </div>
                 )}

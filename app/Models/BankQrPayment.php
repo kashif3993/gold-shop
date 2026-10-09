@@ -14,6 +14,7 @@ class BankQrPayment extends Model
         'cart_snapshot',
         'status',
         'bank_txn_id',
+        'slip_path',
         'invoice_id',
         'created_by_user_id',
         'confirmed_by_user_id',

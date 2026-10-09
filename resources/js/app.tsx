@@ -3,6 +3,7 @@ import '../css/app.css';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import { Toaster } from 'sonner';
 import { route as routeFn } from 'ziggy-js';
 import { initializeTheme } from './hooks/use-appearance';
 
@@ -18,7 +19,14 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        // Mounted once, globally — any page can call toast(...) from
+        // 'sonner' without wiring up its own notification UI.
+        root.render(
+            <>
+                <App {...props} />
+                <Toaster richColors position="top-right" />
+            </>,
+        );
     },
     progress: {
         color: '#4B5563',

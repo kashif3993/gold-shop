@@ -73,4 +73,20 @@ return [
         'expiry_minutes' => (int) env('BANK_QR_EXPIRY_MINUTES', 15),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Bank slip OCR
+    |--------------------------------------------------------------------------
+    |
+    | Reads a photo of a bank transfer slip at the Bank QR confirm step and
+    | tries to find the transaction ID on it — free, local, offline (no cloud
+    | API, no cost). On Windows the `tesseract` binary isn't on PATH by
+    | default; set TESSERACT_BINARY_PATH to its full exe path if the scan
+    | fails with "tesseract is not recognized". Left blank, it's resolved
+    | from PATH as normal (e.g. on the Ubuntu CI/production image).
+    */
+    'tesseract' => [
+        'binary_path' => env('TESSERACT_BINARY_PATH'),
+    ],
+
 ];

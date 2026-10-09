@@ -22,6 +22,7 @@ class RateManagementController extends Controller
 
         $rows = Purity::with('metalType:id,name')
             ->where('is_active', true)
+            ->whereHas('metalType', fn ($q) => $q->where('is_active', true))
             ->orderBy('metal_type_id')
             ->orderByDesc('fineness_percent')
             ->get()
@@ -60,7 +61,7 @@ class RateManagementController extends Controller
 
         return Inertia::render('rate-management/index', [
             'rates' => $rows,
-            'metals' => MetalType::with(['purities' => fn ($q) => $q->where('is_active', true)])->get(),
+            'metals' => MetalType::active()->with(['purities' => fn ($q) => $q->where('is_active', true)])->get(),
             'shopDefault' => $shopDefault ? [
                 'id' => $shopDefault->id,
                 'adjustment_type' => $shopDefault->adjustment_type,

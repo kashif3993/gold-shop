@@ -7,6 +7,7 @@ use App\Models\InvoiceLineItem;
 use App\Models\Item;
 use App\Models\Party;
 use App\Models\PartyType;
+use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\TransactionType;
 use Illuminate\Support\Collection;
@@ -103,6 +104,10 @@ class POSSaleService
             ? round(($subtotal * $discountAmount) / 100, 2)
             : round($discountAmount, 2);
 
+        if (! empty($validated['exchanges']) && ! Setting::bool('exchange_enabled', true)) {
+            throw new \InvalidArgumentException('Old gold/silver exchange is currently turned off — an admin can re-enable it from Settings.');
+        }
+
         $validExchanges = [];
         $totalExchangeValuation = 0;
         foreach ($validated['exchanges'] ?? [] as $exc) {
@@ -124,7 +129,14 @@ class POSSaleService
         }
         $totalExchangeValuation = round($totalExchangeValuation, 2);
 
-        $grandTotal = round($subtotal - $actualDiscount - $totalExchangeValuation, 2);
+        // Tax (Admin → Settings) applies to the taxable sale amount — after
+        // discount, before the old-gold exchange deduction, since an exchange
+        // is a separate trade-in being netted against the bill, not a price cut.
+        $taxRatePercent = Setting::bool('tax_enabled', false) ? (float) Setting::get('tax_rate_percent', 0) : 0.0;
+        $taxableAmount = max(0, $subtotal - $actualDiscount);
+        $taxAmount = $taxRatePercent > 0 ? round($taxableAmount * $taxRatePercent / 100, 2) : 0.0;
+
+        $grandTotal = round($subtotal - $actualDiscount + $taxAmount - $totalExchangeValuation, 2);
 
         return [
             'validItems' => $validItems,
@@ -133,6 +145,8 @@ class POSSaleService
             'totalLabourCost' => $totalLabourCost,
             'totalPolishCost' => $totalPolishCost,
             'actualDiscount' => $actualDiscount,
+            'taxRatePercent' => $taxRatePercent,
+            'taxAmount' => $taxAmount,
             'totalExchangeValuation' => $totalExchangeValuation,
             'grandTotal' => $grandTotal,
         ];
@@ -165,7 +179,7 @@ class POSSaleService
             'total_metal_cost' => $totals['totalMetalCost'],
             'total_labour_cost' => $totals['totalLabourCost'],
             'total_polish_cost' => $totals['totalPolishCost'],
-            'total_tax' => 0,
+            'total_tax' => $totals['taxAmount'],
             'total_discount' => $totals['actualDiscount'],
             'discount_reason' => $validated['discount_reason'] ?? null,
             'total_exchange_deduction' => $totals['totalExchangeValuation'],

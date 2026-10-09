@@ -40,7 +40,12 @@ export interface CartState {
     discount: number;
     discountType: 'flat' | 'percentage';
     discount_reason?: string;
-    total: number; // After discount and exchanges
+    // Sales tax (Admin → Settings) — a client-side preview only; the server
+    // recomputes it authoritatively from the same setting when the sale posts.
+    taxEnabled: boolean;
+    taxRatePercent: number;
+    taxAmount: number;
+    total: number; // subtotal - discount + tax - exchanges
     customer_name: string;
     customer_phone: string;
     paymentMethod: 'Cash' | 'Card' | 'Transfer' | 'Bank QR';
@@ -56,4 +61,5 @@ export type CartAction =
     | { type: 'SET_DISCOUNT_REASON'; payload: string }
     | { type: 'SET_CUSTOMER'; payload: { name: string; phone: string } }
     | { type: 'SET_PAYMENT_METHOD'; payload: 'Cash' | 'Card' | 'Transfer' | 'Bank QR' }
+    | { type: 'SET_TAX_CONFIG'; payload: { enabled: boolean; ratePercent: number } }
     | { type: 'CLEAR_CART' };

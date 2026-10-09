@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,12 +28,25 @@ class InvoiceController extends Controller
             ->when($filters['date_to'] ?? null, fn ($q, $d) => $q->whereDate('invoice_date', '<=', $d));
 
         $invoices = (clone $base)
-            ->with('party:id,name,phone')
+            ->with(['party:id,name,phone', 'bankQrPayment:id,invoice_id,reference,bank_txn_id,slip_path'])
             ->withCount('lineItems')
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
+
+        // Same privacy gate as the detail view — a shopkeeper sees the row
+        // exists but never the transaction ID or a way to open the slip.
+        $canSeeBankQrDetails = $request->user()?->canConfirmBankQr() ?? false;
+        $invoices->getCollection()->transform(function (Invoice $invoice) use ($canSeeBankQrDetails) {
+            $invoice->bank_txn_id = $canSeeBankQrDetails ? $invoice->bankQrPayment?->bank_txn_id : null;
+            $invoice->bank_qr_slip_url = $canSeeBankQrDetails && $invoice->bankQrPayment?->slip_path
+                ? route('admin.pos.bank-qr.slip', $invoice->bankQrPayment->reference)
+                : null;
+            unset($invoice->bankQrPayment);
+
+            return $invoice;
+        });
 
         // Totals across the whole filtered set, not just the current page.
         $totals = (clone $base)
@@ -55,19 +70,19 @@ class InvoiceController extends Controller
     }
 
     /** Detailed, print-friendly single invoice (standalone page / deep link). */
-    public function show(Invoice $invoice)
+    public function show(Request $request, Invoice $invoice)
     {
-        return Inertia::render('invoices/show', $this->detailPayload($invoice));
+        return Inertia::render('invoices/show', $this->detailPayload($invoice, $request->user()));
     }
 
     /** Same detail payload as JSON — used by the quick-view modal on the list. */
-    public function data(Invoice $invoice)
+    public function data(Request $request, Invoice $invoice)
     {
-        return response()->json($this->detailPayload($invoice));
+        return response()->json($this->detailPayload($invoice, $request->user()));
     }
 
     /** Build the full detail payload shared by the page and the modal. */
-    private function detailPayload(Invoice $invoice): array
+    private function detailPayload(Invoice $invoice, ?User $viewer): array
     {
         $invoice->load([
             'party.partyType',
@@ -79,7 +94,16 @@ class InvoiceController extends Controller
             'transactions' => fn ($q) => $q->whereHas('transactionType', fn ($t) => $t->where('name', 'old_gold_exchange')),
             'transactions.metalType:id,name',
             'transactions.purity:id,name',
+            'bankQrPayment',
         ]);
+
+        // A slip can show real account/transaction details, so it's only
+        // ever exposed to the same people trusted to confirm the payment
+        // itself (see User::canConfirmBankQr()) — anyone else viewing this
+        // invoice simply doesn't see the link at all.
+        $bankQrSlipUrl = $invoice->bankQrPayment?->slip_path && $viewer?->canConfirmBankQr()
+            ? route('admin.pos.bank-qr.slip', $invoice->bankQrPayment->reference)
+            : null;
 
         $subtotal = round(
             (float) $invoice->total_metal_cost
@@ -93,28 +117,26 @@ class InvoiceController extends Controller
             'subtotal' => $subtotal,
             'exchangeLines' => $invoice->transactions->map(fn ($t) => [
                 'id' => $t->id,
-                'description' => trim(($t->metalType->name ?? '') . ' ' . ($t->purity->name ?? '') . ' scrap'),
+                'description' => trim(($t->metalType->name ?? '').' '.($t->purity->name ?? '').' scrap'),
                 'weight_grams' => (float) $t->weight_grams,
                 'rate_per_gram' => (float) $t->rate_per_gram,
                 'deduction_percent' => (float) $t->deduction_percent_applied,
                 'valuation' => (float) $t->total_amount,
             ])->values(),
             'shop' => $this->shopDetails(),
+            'bankQrSlipUrl' => $bankQrSlipUrl,
         ];
     }
 
-    /**
-     * Shop identity printed on the invoice header. Kept here (not a DB table)
-     * until an Admin settings screen exists to manage it.
-     */
+    /** Shop identity printed on the invoice header — set from Admin → Settings. */
     private function shopDetails(): array
     {
         return [
-            'name' => config('app.name', 'Zar & Noor'),
-            'tagline' => 'Jewellers — Gold & Silver',
-            'address' => 'Main Bazaar, Rawalpindi, Pakistan',
-            'phone' => '+92 300 0000000',
-            'ntn' => null,
+            'name' => Setting::get('shop_name', config('app.name', 'Zar & Noor')),
+            'tagline' => Setting::get('shop_tagline', 'Jewellers — Gold & Silver'),
+            'address' => Setting::get('shop_address', 'Main Bazaar, Rawalpindi, Pakistan'),
+            'phone' => Setting::get('shop_phone', '+92 300 0000000'),
+            'ntn' => Setting::get('shop_ntn'),
         ];
     }
 }

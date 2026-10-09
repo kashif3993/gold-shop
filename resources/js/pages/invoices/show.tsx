@@ -1,11 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, Receipt } from 'lucide-react';
 import InvoiceSheet from '@/components/invoice-sheet';
 import '../../../css/invoices.css';
 
-export default function InvoiceShow({ invoice, subtotal, exchangeLines = [], shop }: any) {
+export default function InvoiceShow({ invoice, subtotal, exchangeLines = [], shop, bankQrSlipUrl }: any) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Invoices', href: '/invoices' },
         { title: invoice.invoice_number, href: `/invoices/${invoice.id}` },
@@ -22,6 +22,11 @@ export default function InvoiceShow({ invoice, subtotal, exchangeLines = [], sho
                     <button type="button" className="inv-btn inv-btn-gold" onClick={() => window.print()}>
                         <Printer size={15} /> Print
                     </button>
+                    {bankQrSlipUrl && (
+                        <a href={bankQrSlipUrl} target="_blank" rel="noopener noreferrer" className="inv-btn inv-btn-ghost">
+                            <Receipt size={15} /> View Payment Slip
+                        </a>
+                    )}
                 </div>
 
                 <InvoiceSheet invoice={invoice} subtotal={subtotal} exchangeLines={exchangeLines} shop={shop} />

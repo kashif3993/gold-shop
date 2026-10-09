@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\BankQrPayment;
+use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\MetalType;
 use App\Models\PartyType;
@@ -13,6 +14,7 @@ use App\Models\User;
 use App\Services\GoldRateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class BankQrPaymentTest extends TestCase
@@ -20,8 +22,11 @@ class BankQrPaymentTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $shopkeeper;
+
     private MetalType $gold;
+
     private Purity $purity;
 
     protected function setUp(): void
@@ -166,6 +171,35 @@ class BankQrPaymentTest extends TestCase
         $this->assertDatabaseHas('invoices', ['id' => $payment->invoice_id, 'payment_method' => 'bank_transfer']);
     }
 
+    public function test_manager_cannot_confirm_while_the_permission_is_off(): void
+    {
+        $manager = User::factory()->manager()->create();
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($manager)
+            ->postJson("/admin/pos/bank-qr/{$reference}/confirm", ['bank_txn_id' => '482917'])
+            ->assertForbidden();
+
+        $this->assertSame('in_stock', $item->fresh()->status);
+    }
+
+    public function test_manager_can_confirm_once_an_admin_turns_the_permission_on(): void
+    {
+        Setting::put('bank_qr_manager_confirm_enabled', true);
+        $manager = User::factory()->manager()->create();
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $response = $this->actingAs($manager)
+            ->postJson("/admin/pos/bank-qr/{$reference}/confirm", ['bank_txn_id' => '482917']);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $this->assertSame('sold', $item->fresh()->status);
+    }
+
     public function test_confirm_requires_a_bank_transaction_id(): void
     {
         $item = $this->makeItem();
@@ -187,7 +221,7 @@ class BankQrPaymentTest extends TestCase
         $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/confirm", ['bank_txn_id' => '222222'])
             ->assertStatus(409);
 
-        $this->assertEquals(1, \App\Models\Invoice::count());
+        $this->assertEquals(1, Invoice::count());
         $this->assertSame('111111', BankQrPayment::where('reference', $reference)->value('bank_txn_id'));
     }
 
@@ -202,7 +236,7 @@ class BankQrPaymentTest extends TestCase
         $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/confirm", ['bank_txn_id' => '482917'])
             ->assertStatus(410);
 
-        $this->assertEquals(0, \App\Models\Invoice::count());
+        $this->assertEquals(0, Invoice::count());
         $this->assertSame('expired', BankQrPayment::where('reference', $reference)->value('status'));
     }
 
@@ -221,7 +255,187 @@ class BankQrPaymentTest extends TestCase
             ->postJson('/admin/pos/bank-qr/'.$second->json('payment.reference').'/confirm', ['bank_txn_id' => 'BBB'])
             ->assertStatus(400); // item no longer in stock
 
-        $this->assertEquals(1, \App\Models\Invoice::count());
+        $this->assertEquals(1, Invoice::count());
+    }
+
+    /* ── slip scan (OCR) — same permission as confirm ──────────────── */
+
+    public function test_shopkeeper_cannot_scan_a_slip(): void
+    {
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->shopkeeper)
+            ->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+                'slip' => UploadedFile::fake()->image('slip.jpg'),
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_manager_cannot_scan_a_slip_while_the_permission_is_off(): void
+    {
+        $manager = User::factory()->manager()->create();
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($manager)
+            ->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+                'slip' => UploadedFile::fake()->image('slip.jpg'),
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_scan_a_slip_and_get_a_response_even_without_a_detectable_id(): void
+    {
+        Storage::fake('bank-slips');
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        // A blank fake image has no text at all — this exercises the real
+        // OCR call end-to-end (whatever engine is on this machine) and
+        // confirms the endpoint degrades to a null result rather than
+        // erroring, which is what it must do when nothing is detected.
+        $response = $this->actingAs($this->admin)
+            ->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+                'slip' => UploadedFile::fake()->image('slip.jpg'),
+            ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $this->assertNull($response->json('transaction_id'));
+    }
+
+    public function test_scan_slip_requires_an_image(): void
+    {
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->admin)
+            ->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [])
+            ->assertJsonValidationErrors('slip');
+    }
+
+    /* ── slip storage ──────────────────────────────────────────────── */
+
+    public function test_scanning_a_slip_stores_it_and_records_the_path(): void
+    {
+        Storage::fake('bank-slips');
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+            'slip' => UploadedFile::fake()->image('slip.jpg'),
+        ])->assertOk();
+
+        $payment = BankQrPayment::where('reference', $reference)->first();
+        $this->assertNotNull($payment->slip_path);
+        Storage::disk('bank-slips')->assertExists($payment->slip_path);
+    }
+
+    public function test_re_scanning_replaces_the_stored_slip(): void
+    {
+        Storage::fake('bank-slips');
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+            'slip' => UploadedFile::fake()->image('first.jpg'),
+        ]);
+        $firstPath = BankQrPayment::where('reference', $reference)->value('slip_path');
+
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+            'slip' => UploadedFile::fake()->image('second.jpg'),
+        ]);
+        $secondPath = BankQrPayment::where('reference', $reference)->value('slip_path');
+
+        $this->assertSame($firstPath, $secondPath); // same filename (keyed by reference) — overwritten, not duplicated
+        Storage::disk('bank-slips')->assertExists($secondPath);
+    }
+
+    public function test_shopkeeper_cannot_view_a_stored_slip(): void
+    {
+        Storage::fake('bank-slips');
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+            'slip' => UploadedFile::fake()->image('slip.jpg'),
+        ]);
+
+        $this->actingAs($this->shopkeeper)->get("/admin/pos/bank-qr/{$reference}/slip")->assertForbidden();
+    }
+
+    public function test_viewing_a_slip_404s_when_none_was_uploaded(): void
+    {
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->admin)->get("/admin/pos/bank-qr/{$reference}/slip")->assertNotFound();
+    }
+
+    public function test_admin_can_view_a_stored_slip(): void
+    {
+        Storage::fake('bank-slips');
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+            'slip' => UploadedFile::fake()->image('slip.jpg'),
+        ]);
+
+        $this->actingAs($this->admin)->get("/admin/pos/bank-qr/{$reference}/slip")->assertOk();
+    }
+
+    public function test_confirmed_invoice_exposes_the_slip_link_only_to_a_permitted_viewer(): void
+    {
+        Storage::fake('bank-slips');
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+            'slip' => UploadedFile::fake()->image('slip.jpg'),
+        ]);
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/confirm", ['bank_txn_id' => 'TXN1']);
+
+        $invoiceId = BankQrPayment::where('reference', $reference)->value('invoice_id');
+
+        $this->actingAs($this->admin)->get("/invoices/{$invoiceId}")
+            ->assertInertia(fn ($page) => $page->where('bankQrSlipUrl', fn ($url) => str_contains($url, $reference)));
+
+        $this->actingAs($this->shopkeeper)->get("/invoices/{$invoiceId}")
+            ->assertInertia(fn ($page) => $page->where('bankQrSlipUrl', null));
+    }
+
+    public function test_invoices_list_shows_txn_id_and_slip_link_only_to_a_permitted_viewer(): void
+    {
+        Storage::fake('bank-slips');
+        $item = $this->makeItem();
+        $start = $this->actingAs($this->shopkeeper)->postJson('/api/v1/pos/bank-qr', $this->cartPayload($item));
+        $reference = $start->json('payment.reference');
+
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/scan-slip", [
+            'slip' => UploadedFile::fake()->image('slip.jpg'),
+        ]);
+        $this->actingAs($this->admin)->postJson("/admin/pos/bank-qr/{$reference}/confirm", ['bank_txn_id' => 'TXN-LIST-1']);
+
+        $this->actingAs($this->admin)->get('/invoices')
+            ->assertInertia(fn ($page) => $page
+                ->where('invoices.data.0.bank_txn_id', 'TXN-LIST-1')
+                ->where('invoices.data.0.bank_qr_slip_url', fn ($url) => str_contains($url, $reference)));
+
+        $this->actingAs($this->shopkeeper)->get('/invoices')
+            ->assertInertia(fn ($page) => $page
+                ->where('invoices.data.0.bank_txn_id', null)
+                ->where('invoices.data.0.bank_qr_slip_url', null));
     }
 
     /* ── admin payment settings ───────────────────────────────────── */

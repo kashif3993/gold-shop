@@ -109,6 +109,13 @@ export default function InvoiceSheet({ invoice, subtotal, exchangeLines = [], sh
                         </>
                     )}
 
+                    {Number(invoice.total_tax) > 0 && (
+                        <tr>
+                            <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right' }}>Sales Tax</td>
+                            <td>+ {fmt(invoice.total_tax)}</td>
+                        </tr>
+                    )}
+
                     {exchangeLines.map((ex: any) => (
                         <tr key={ex.id}>
                             <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right' }}>

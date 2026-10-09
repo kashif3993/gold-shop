@@ -3,10 +3,11 @@ import ThemeSwitch from '@/components/theme-switch';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { type BreadcrumbItem as BreadcrumbItemType, type SharedData } from '@/types';
 import { Input } from '@/components/ui/input';
-import { Search, Bell } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { UserInfo } from '@/components/user-info';
+import NotificationBell from '@/components/notification-bell';
 import { usePage } from '@inertiajs/react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
@@ -33,10 +34,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 <ThemeSwitch className="scale-90 sm:scale-100 origin-right" />
                 
-                <button className="relative p-1.5 transition-colors hover:text-gold outline-none focus-visible:ring-2 focus-visible:ring-gold text-slate-500 dark:text-slate-400 shrink-0">
-                    <Bell className="h-[20px] w-[20px] sm:h-[22px] sm:w-[22px] stroke-[1.5]" />
-                    <span className="absolute right-1.5 top-1.5 flex h-2 w-2 rounded-full bg-red-500"></span>
-                </button>
+                <NotificationBell />
                 
                 <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-0.5 sm:mx-1 shrink-0"></div>
                 

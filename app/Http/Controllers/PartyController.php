@@ -12,6 +12,11 @@ use Inertia\Inertia;
 
 class PartyController extends Controller
 {
+    /** Allowed page sizes for the "rows per page" picker — anything else falls back to the default. */
+    private const PER_PAGE_OPTIONS = [10, 20, 50, 100];
+
+    private const DEFAULT_PER_PAGE = 20;
+
     public function index(Request $request)
     {
         $query = Party::with('partyType')
@@ -34,10 +39,17 @@ class PartyController extends Controller
             });
         }
 
+        $perPage = (int) $request->input('per_page', self::DEFAULT_PER_PAGE);
+        if (! in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
+            $perPage = self::DEFAULT_PER_PAGE;
+        }
+
         return Inertia::render('parties/index', [
-            'parties'    => $query->paginate(20)->withQueryString(),
-            'partyTypes' => PartyType::orderBy('id')->get(),
-            'filters'    => $request->only(['party_type_id', 'status', 'search']),
+            'parties'       => $query->paginate($perPage)->withQueryString(),
+            'partyTypes'    => PartyType::orderBy('id')->get(),
+            'filters'       => $request->only(['party_type_id', 'status', 'search']),
+            'perPage'       => $perPage,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
     }
 

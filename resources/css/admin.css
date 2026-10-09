@@ -199,6 +199,178 @@
     font-size: 0.78rem;
 }
 
+/* ── toggle rows (Settings screen) ──────────────────────────────────── */
+
+.adm-toggle-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--adm-line);
+}
+
+.adm-toggle-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.adm-toggle-row:first-child {
+    padding-top: 0;
+}
+
+.adm-toggle-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.adm-toggle-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.adm-toggle-desc {
+    font-size: 0.8rem;
+    color: var(--adm-muted);
+    max-width: 46ch;
+}
+
+.adm-switch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.adm-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+}
+
+.adm-switch-track {
+    position: absolute;
+    inset: 0;
+    background: var(--adm-line-strong);
+    border-radius: 999px;
+    transition: background 0.15s;
+    /* Sits visually on top of the real checkbox (next section) — without
+       this, it also sits on top for clicks, and the checkbox underneath
+       never receives them. */
+    pointer-events: none;
+}
+
+.adm-switch-track::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: transform 0.15s;
+}
+
+.adm-switch input:checked + .adm-switch-track {
+    background: var(--adm-gold);
+}
+
+.adm-switch input:checked + .adm-switch-track::after {
+    transform: translateX(18px);
+}
+
+.adm-switch input:focus-visible + .adm-switch-track {
+    outline: 2px solid var(--adm-gold);
+    outline-offset: 2px;
+}
+
+.adm-switch input:disabled + .adm-switch-track {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.adm-danger-zone {
+    border: 1px solid var(--adm-danger-border);
+    background: var(--adm-danger-bg);
+    border-radius: 10px;
+    padding: 1rem 1.15rem;
+}
+
+.adm-danger-zone .adm-toggle-row {
+    border-bottom: none;
+    padding: 0;
+}
+
+.adm-danger-zone .adm-toggle-title {
+    color: #991b1b;
+}
+
+/* File input — the native control styled to match the rest of the form,
+   with the "Choose file" button picked out in gold so it doesn't read as a
+   plain unstyled browser default. */
+.adm-file {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem;
+    font-size: 0.85rem;
+    border: 1px solid var(--adm-line-strong);
+    border-radius: 8px;
+    background: var(--adm-surface-alt);
+    color: var(--adm-muted);
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.adm-file:hover {
+    border-color: var(--adm-gold);
+}
+
+.adm-file:focus-visible {
+    outline: none;
+    border-color: var(--adm-gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+}
+
+.adm-file::file-selector-button,
+.adm-file::-webkit-file-upload-button {
+    margin-right: 0.7rem;
+    padding: 0.45rem 0.9rem;
+    border: none;
+    border-radius: 6px;
+    background: var(--adm-gold);
+    color: #111;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.adm-file:hover::file-selector-button,
+.adm-file:hover::-webkit-file-upload-button {
+    background: var(--adm-gold-dark);
+}
+
+.dark .adm-file {
+    background: #111827;
+    border-color: #4b5563;
+    color: #9ca3af;
+}
+
+.dark .adm-file:hover {
+    border-color: var(--adm-gold);
+}
+
 /* ── buttons ─────────────────────────────────────────────────────── */
 
 .adm-btn {
@@ -487,6 +659,27 @@
 
 .dark .adm-page-link:hover:not(:disabled) {
     background: #374151;
+}
+
+.dark .adm-toggle-row {
+    border-color: #374151;
+}
+
+.dark .adm-toggle-title {
+    color: #f9fafb;
+}
+
+.dark .adm-switch-track {
+    background: #4b5563;
+}
+
+.dark .adm-danger-zone {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.3);
+}
+
+.dark .adm-danger-zone .adm-toggle-title {
+    color: #fca5a5;
 }
 
 /* ============================================================================

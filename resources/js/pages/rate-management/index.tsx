@@ -32,6 +32,10 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
     const { flash, auth } = usePage().props as any;
     const isAdmin = auth?.user?.role === 'admin';
 
+    const dealsIn = (name: string) => (metals ?? []).some((m: any) => m.name === name);
+    const dealsInGold = dealsIn('Gold');
+    const dealsInSilver = dealsIn('Silver');
+
     const refresh = useForm({});
     const fxForm = useForm({ usd_pkr: String(fx?.value ?? ''), auto: Boolean(fx?.auto) });
     const manual = useForm({ gold_spot: '', silver_spot: '' });
@@ -275,18 +279,22 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                     <h2 className="rm-card-title">Manual rate entry</h2>
                     <p className="rm-card-sub">Type today's pure-metal spot (PKR per gram). Every purity is derived from its fineness, then your adjustment is applied.</p>
                     <form className="rm-form-row" onSubmit={submitManual}>
-                        <div className="rm-field">
-                            <label className="rm-label">Pure gold spot / g</label>
-                            <input type="number" step="any" min="0" className="rm-input" placeholder="e.g. 24500"
-                                value={manual.data.gold_spot} onChange={e => manual.setData('gold_spot', e.target.value)} />
-                            {manual.errors.gold_spot && <span className="rm-error">{manual.errors.gold_spot}</span>}
-                        </div>
-                        <div className="rm-field">
-                            <label className="rm-label">Pure silver spot / g</label>
-                            <input type="number" step="any" min="0" className="rm-input" placeholder="e.g. 312"
-                                value={manual.data.silver_spot} onChange={e => manual.setData('silver_spot', e.target.value)} />
-                            {manual.errors.silver_spot && <span className="rm-error">{manual.errors.silver_spot}</span>}
-                        </div>
+                        {dealsInGold && (
+                            <div className="rm-field">
+                                <label className="rm-label">Pure gold spot / g</label>
+                                <input type="number" step="any" min="0" className="rm-input" placeholder="e.g. 24500"
+                                    value={manual.data.gold_spot} onChange={e => manual.setData('gold_spot', e.target.value)} />
+                                {manual.errors.gold_spot && <span className="rm-error">{manual.errors.gold_spot}</span>}
+                            </div>
+                        )}
+                        {dealsInSilver && (
+                            <div className="rm-field">
+                                <label className="rm-label">Pure silver spot / g</label>
+                                <input type="number" step="any" min="0" className="rm-input" placeholder="e.g. 312"
+                                    value={manual.data.silver_spot} onChange={e => manual.setData('silver_spot', e.target.value)} />
+                                {manual.errors.silver_spot && <span className="rm-error">{manual.errors.silver_spot}</span>}
+                            </div>
+                        )}
                         <button type="submit" className="rm-btn rm-btn-gold" disabled={manual.processing}>Save manual rate</button>
                     </form>
                 </div>

@@ -340,7 +340,7 @@ export default function BuyBackIndex({ metals = [], purities = [], currentRates 
                         </div>
 
                         <div className="bb-card">
-                            <h2 className="bb-card-title">Gold being bought back</h2>
+                            <h2 className="bb-card-title">Metal being bought back</h2>
                             <div className="bb-field-grid">
                                 <div className="bb-field">
                                     <label className="bb-label">Metal</label>

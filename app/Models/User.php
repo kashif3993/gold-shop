@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
@@ -57,5 +58,21 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function isManager(): bool
+    {
+        return $this->role === 'manager';
+    }
+
+    /**
+     * Admins always can; a manager only while an admin has explicitly turned
+     * this on in Settings (off by default — see SystemSettingsController).
+     * Single source of truth for this check, shared by the route middleware
+     * and the Inertia-shared prop the frontend reads to show/hide the UI.
+     */
+    public function canConfirmBankQr(): bool
+    {
+        return $this->isAdmin() || ($this->isManager() && Setting::bool('bank_qr_manager_confirm_enabled'));
     }
 }

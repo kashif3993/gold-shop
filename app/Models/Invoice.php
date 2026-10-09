@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Invoice extends Model
 {
@@ -58,5 +59,11 @@ class Invoice extends Model
     public function lineItems(): HasMany
     {
         return $this->hasMany(InvoiceLineItem::class);
+    }
+
+    /** Only set for a Bank QR sale — see BankQrPayment::invoice_id, assigned on confirm(). */
+    public function bankQrPayment(): HasOne
+    {
+        return $this->hasOne(BankQrPayment::class);
     }
 }

@@ -9,7 +9,7 @@ interface UserRow {
     id: number;
     username: string;
     email: string | null;
-    role: 'admin' | 'shopkeeper';
+    role: 'admin' | 'manager' | 'shopkeeper';
     is_active: boolean;
     created_at: string;
 }
@@ -37,7 +37,7 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
             <div className="adm-page">
                 <div className="adm-head">
                     <h1 className="adm-title">Users</h1>
-                    <p className="adm-desc">Every login the shop has — who's an admin, who's a shopkeeper, and who's still active.</p>
+                    <p className="adm-desc">Every login the shop has — who's an admin, a manager, or a shopkeeper, and who's still active.</p>
                 </div>
 
                 {flash?.success && <div className="adm-flash adm-flash-success">{flash.success}</div>}
@@ -72,6 +72,7 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
                                                     style={{ minWidth: '120px' }}
                                                 >
                                                     <option value="shopkeeper">Shopkeeper</option>
+                                                    <option value="manager">Manager</option>
                                                     <option value="admin">Admin</option>
                                                 </select>
                                             </td>

@@ -83,6 +83,13 @@ class GoldRateService
      */
     public function autoRefreshIfDue(): void
     {
+        // Admin → Settings toggle for the opportunistic, ticker-triggered
+        // refresh only — the "Refresh now" button and the scheduled
+        // `rates:fetch` command are deliberate operator actions and always work.
+        if (! Setting::bool('rate_auto_refresh_enabled', true)) {
+            return;
+        }
+
         if (! $this->isDueForAutoRefresh()) {
             return;
         }
@@ -360,8 +367,9 @@ class GoldRateService
     }
 
     /** @return Collection<int,MetalType> */
+    /** Only metals the shop currently deals in (Admin → Settings) — skips both the API fetch and manual entry for a switched-off metal. */
     private function metalsWithPurities(): Collection
     {
-        return MetalType::with(['purities' => fn ($q) => $q->where('is_active', true)])->get();
+        return MetalType::active()->with(['purities' => fn ($q) => $q->where('is_active', true)])->get();
     }
 }

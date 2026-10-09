@@ -2,7 +2,7 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Package, Users, UserCheck, TrendingUp, DollarSign, FileText, Plus, ArrowUpRight, ArrowDownRight, Minus, Activity, Zap } from 'lucide-react';
-import { ComponentType } from 'react';
+import { ComponentType, useState } from 'react';
 import { cn } from '@/lib/utils';
 import RateTicker from '@/components/rate-ticker';
 
@@ -14,6 +14,7 @@ interface DashboardProps {
         total_parties: number;
         total_users: number;
         current_gold_rate: string | null;
+        current_silver_rate: string | null;
         revenue_this_month?: number | null;
         pending_invoices?: number | null;
     };
@@ -21,7 +22,9 @@ interface DashboardProps {
     purities?: { label: string; metal: string; item_count: number; metal_color?: string }[];
     totalPurities: number;
     recentActivity: { field_name: string; reason: string; changed_by: string | null; changed_at: string }[];
-    goldRateHistory?: { date: string; rate: number }[];
+    rateHistory?: { metal: string; purity: string; points: { date: string; rate: number }[] }[];
+    // Metals the shop currently deals in (Admin → Settings → Metals Dealt In).
+    dealsIn?: { gold: boolean; silver: boolean };
 }
 
 function StatCard({ icon: Icon, label, value, sub, trendUp, delay = 0 }: {
@@ -111,19 +114,21 @@ function PurityRow({ label, count, max, color }: { label: string; count: number;
     );
 }
 
-export default function Dashboard({ stats, metalBreakdown, purities, totalPurities, recentActivity, goldRateHistory }: DashboardProps) {
+export default function Dashboard({ stats, metalBreakdown, purities, totalPurities, recentActivity, rateHistory, dealsIn }: DashboardProps) {
     const { auth } = usePage<SharedData>().props;
     const firstName = auth.user.username ?? 'User';
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    const rateHistory = (goldRateHistory && goldRateHistory.length > 1) ? goldRateHistory : (() => {
-        const base = parseFloat(stats.current_gold_rate ?? '248500') || 248500;
-        const seed = [0, -0.012, 0.018, -0.008, 0.025, -0.005, 0.015];
-        return Array.from({ length: 7 }, (_, i) => {
-            const d = new Date(); d.setDate(d.getDate() - (6 - i));
-            return { date: d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }), rate: Math.round(base * (1 + seed[i])) };
-        });
-    })();
+    const dealsInGold = dealsIn?.gold ?? true;
+    const dealsInSilver = dealsIn?.silver ?? true;
+
+    const [chartMetal, setChartMetal] = useState<'Gold' | 'Silver'>('Gold');
+    const metalsWithHistory = (rateHistory ?? [])
+        .filter(r => r.points.length > 0)
+        .filter(r => (r.metal === 'Gold' ? dealsInGold : r.metal === 'Silver' ? dealsInSilver : true))
+        .map(r => r.metal);
+    const activeMetal = metalsWithHistory.includes(chartMetal) ? chartMetal : (metalsWithHistory[0] as 'Gold' | 'Silver' | undefined) ?? 'Gold';
+    const activePoints = rateHistory?.find(r => r.metal === activeMetal)?.points ?? [];
 
     const purityRows = purities && purities.length > 0 ? purities : [
         { label: '24K (99.9%)', metal: 'Gold',   item_count: 0, metal_color: '#d4a017' },
@@ -137,9 +142,11 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
     const silverRows = purityRows.filter(p => p.metal === 'Silver');
     const maxCount   = Math.max(...purityRows.map(p => p.item_count), 1);
 
-    const currentRate = stats.current_gold_rate
-        ? `Rs ${Number(stats.current_gold_rate).toLocaleString('en-PK')}`
-        : 'Not set';
+    const fmtRate = (v: string | number | null | undefined) =>
+        v != null ? `Rs ${Number(v).toLocaleString('en-PK')}` : 'Not set';
+    const currentGoldRate = fmtRate(stats.current_gold_rate);
+    const currentSilverRate = fmtRate(stats.current_silver_rate);
+    const currentRate = activeMetal === 'Silver' ? currentSilverRate : currentGoldRate;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -165,11 +172,12 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
                 </div>
 
                 {/* ── 6 KPI stat cards ─────────────────────────── */}
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6">
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-7">
                     <StatCard icon={Package}    label="Total Items in Stock"  value={stats.items_in_stock.toLocaleString()}                                                               sub="+4.2% this week"     trendUp={true}  delay={50}  />
                     <StatCard icon={Users}      label="Registered Parties"    value={stats.total_parties.toLocaleString()}                                                                sub="+2 new this month"   trendUp={true}  delay={100} />
                     <StatCard icon={UserCheck}  label="Team Members"          value={stats.total_users.toLocaleString()}                                                                  sub="0.0% active seats"   trendUp={null}  delay={150} />
-                    <StatCard icon={TrendingUp} label="Today's Gold Rate"     value={currentRate}                                                                                         sub="+1.2% per tola"      trendUp={true}  delay={200} />
+                    {dealsInGold && <StatCard icon={TrendingUp} label="Today's Gold Rate"   value={currentGoldRate}   sub="per gram" trendUp={null} delay={200} />}
+                    {dealsInSilver && <StatCard icon={TrendingUp} label="Today's Silver Rate" value={currentSilverRate} sub="per gram" trendUp={null} delay={225} />}
                     <StatCard icon={DollarSign} label="Revenue This Month"    value={stats.revenue_this_month ? `Rs ${(stats.revenue_this_month/1_000_000).toFixed(1)}M` : 'Rs 0'}       sub="+18% vs last month"  trendUp={true}  delay={250} />
                     <StatCard icon={FileText}   label="Pending Invoices"      value={String(stats.pending_invoices ?? 0)}                                                                 sub="-3 unpaid accounts"  trendUp={false} delay={300} />
                 </div>
@@ -177,14 +185,14 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
                 {/* ── Chart + Purity config ─────────────────────── */}
                 <div className="grid gap-4 lg:grid-cols-5">
 
-                    {/* Live Gold Rate chart */}
+                    {/* Live Rate chart — Gold / Silver toggle */}
                     <div
                         className="lg:col-span-3 rounded-2xl border border-border/50 bg-card p-5 shadow-sm animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
                         style={{ animationDelay: '350ms', animationDuration: '600ms' }}
                     >
                         <div className="flex items-start justify-between gap-3 mb-5">
                             <div>
-                                <h2 className="text-[15px] font-semibold leading-tight">Live Gold Rate <span className="text-muted-foreground font-normal">(Rs / Tola)</span></h2>
+                                <h2 className="text-[15px] font-semibold leading-tight">Live {activeMetal} Rate <span className="text-muted-foreground font-normal">(Rs / gram)</span></h2>
                                 <p className="text-xs text-muted-foreground mt-1">Pakistani market · past 7 days</p>
                             </div>
                             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gold/30 bg-gold/8 text-gold px-3 py-1.5 text-xs font-semibold whitespace-nowrap">
@@ -192,7 +200,24 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
                                 {currentRate}
                             </span>
                         </div>
-                        <GoldSparkline data={rateHistory} />
+                        {metalsWithHistory.length > 1 && (
+                            <div className="flex gap-1.5 mb-4">
+                                {(['Gold', 'Silver'] as const).filter(m => metalsWithHistory.includes(m)).map(m => (
+                                    <button
+                                        key={m}
+                                        type="button"
+                                        onClick={() => setChartMetal(m)}
+                                        className={cn(
+                                            'rounded-full px-3 py-1 text-xs font-semibold transition-colors',
+                                            activeMetal === m ? 'bg-gold/15 text-gold' : 'text-muted-foreground hover:bg-muted/60',
+                                        )}
+                                    >
+                                        {m}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        <GoldSparkline data={activePoints} />
                     </div>
 
                     {/* Purity breakdown */}
