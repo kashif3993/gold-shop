@@ -59,6 +59,11 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                // Item Entry's "Save & Print" stays on the same page instead of
+                // navigating away — this hands back the just-saved item (with its
+                // real, server-assigned item_code) so the page can print it
+                // in place. See items/create.tsx.
+                'createdItem' => fn () => $request->session()->get('createdItem'),
             ],
             // On/off switches from Admin → Settings — lets the sidebar and POS
             // hide a disabled module's UI. Real enforcement is server-side

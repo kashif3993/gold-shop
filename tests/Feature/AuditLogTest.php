@@ -18,7 +18,9 @@ class AuditLogTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private MetalType $gold;
+
     private Purity $purity;
 
     protected function setUp(): void
@@ -35,13 +37,14 @@ class AuditLogTest extends TestCase
     private function makeItem(array $overrides = []): Item
     {
         return Item::create(array_merge([
-            'item_code' => 'ITM-' . strtoupper(uniqid()),
+            'item_code' => 'ITM-'.strtoupper(uniqid()),
             'item_type' => 'ring',
             'metal_type_id' => $this->gold->id,
             'purity_id' => $this->purity->id,
             'gross_weight_grams' => 10,
             'stone_weight_grams' => 0,
             'cutting_loss_grams' => 0,
+            'polish_weight_grams' => 0,
             'labour_cost' => 1500,
             'polish_cost' => 300,
             'purchase_rate_per_gram' => 20000,
@@ -102,15 +105,15 @@ class AuditLogTest extends TestCase
 
         $payload = array_merge($item->only([
             'item_code', 'item_type', 'metal_type_id', 'purity_id',
-            'gross_weight_grams', 'stone_weight_grams', 'cutting_loss_grams',
-            'labour_cost', 'polish_cost', 'purchase_price', 'status', 'source_party_id',
+            'gross_weight_grams', 'stone_weight_grams', 'cutting_loss_grams', 'polish_weight_grams',
+            'labour_cost', 'purchase_price', 'status', 'source_party_id',
         ]), [
             'date_received' => $item->date_received->toDateString(),
             'purchase_rate_per_gram' => 22000,
             'edit_reason' => 'Rate was mistyped at entry',
         ]);
 
-        $this->actingAs($this->user)->put("/items/{$item->id}", $payload)->assertRedirect();
+        $this->actingAs($this->user)->put("/items/{$item->id}", $payload)->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('audit_log', [
             'entity_type' => 'item_price',
@@ -128,14 +131,14 @@ class AuditLogTest extends TestCase
 
         $payload = array_merge($item->only([
             'item_code', 'item_type', 'metal_type_id', 'purity_id',
-            'stone_weight_grams', 'cutting_loss_grams',
-            'labour_cost', 'polish_cost', 'purchase_rate_per_gram', 'purchase_price', 'status', 'source_party_id',
+            'stone_weight_grams', 'cutting_loss_grams', 'polish_weight_grams',
+            'labour_cost', 'purchase_rate_per_gram', 'purchase_price', 'status', 'source_party_id',
         ]), [
             'date_received' => $item->date_received->toDateString(),
             'gross_weight_grams' => 11.5,
         ]);
 
-        $this->actingAs($this->user)->put("/items/{$item->id}", $payload)->assertRedirect();
+        $this->actingAs($this->user)->put("/items/{$item->id}", $payload)->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('audit_log', [
             'entity_type' => 'transaction_weight',
@@ -153,14 +156,14 @@ class AuditLogTest extends TestCase
 
         $payload = array_merge($item->only([
             'item_code', 'metal_type_id', 'purity_id',
-            'gross_weight_grams', 'stone_weight_grams', 'cutting_loss_grams',
-            'labour_cost', 'polish_cost', 'purchase_rate_per_gram', 'purchase_price', 'status', 'source_party_id',
+            'gross_weight_grams', 'stone_weight_grams', 'cutting_loss_grams', 'polish_weight_grams',
+            'labour_cost', 'purchase_rate_per_gram', 'purchase_price', 'status', 'source_party_id',
         ]), [
             'date_received' => $item->date_received->toDateString(),
             'item_type' => 'bangle', // changed, but not a protected field
         ]);
 
-        $this->actingAs($this->user)->put("/items/{$item->id}", $payload)->assertRedirect();
+        $this->actingAs($this->user)->put("/items/{$item->id}", $payload)->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertDatabaseCount('audit_log', 0);
     }

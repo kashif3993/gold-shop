@@ -24,6 +24,7 @@ class StoreItemRequest extends FormRequest
             'gross_weight_grams' => ['required', 'numeric', 'min:0.001'],
             'stone_weight_grams' => ['nullable', 'numeric', 'min:0'],
             'cutting_loss_grams' => ['nullable', 'numeric', 'min:0'],
+            'polish_weight_grams' => ['nullable', 'numeric', 'min:0'],
             'labour_cost' => ['nullable', 'numeric', 'min:0'],
             'polish_cost' => ['nullable', 'numeric', 'min:0'],
             'purchase_rate_per_gram' => ['required', 'numeric', 'min:0'],

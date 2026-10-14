@@ -1,9 +1,12 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { gramsToTraditional, traditionalToGrams, carryTraditional, formatNumber } from '@/utils/weight';
+import { useScaleReading } from '@/utils/scale';
 import { Info, AlertCircle, ChevronDown, Check } from 'lucide-react';
+import ItemEntryPrintSlip from '@/components/item-entry-print-slip';
 import '../../../css/item-entry.css';
+import '../../../css/item-entry-print.css';
 
 interface Metal {
     id: number;
@@ -23,11 +26,27 @@ interface Party {
     name: string;
 }
 
+interface Shop {
+    name: string;
+    address: string | null;
+    phone: string | null;
+    logo: string | null;
+}
+
+interface PrintDimensions {
+    widthMm: number;
+    heightMm: number;
+    paddingMm: number;
+}
+
 interface ItemCreateProps {
     metals: Metal[];
     purities: Purity[];
     parties: Party[];
     currentRates?: Record<string, string | number>;
+    shop: Shop;
+    printerType: 'regular' | 'thermal';
+    printDimensions: PrintDimensions;
 }
 
 const BULLION_TYPES = ['biscuit', 'nugget', 'bar', 'coin', 'piece'];
@@ -194,7 +213,8 @@ function CustomSelect({ value, onValueChange, placeholder = 'Select...', options
 }
 /* ─────────────────────────────────────────────────────────────────────── */
 
-export default function ItemCreate({ metals = [], purities = [], parties = [], currentRates = {} }: ItemCreateProps) {
+export default function ItemCreate({ metals = [], purities = [], parties = [], currentRates = {}, shop, printerType, printDimensions }: ItemCreateProps) {
+    const { flash } = usePage().props as any;
     const [codePreview, setCodePreview] = useState('');
     // Once the shopkeeper types their own purchase rate, stop auto-filling it.
     const rateTouched = useRef(false);
@@ -204,15 +224,20 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
 
     const [gross, setGross] = useState({ gram: '', tola: '', masha: '', ratti: '', point: '' });
     const [stone, setStone] = useState({ gram: '' });
+    const [polish, setPolish] = useState({ gram: '' });
     const [cutting, setCutting] = useState({ gram: '', tola: '', masha: '', ratti: '', point: '' });
 
     const [grossGrams, setGrossGrams] = useState(0);
     const [stoneGrams, setStoneGrams] = useState(0);
+    const [polishGrams, setPolishGrams] = useState(0);
     const [cuttingGrams, setCuttingGrams] = useState(0);
     const [purityNotice, setPurityNotice] = useState<string>('');
     const [ringValidationError, setRingValidationError] = useState<string>('');
+    const scale = useScaleReading();
+    const scaleEverConnected = useRef(false);
+    if (scale.ok) scaleEverConnected.current = true;
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, reset, processing, errors } = useForm({
         item_code: '',
         item_type: initialItemType,
         metal_type_id: initialMetalId,
@@ -222,9 +247,9 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
         gross_weight_grams: 0,
         stone_weight_grams: 0,
         cutting_loss_grams: 0,
+        polish_weight_grams: 0,
         net_weight_grams: 0,
         labour_cost: 0,
-        polish_cost: 0,
         purchase_rate_per_gram: 0,
         purchase_price: 0,
     });
@@ -359,8 +384,16 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
         setStoneGrams(Number((parseFloat(value) || 0).toFixed(6)));
     }
 
-    const netGrams = Math.max(0, grossGrams - stoneGrams - cuttingGrams);
-    const totalPrice = (netGrams * data.purchase_rate_per_gram) + data.labour_cost + data.polish_cost;
+    function handlePolishGramChange(value: string) {
+        setPolish({ gram: value });
+        setPolishGrams(Number((parseFloat(value) || 0).toFixed(6)));
+    }
+
+    // Polish is taken as weight added back into net weight (the shop's profit
+    // margin lives here, not as a separate Rs charge) — so it flows straight
+    // into the metal value below, rather than being added on its own.
+    const netGrams = Math.max(0, grossGrams - stoneGrams - cuttingGrams + polishGrams);
+    const totalPrice = (netGrams * data.purchase_rate_per_gram) + data.labour_cost;
 
     useEffect(() => {
         setData(prev => ({
@@ -368,17 +401,94 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
             gross_weight_grams: Number(grossGrams.toFixed(3)),
             stone_weight_grams: Number(stoneGrams.toFixed(3)),
             cutting_loss_grams: Number(cuttingGrams.toFixed(3)),
+            polish_weight_grams: Number(polishGrams.toFixed(3)),
             net_weight_grams: Number(netGrams.toFixed(3)),
             purchase_price: totalPrice,
         }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [grossGrams, stoneGrams, cuttingGrams, data.purchase_rate_per_gram, data.labour_cost, data.polish_cost]);
+    }, [grossGrams, stoneGrams, cuttingGrams, polishGrams, data.purchase_rate_per_gram, data.labour_cost]);
 
     const [grossWeightError, setGrossWeightError] = useState<string>('');
 
-    const submit = (e: any) => {
-        e.preventDefault();
+    // Auto-fills Gross Weight straight from the scale as it updates — paused
+    // while the shopkeeper has a weight field focused so typing isn't fought.
+    const grossWeightFocused = useRef(false);
+    useEffect(() => {
+        if (scale.ok && scale.grams !== null && !grossWeightFocused.current) {
+            setGrossWeightError('');
+            handleUnitChange(setGross, gross, 'gram', String(Math.max(0, scale.grams)), setGrossGrams);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [scale.ok, scale.grams]);
 
+    // Saving stays on this same page (preserveState) instead of navigating
+    // away — a shopkeeper entering a batch of items shouldn't be bounced to
+    // a different screen after every single one. The form clears itself
+    // once the save lands; "Save & Print" additionally waits for the
+    // server's flashed `createdItem` (it carries the real, server-assigned
+    // item_code) before printing and then clearing.
+    const [pendingAction, setPendingAction] = useState<'save' | 'print' | null>(null);
+    const [printItem, setPrintItem] = useState<any>(null);
+
+    function resetForm() {
+        reset();
+        setGross({ gram: '', tola: '', masha: '', ratti: '', point: '' });
+        setStone({ gram: '' });
+        setPolish({ gram: '' });
+        setCutting({ gram: '', tola: '', masha: '', ratti: '', point: '' });
+        setGrossGrams(0);
+        setStoneGrams(0);
+        setPolishGrams(0);
+        setCuttingGrams(0);
+        setPurityNotice('');
+        setRingValidationError('');
+        setGrossWeightError('');
+        rateTouched.current = false;
+    }
+
+    useEffect(() => {
+        if (!pendingAction) return;
+        post(route('items.store'), {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                // A plain save clears right away; "print" clears once the
+                // print effect below has actually fired the print dialog
+                // (triggered separately, by the flashed createdItem arriving).
+                if (pendingAction === 'save') {
+                    resetForm();
+                    setPendingAction(null);
+                }
+            },
+            // Validation failed server-side — leave what was typed in place
+            // (don't wipe it) and just re-enable the buttons.
+            onError: () => setPendingAction(null),
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pendingAction]);
+
+    // The server flashes `createdItem` on every save; only act on it when
+    // this visit was actually a "Save & Print" (a plain save ignores it).
+    useEffect(() => {
+        if (pendingAction === 'print' && flash?.createdItem) {
+            setPrintItem(flash.createdItem);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flash?.createdItem]);
+
+    useEffect(() => {
+        if (!printItem) return;
+        const t = setTimeout(() => {
+            window.print();
+            setPrintItem(null);
+            resetForm();
+            setPendingAction(null);
+        }, 150);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [printItem]);
+
+    const submit = (action: 'save' | 'print') => {
         // Client-side guard: verify gross weight is entered
         if (grossGrams <= 0) {
             setGrossWeightError('Please enter a valid gross weight greater than 0.');
@@ -393,7 +503,7 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
             return;
         }
 
-        post(route('items.store'));
+        setPendingAction(action);
     };
 
     return (
@@ -405,12 +515,16 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
                     <h1 className="item-entry-title">Create New Item</h1>
                 </div>
 
-                <form onSubmit={submit} className="item-entry-form">
-                    
-                    {/* Left Column (Forms) */}
-                    <div>
+                {flash?.success && (
+                    <div className="item-code-preview" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af', marginBottom: '0.75rem' }}>
+                        {flash.success} Ready for the next one.
+                    </div>
+                )}
+
+                <form onSubmit={e => { e.preventDefault(); submit('save'); }} className="item-entry-form">
+
                         {/* Basic Details Card */}
-                        <div className="item-card" style={{ marginBottom: '2rem' }}>
+                        <div className="item-card">
                             <h2 className="card-title">Basic Details</h2>
                             
                             <div className="form-grid">
@@ -514,11 +628,26 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
                         </div>
 
                         {/* Weight Management Card */}
-                        <div className="item-card" style={{ marginBottom: '2rem' }}>
+                        <div className="item-card item-card-wide">
                             <h2 className="card-title">Weight Management</h2>
                             
                             <div className="weight-section">
                                 <div className="weight-title">Gross Weight</div>
+                                {(scale.ok || scaleEverConnected.current) && (
+                                    <div className="scale-hint">
+                                        {scale.ok ? (
+                                            <>
+                                                <span className="scale-dot online" />
+                                                Scale: <strong>{formatNumber(scale.grams ?? 0, 2)} g</strong> — auto-filling
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="scale-dot offline" />
+                                                Scale disconnected — enter weight manually
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="weight-grid">
                                     {(['gram', 'tola', 'masha', 'ratti', 'point'] as const).map((u) => (
                                         <div key={u} className="form-group">
@@ -526,6 +655,8 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
                                             <input
                                                 type="number" step="any" min="0" className="form-input"
                                                 value={(gross as any)[u]}
+                                                onFocus={() => { grossWeightFocused.current = true; }}
+                                                onBlur={() => { grossWeightFocused.current = false; }}
                                                 onChange={(e) => {
                                                     setGrossWeightError('');
                                                     handleUnitChange(setGross, gross, u, e.target.value, setGrossGrams);
@@ -543,14 +674,22 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
                             </div>
 
                             <div className="weight-section">
-                                <div className="weight-title">Stone Weight (Deduction)</div>
-                                <div className="weight-grid" style={{ gridTemplateColumns: '1fr' }}>
+                                <div className="weight-title">Stone &amp; Polish Weight (Gram)</div>
+                                <div className="weight-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
                                     <div className="form-group">
-                                        <label className="form-label">Gram</label>
+                                        <label className="form-label">Stone Weight (−)</label>
                                         <input
                                             type="number" step="any" min="0" className="form-input"
                                             value={stone.gram}
                                             onChange={(e) => handleStoneGramChange(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Polish Weight (+)</label>
+                                        <input
+                                            type="number" step="any" min="0" className="form-input"
+                                            value={polish.gram}
+                                            onChange={(e) => handlePolishGramChange(e.target.value)}
                                         />
                                     </div>
                                 </div>
@@ -605,19 +744,13 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
                                     <label className="form-label">Labour Cost (Total)</label>
                                     <input type="number" step="any" min="0" className="form-input" value={data.labour_cost || ''} onChange={e => setData('labour_cost', parseFloat(e.target.value) || 0)} />
                                 </div>
-                                <div className="form-group">
-                                    <label className="form-label">Polish Cost (Total)</label>
-                                    <input type="number" step="any" min="0" className="form-input" value={data.polish_cost || ''} onChange={e => setData('polish_cost', parseFloat(e.target.value) || 0)} />
-                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Right Column (Summary & Actions) */}
-                    <div>
+                        {/* Summary & Actions */}
                         <div className="summary-panel">
                             <h2 className="summary-title">Calculation Summary</h2>
-                            
+
                             <div className="summary-row">
                                 <span>Gross Weight</span>
                                 <span className="summary-value">{formatNumber(grossGrams, 3)} g</span>
@@ -630,13 +763,17 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
                                 <span>- Cutting Loss</span>
                                 <span className="summary-value">{formatNumber(cuttingGrams, 3)} g</span>
                             </div>
-                            
-                            <div className="summary-row total" style={{marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.2)'}}>
+                            <div className="summary-row">
+                                <span>+ Polish (Added Weight)</span>
+                                <span className="summary-value">{formatNumber(polishGrams, 3)} g</span>
+                            </div>
+
+                            <div className="summary-row total" style={{marginTop: '0.6rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(241,236,224,0.16)'}}>
                                 <span>Net Weight</span>
                                 <span className="summary-value">{formatNumber(netGrams, 3)} g</span>
                             </div>
 
-                            <div className="summary-row" style={{marginTop: '2rem'}}>
+                            <div className="summary-row" style={{marginTop: '1.1rem'}}>
                                 <span>Metal Value (Net x Rate)</span>
                                 <span className="summary-value">{(netGrams * data.purchase_rate_per_gram).toFixed(2)}</span>
                             </div>
@@ -644,26 +781,43 @@ export default function ItemCreate({ metals = [], purities = [], parties = [], c
                                 <span>+ Labour Cost</span>
                                 <span className="summary-value">{data.labour_cost.toFixed(2)}</span>
                             </div>
-                            <div className="summary-row">
-                                <span>+ Polish Cost</span>
-                                <span className="summary-value">{data.polish_cost.toFixed(2)}</span>
-                            </div>
 
                             <div className="summary-row total">
                                 <span>Total Price</span>
                                 <span className="summary-value">{totalPrice.toFixed(2)}</span>
                             </div>
 
-                            <div className="form-actions" style={{marginTop: '2rem', justifyContent: 'center'}}>
-                                <button type="submit" className="btn-primary" style={{width: '100%'}} disabled={processing}>
-                                    {processing ? 'Saving...' : 'Save Item to Inventory'}
+                            <div className="form-actions" style={{marginTop: '1.1rem', flexDirection: 'row', gap: '0.6rem'}}>
+                                <button type="submit" className="btn-primary" style={{flex: 1}} disabled={processing || pendingAction !== null}>
+                                    {pendingAction === 'save' ? 'Saving...' : 'Save'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    style={{flex: 1}}
+                                    disabled={processing || pendingAction !== null}
+                                    onClick={() => submit('print')}
+                                >
+                                    {pendingAction === 'print' ? (printItem ? 'Printing...' : 'Saving...') : 'Print'}
                                 </button>
                             </div>
                         </div>
-                    </div>
 
                 </form>
+
+                <div className="print-only">
+                    {printItem && (
+                        <ItemEntryPrintSlip item={printItem} shop={shop} printerType={printerType} printDimensions={printDimensions} />
+                    )}
+                </div>
             </div>
+
+            <style>{`
+                .print-only { display: none; }
+                @media print {
+                    .print-only { display: block !important; }
+                }
+            `}</style>
         </AppLayout>
     );
 }

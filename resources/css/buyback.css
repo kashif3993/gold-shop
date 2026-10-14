@@ -27,7 +27,7 @@
 }
 
 .bb-page {
-    padding: 2rem;
+    padding: clamp(0.75rem, 2vw, 1.5rem) clamp(0.75rem, 2.5vw, 1.75rem);
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
@@ -36,103 +36,118 @@
 }
 
 .bb-header {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .bb-title {
-    font-size: 2rem;
+    font-size: clamp(1.15rem, 1.6vw + 0.6rem, 1.5rem);
     font-weight: 700;
-    margin: 0 0 0.35rem;
+    margin: 0 0 0.2rem;
     color: #111827;
 }
 
 .bb-desc {
     color: var(--bb-muted);
-    font-size: 1rem;
+    font-size: 0.85rem;
     margin: 0;
 }
 
-/* ── "Not a refund" notice ─────────────────────────────────────────── */
+/* ── "Not a refund" notice — one compact line, not a tall paragraph box ─ */
 
 .bb-notice {
     display: flex;
-    gap: 0.75rem;
-    align-items: flex-start;
+    gap: 0.5rem;
+    align-items: center;
     background: var(--bb-gold-soft);
     border: 1px solid var(--bb-gold-soft-border);
-    border-left: 4px solid var(--bb-gold);
-    border-radius: 10px;
-    padding: 0.9rem 1.1rem;
-    margin: 1.25rem 0 1.75rem;
+    border-radius: 8px;
+    padding: 0.45rem 0.8rem;
+    margin: 0.6rem 0;
     color: var(--bb-gold-text);
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 0.8rem;
+    line-height: 1.4;
 }
 
 .bb-notice svg {
     flex-shrink: 0;
-    margin-top: 0.1rem;
 }
 
 .bb-notice strong {
-    display: block;
-    font-size: 0.95rem;
-    margin-bottom: 0.15rem;
     color: #6b4a0d;
 }
 
-/* ── layout ───────────────────────────────────────────────────────── */
+/* ── reference-only original sale: a slim bar, not its own full card ─── */
 
-.bb-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
-    align-items: start;
+.bb-lookup-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    background: var(--bb-surface);
+    border: 1px solid var(--bb-line);
+    border-radius: 10px;
+    padding: 0.5rem 0.8rem;
+    margin-bottom: 0.75rem;
 }
 
-@media (min-width: 1000px) {
-    .bb-grid {
-        grid-template-columns: 1.7fr 1fr;
-    }
+.bb-lookup-bar-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--bb-muted);
+    white-space: nowrap;
+}
+
+.bb-lookup-form {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.bb-lookup-bar .bb-input {
+    flex: 1;
+    min-width: 160px;
+}
+
+/* ── layout: every work area in one flexing row, like Item Entry — no
+   vertical stacking, no scroll, on any screen wide enough to hold them
+   side by side; narrower screens wrap continuously (flex-wrap) rather
+   than snapping at one hard breakpoint. ───────────────────────────── */
+
+.bb-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 .bb-card {
     background: var(--bb-surface);
     border: 1px solid var(--bb-line);
     border-radius: var(--bb-radius);
-    padding: 1.5rem;
+    padding: 1.1rem 1.25rem;
     box-shadow: var(--bb-shadow);
-    margin-bottom: 1.5rem;
+    box-sizing: border-box;
+    flex: 1 1 230px;
+    min-width: 0;
 }
 
-.bb-card:last-child {
-    margin-bottom: 0;
+.bb-card-wide {
+    flex: 2.4 1 420px;
 }
 
 .bb-card-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
-    margin: 0 0 1.15rem;
+    margin: 0 0 0.9rem;
     color: #111827;
     border-bottom: 1px solid var(--bb-surface-head);
-    padding-bottom: 0.65rem;
-}
-
-/* ── reference-only original sale ─────────────────────────────────── */
-
-.bb-lookup-row {
-    display: flex;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-}
-
-.bb-lookup-row .bb-input {
-    flex: 1;
-    min-width: 180px;
+    padding-bottom: 0.55rem;
 }
 
 .bb-ref {
-    margin-top: 1.1rem;
+    margin-bottom: 0.75rem;
     border: 1px dashed var(--bb-line-strong);
     border-radius: 10px;
     padding: 1rem 1.1rem;
@@ -194,8 +209,8 @@
 
 .bb-field-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.1rem;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.9rem;
 }
 
 .bb-field {
@@ -222,13 +237,14 @@
 
 .bb-input,
 .bb-select {
-    padding: 0.55rem 0.9rem;
-    font-size: 0.95rem;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.9rem;
     border: 1px solid var(--bb-line-strong);
     border-radius: 8px;
     background: var(--bb-surface-alt);
     color: #111827;
     width: 100%;
+    min-width: 0;
     box-sizing: border-box;
     font-family: inherit;
     transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
@@ -248,23 +264,39 @@
     cursor: not-allowed;
 }
 
+/* A number input's own spinner arrows eat ~20px on the right — in a
+   narrow weight-grid cell that's enough to crowd out the digits
+   themselves (typing "50.5" could show only part of it). Dropping the
+   spinner hands that width back to the value, which is what actually
+   needs to be readable here. */
+.bb-input[type='number'] {
+    -moz-appearance: textfield;
+}
+
+.bb-input[type='number']::-webkit-outer-spin-button,
+.bb-input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 .bb-error {
     color: var(--bb-danger);
     font-size: 0.78rem;
     margin-top: 0.3rem;
 }
 
-/* re-weigh: gram + traditional units */
+/* re-weigh: gram + traditional units — continuous reflow (no hard
+   breakpoint) and a wide-enough floor per cell that a typed value like
+   "999.999" always stays fully visible instead of scrolling out of view. */
 .bb-weight-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(62px, 1fr));
+    gap: 0.5rem;
 }
 
-@media (min-width: 560px) {
-    .bb-weight-grid {
-        grid-template-columns: repeat(5, 1fr);
-    }
+.bb-weight-grid .bb-input {
+    padding: 0.5rem 0.4rem;
+    text-align: left;
 }
 
 .bb-deduction-line {
@@ -322,32 +354,76 @@
     user-select: none;
 }
 
-/* ── valuation panel ──────────────────────────────────────────────── */
+/* ── valuation panel — dark gold/black, same language as Item Entry's
+   Calculation Summary, not the site's light/dark theme toggle (it's a
+   fixed "premium highlight" panel, so no .dark override needed here). ── */
 
 .bb-summary {
-    position: sticky;
-    top: 1.5rem;
-    background: var(--bb-surface);
-    border: 1px solid var(--bb-line);
-    border-radius: var(--bb-radius);
-    box-shadow: var(--bb-shadow);
+    flex: 1 1 250px;
+    min-width: 0;
+    box-sizing: border-box;
+    background: linear-gradient(165deg, #232017, #16140f);
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgba(28, 26, 22, 0.18);
     overflow: hidden;
 }
 
 .bb-summary-head {
-    background: #111827;
-    color: #fff;
-    padding: 1rem 1.25rem;
+    background: transparent;
+    color: #f1ece0;
+    padding: 1rem 1.25rem 0.6rem;
+    font-family: 'Fraunces', Georgia, serif;
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.02em;
+    border-bottom: 1px solid rgba(241, 236, 224, 0.16);
+    margin: 0 1.25rem;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .bb-summary-body {
-    padding: 1.25rem;
+    padding: 1rem 1.25rem 1.25rem;
 }
 
-.bb-sum-row {
+.bb-summary .bb-sum-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
+    color: #c7bfa9;
+}
+
+.bb-summary .bb-sum-row span:last-child {
+    font-family: monospace;
+    font-weight: 600;
+    color: #f1ece0;
+}
+
+.bb-summary .bb-sum-row.bb-sum-minus span:last-child {
+    color: #f3a6a6;
+}
+
+.bb-summary .bb-sum-divider {
+    border: none;
+    border-top: 1px dashed rgba(241, 236, 224, 0.22);
+    margin: 0.6rem 0;
+}
+
+.bb-summary .bb-payout {
+    margin-top: 0.5rem;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    background: rgba(232, 209, 138, 0.1);
+    border: 1px solid rgba(232, 209, 138, 0.35);
+}
+
+/* Original, light styling stays for the success screen's .bb-done card
+   (where .bb-sum-row is reused on a white background). */
+.bb-done .bb-sum-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -357,50 +433,32 @@
     color: #374151;
 }
 
-.bb-sum-row span:last-child {
+.bb-done .bb-sum-row span:last-child {
     font-family: monospace;
     font-weight: 600;
     color: var(--bb-ink);
 }
 
-.bb-sum-row.bb-sum-minus span:last-child {
-    color: var(--bb-danger);
-}
-
-.bb-sum-divider {
-    border: none;
-    border-top: 1px dashed var(--bb-line-strong);
-    margin: 0.6rem 0;
-}
-
-.bb-payout {
-    margin-top: 0.5rem;
-    padding: 0.9rem 1rem;
-    border-radius: 10px;
-    background: var(--bb-gold-soft);
-    border: 1px solid var(--bb-gold-soft-border);
-}
-
 .bb-payout-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-weight: 800;
-    color: var(--bb-gold-text);
+    color: #e8d18a;
 }
 
 .bb-payout-value {
-    font-size: 1.8rem;
-    font-weight: 800;
-    font-family: monospace;
-    color: #6b4a0d;
-    margin-top: 0.15rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'Fraunces', monospace;
+    color: #e8d18a;
+    margin-top: 0.1rem;
 }
 
 .bb-compare {
     margin-top: 0.9rem;
-    font-size: 0.78rem;
-    color: var(--bb-muted);
+    font-size: 0.75rem;
+    color: #c7bfa9;
     line-height: 1.45;
 }
 
@@ -408,19 +466,19 @@
     display: block;
     width: 100%;
     margin-top: 1.1rem;
-    padding: 0.8rem 1rem;
+    padding: 0.75rem 1rem;
     border: none;
     border-radius: 8px;
-    background: var(--bb-gold);
-    color: #111;
-    font-size: 0.95rem;
+    background: #e8d18a;
+    color: #1c1a16;
+    font-size: 0.92rem;
     font-weight: 700;
     cursor: pointer;
     transition: background 0.15s, transform 0.1s;
 }
 
 .bb-btn:hover:not(:disabled) {
-    background: var(--bb-gold-dark);
+    background: #ddc06b;
 }
 
 .bb-btn:active:not(:disabled) {
@@ -544,7 +602,6 @@
 }
 
 .dark .bb-card,
-.dark .bb-summary,
 .dark .bb-done {
     background: #1f2937;
     border-color: #374151;
@@ -593,28 +650,17 @@
     color: #d1d5db;
 }
 
-.dark .bb-sum-row {
+/* .bb-summary's own rows/payout box are already dark regardless of the
+   site theme (see "valuation panel" above) — only .bb-done's (the
+   success screen, on a white/dark-surface card) need a toggle. */
+.dark .bb-done .bb-sum-row {
     color: #d1d5db;
 }
 
-.dark .bb-sum-row span:last-child {
+.dark .bb-done .bb-sum-row span:last-child {
     color: #f3f4f6;
 }
 
-.dark .bb-sum-row.bb-sum-minus span:last-child {
-    color: #f87171;
-}
-
-.dark .bb-payout {
-    background: rgba(212, 175, 55, 0.14);
-    border-color: rgba(212, 175, 55, 0.32);
-}
-
-.dark .bb-payout-label {
-    color: #f0d489;
-}
-
-.dark .bb-payout-value,
 .dark .bb-done-amount,
 .dark .bb-done-icon {
     color: #f0d489;
@@ -667,35 +713,14 @@
    Responsive
    ============================================================================ */
 
-@media (max-width: 768px) {
-    .bb-page {
-        padding: 1rem;
-        max-width: 100vw;
-    }
-
-    .bb-title {
-        font-size: 1.5rem;
-    }
-
-    .bb-field-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .bb-summary {
-        position: static;
-    }
-}
-
+/* .bb-row (flex-wrap), .bb-field-grid and .bb-weight-grid (auto-fit) are
+   already continuously responsive — no hard breakpoints needed here. */
 @media (max-width: 380px) {
     .bb-page {
-        padding: 0.75rem;
+        padding: 0.6rem;
     }
 
     .bb-card {
-        padding: 1.15rem;
-    }
-
-    .bb-weight-grid {
-        grid-template-columns: 1fr 1fr;
+        padding: 0.9rem;
     }
 }

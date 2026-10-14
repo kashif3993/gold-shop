@@ -17,30 +17,31 @@ class ItemEntryTest extends TestCase
     public function test_item_entry_math_and_purchase_price_locking()
     {
         $user = User::factory()->create();
-        
+
         $partyType = PartyType::create(['name' => 'Karigar']);
         $party = Party::create([
             'party_type_id' => $partyType->id,
             'name' => 'Test Karigar',
-            'phone' => '1234567890'
+            'phone' => '1234567890',
         ]);
 
         $metal = MetalType::create(['name' => 'Gold']);
         $purity = Purity::create([
             'metal_type_id' => $metal->id,
             'name' => '22K',
-            'fineness_percent' => 91.6
+            'fineness_percent' => 91.6,
         ]);
 
-        // Scenario: 
+        // Scenario:
         // Gross: 10g
         // Stone: 1g
         // Cutting: 0.5g
-        // Expected Net: 8.5g
+        // Polish (added weight): 0.2g — the shop's profit margin, taken as weight, not a flat Rs charge
+        // Expected Net: 10 - 1 - 0.5 + 0.2 = 8.7g
         // Rate: 10000 per gram
         // Labour: 2000
-        // Polish: 500
-        // Expected Purchase Price: (8.5 * 10000) + 2000 + 500 = 85000 + 2500 = 87500
+        // polish_cost (legacy Rs field) is sent but must be IGNORED by pricing now
+        // Expected Purchase Price: (8.7 * 10000) + 2000 = 87000 + 2000 = 89000
 
         $payload = [
             'item_code' => 'ITM-001',
@@ -50,8 +51,9 @@ class ItemEntryTest extends TestCase
             'gross_weight_grams' => 10,
             'stone_weight_grams' => 1,
             'cutting_loss_grams' => 0.5,
+            'polish_weight_grams' => 0.2,
             'labour_cost' => 2000,
-            'polish_cost' => 500,
+            'polish_cost' => 500, // legacy Rs field — must not affect purchase_price anymore
             'purchase_rate_per_gram' => 10000,
             'purchase_price' => 999999, // Intentional fake price from frontend
             'source_party_id' => $party->id,
@@ -65,15 +67,15 @@ class ItemEntryTest extends TestCase
         // Verify the database has the correctly calculated math
         $this->assertDatabaseHas('items', [
             'item_code' => 'ITM-001',
-            'net_weight_grams' => 8.5, // 10 - 1 - 0.5
-            'purchase_price' => 87500, // Enforced server-side override
+            'net_weight_grams' => 8.7, // 10 - 1 - 0.5 + 0.2
+            'purchase_price' => 89000, // Enforced server-side override; polish_cost ignored
         ]);
     }
 
     public function test_stone_and_cutting_cannot_exceed_gross_weight()
     {
         $user = User::factory()->create();
-        
+
         $partyType = PartyType::create(['name' => 'Karigar']);
         $party = Party::create(['party_type_id' => $partyType->id, 'name' => 'Test', 'phone' => '123']);
         $metal = MetalType::create(['name' => 'Gold']);

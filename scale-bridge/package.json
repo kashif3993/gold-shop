@@ -1,0 +1,13 @@
+{
+  "name": "scale-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reads the digital weighing scale over USB/serial and serves the live weight on localhost for the Item Entry page to poll.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "serialport": "^12.0.0"
+  }
+}

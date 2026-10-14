@@ -20,6 +20,9 @@ interface Settings {
     shop_ntn: string | null;
     shop_logo: string | null;
     receipt_printer_type: 'regular' | 'thermal';
+    item_slip_print_width_mm: number;
+    item_slip_print_height_mm: number;
+    item_slip_print_padding_mm: number;
     buyback_enabled: boolean;
     bank_qr_enabled: boolean;
     bank_qr_manager_confirm_enabled: boolean;
@@ -65,6 +68,9 @@ export default function SystemSettings({ settings, metals }: { settings: Setting
         shop_logo: null as File | null,
 
         receipt_printer_type: settings.receipt_printer_type,
+        item_slip_print_width_mm: settings.item_slip_print_width_mm,
+        item_slip_print_height_mm: settings.item_slip_print_height_mm,
+        item_slip_print_padding_mm: settings.item_slip_print_padding_mm,
 
         active_metal_ids: metals.filter(m => m.is_active).map(m => m.id) as number[],
 
@@ -215,6 +221,41 @@ export default function SystemSettings({ settings, metals }: { settings: Setting
                                 <span style={{ fontWeight: 600 }}>Thermal Printer</span>
                                 <p className="adm-card-sub" style={{ margin: '0.3rem 0 0' }}>A narrow receipt-roll layout — for a dedicated POS thermal printer.</p>
                             </label>
+                        </div>
+
+                        <p className="adm-card-sub" style={{ marginTop: '1.1rem' }}>Item Entry's "Save &amp; Print" weight/value slip — size it to whatever paper roll or sheet is actually loaded.</p>
+                        <div className="adm-form-row">
+                            <div className="adm-field" style={{ maxWidth: '180px' }}>
+                                <label className="adm-label" htmlFor="item_slip_print_width_mm">Slip Width (mm)</label>
+                                <input
+                                    id="item_slip_print_width_mm" type="number" step="1" min="20" max="300"
+                                    className="adm-input" style={{ width: '100%' }}
+                                    value={form.data.item_slip_print_width_mm}
+                                    onChange={e => form.setData('item_slip_print_width_mm', parseFloat(e.target.value) || 0)}
+                                />
+                                {form.errors.item_slip_print_width_mm && <span className="adm-error">{form.errors.item_slip_print_width_mm}</span>}
+                            </div>
+                            <div className="adm-field" style={{ maxWidth: '180px' }}>
+                                <label className="adm-label" htmlFor="item_slip_print_height_mm">Slip Height (mm)</label>
+                                <input
+                                    id="item_slip_print_height_mm" type="number" step="1" min="0" max="500"
+                                    className="adm-input" style={{ width: '100%' }}
+                                    value={form.data.item_slip_print_height_mm}
+                                    onChange={e => form.setData('item_slip_print_height_mm', parseFloat(e.target.value) || 0)}
+                                />
+                                <span className="adm-card-sub" style={{ margin: '0.3rem 0 0' }}>0 = auto (grows to fit content)</span>
+                                {form.errors.item_slip_print_height_mm && <span className="adm-error">{form.errors.item_slip_print_height_mm}</span>}
+                            </div>
+                            <div className="adm-field" style={{ maxWidth: '180px' }}>
+                                <label className="adm-label" htmlFor="item_slip_print_padding_mm">Slip Padding (mm)</label>
+                                <input
+                                    id="item_slip_print_padding_mm" type="number" step="0.5" min="0" max="50"
+                                    className="adm-input" style={{ width: '100%' }}
+                                    value={form.data.item_slip_print_padding_mm}
+                                    onChange={e => form.setData('item_slip_print_padding_mm', parseFloat(e.target.value) || 0)}
+                                />
+                                {form.errors.item_slip_print_padding_mm && <span className="adm-error">{form.errors.item_slip_print_padding_mm}</span>}
+                            </div>
                         </div>
                     </div>
 

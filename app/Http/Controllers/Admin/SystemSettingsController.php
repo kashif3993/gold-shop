@@ -34,6 +34,9 @@ class SystemSettingsController extends Controller
                 'shop_logo' => Setting::get('shop_logo'),
 
                 'receipt_printer_type' => Setting::get('receipt_printer_type', 'regular'),
+                'item_slip_print_width_mm' => (float) Setting::get('item_slip_print_width_mm', 80),
+                'item_slip_print_height_mm' => (float) Setting::get('item_slip_print_height_mm', 0),
+                'item_slip_print_padding_mm' => (float) Setting::get('item_slip_print_padding_mm', 4),
 
                 'buyback_enabled' => Setting::bool('buyback_enabled', true),
                 'bank_qr_enabled' => Setting::bool('bank_qr_enabled', true),
@@ -66,6 +69,9 @@ class SystemSettingsController extends Controller
             'shop_logo' => 'nullable|image|max:2048',
 
             'receipt_printer_type' => 'required|in:regular,thermal',
+            'item_slip_print_width_mm' => 'required|numeric|min:20|max:300',
+            'item_slip_print_height_mm' => 'nullable|numeric|min:0|max:500',
+            'item_slip_print_padding_mm' => 'required|numeric|min:0|max:50',
 
             'buyback_enabled' => 'required|boolean',
             'bank_qr_enabled' => 'required|boolean',
@@ -127,6 +133,7 @@ class SystemSettingsController extends Controller
             'shop_name', 'shop_tagline', 'shop_address', 'shop_phone', 'shop_ntn',
             'tax_rate_percent', 'zakat_rate_percent', 'zakat_nisab_gold_grams', 'zakat_nisab_silver_grams',
             'maintenance_message', 'receipt_printer_type',
+            'item_slip_print_width_mm', 'item_slip_print_height_mm', 'item_slip_print_padding_mm',
         ] as $key) {
             Setting::put($key, $data[$key] ?? '', $userId);
         }

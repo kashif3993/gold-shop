@@ -18,14 +18,16 @@ class ItemController extends Controller
         $gross = (float) ($validated['gross_weight_grams'] ?? 0);
         $stone = (float) ($validated['stone_weight_grams'] ?? 0);
         $cutting = (float) ($validated['cutting_loss_grams'] ?? 0);
-        $net = max(0, $gross - $stone - $cutting);
+        $polishWeight = (float) ($validated['polish_weight_grams'] ?? 0);
+        $net = max(0, $gross - $stone - $cutting + $polishWeight);
 
         $rate = (float) ($validated['purchase_rate_per_gram'] ?? 0);
         $labour = (float) ($validated['labour_cost'] ?? 0);
-        $polish = (float) ($validated['polish_cost'] ?? 0);
 
-        // Server-side purchase price locking
-        $validated['purchase_price'] = ($net * $rate) + $labour + $polish;
+        // Server-side purchase price locking. Polish is no longer a flat Rs
+        // charge — it's weight added back into net weight above, so its
+        // margin is already inside (net * rate).
+        $validated['purchase_price'] = ($net * $rate) + $labour;
         $validated['created_by_user_id'] = $request->user()->id;
 
         $item = Item::create($validated)->refresh();
@@ -39,7 +41,7 @@ class ItemController extends Controller
     {
         $query = $request->query('q');
 
-        if (!$query) {
+        if (! $query) {
             return response()->json(['data' => []]);
         }
 
@@ -47,7 +49,7 @@ class ItemController extends Controller
             ->where('status', 'in_stock')
             ->where(function ($q) use ($query) {
                 $q->where('item_code', 'like', "%{$query}%")
-                  ->orWhere('qr_payload', 'like', "%{$query}%");
+                    ->orWhere('qr_payload', 'like', "%{$query}%");
             })
             ->limit(10)
             ->get();

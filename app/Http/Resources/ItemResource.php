@@ -19,6 +19,7 @@ class ItemResource extends JsonResource
             'gross_weight_grams' => $this->gross_weight_grams,
             'stone_weight_grams' => $this->stone_weight_grams,
             'cutting_loss_grams' => $this->cutting_loss_grams,
+            'polish_weight_grams' => $this->polish_weight_grams,
             'net_weight_grams' => $this->net_weight_grams,
             'labour_cost' => $this->labour_cost,
             'polish_cost' => $this->polish_cost,
@@ -29,8 +30,8 @@ class ItemResource extends JsonResource
             'status' => $this->status,
             'created_by_user_id' => $this->created_by_user_id,
             'created_at' => $this->created_at,
-            'metal_name' => $this->whenLoaded('metalType', fn() => $this->metalType->name),
-            'purity_name' => $this->whenLoaded('purity', fn() => $this->purity->name),
+            'metal_name' => $this->whenLoaded('metalType', fn () => $this->metalType->name),
+            'purity_name' => $this->whenLoaded('purity', fn () => $this->purity->name),
         ];
     }
 }

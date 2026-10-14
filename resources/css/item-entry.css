@@ -2,22 +2,22 @@
 .item-entry-container {
     width: 100%;
     box-sizing: border-box;
-    padding: 2rem;
+    padding: clamp(0.75rem, 2vw, 1.5rem) clamp(0.75rem, 2.5vw, 1.75rem);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: #1a1a1a;
 }
 
 .item-entry-header {
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
     border-bottom: 2px solid #eaeaea;
 }
 
 .item-entry-title {
-    font-size: 2rem;
+    font-size: clamp(1.15rem, 1.6vw + 0.6rem, 1.5rem);
     font-weight: 700;
     color: #111827;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.25rem 0;
 }
 
 .item-entry-desc {
@@ -53,16 +53,16 @@
     color: #b45309;
 }
 
+/* Every work area sits in one flexing row — no vertical stacking, no scroll,
+   on any screen wide enough to hold them side by side. Narrower screens let
+   items wrap onto new rows/lines continuously (flex-wrap), rather than
+   snapping at a single hard breakpoint, so the page stays usable from a
+   phone width up to a wide desktop. */
 .item-entry-form {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-}
-
-@media (min-width: 1024px) {
-    .item-entry-form {
-        grid-template-columns: 3fr 1fr;
-    }
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 /* Card Styling */
@@ -70,10 +70,17 @@
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.1rem 1.25rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     transition: box-shadow 0.3s ease;
     overflow: hidden;
+    box-sizing: border-box;
+    flex: 1 1 230px;
+    min-width: 0;
+}
+
+.item-card-wide {
+    flex: 3 1 340px;
 }
 
 .item-card:hover {
@@ -81,20 +88,20 @@
 }
 
 .card-title {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
     font-weight: 600;
     margin-top: 0;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     color: #111827;
     border-bottom: 1px solid #f3f4f6;
-    padding-bottom: 0.75rem;
+    padding-bottom: 0.6rem;
 }
 
 /* Form Groups */
 .form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
 }
 
 .form-group {
@@ -112,14 +119,15 @@
 
 .form-input,
 .form-select {
-    padding: 0.25rem 1rem !important;
-    font-size: 1rem;
+    padding: 0.45rem 0.65rem !important;
+    font-size: 0.95rem;
     border: 1px solid #d1d5db;
     border-radius: 8px;
     background-color: #f9fafb;
     color: #111827;
     transition: all 0.2s ease;
     width: 100%;
+    min-width: 0;
     box-sizing: border-box;
 }
 
@@ -129,6 +137,22 @@
     border-color: #6366f1;
     background-color: #ffffff;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* A number input's own spinner arrows eat ~20px on the right — in a
+   narrow weight-grid cell that's enough to crowd out the digits
+   themselves (typing "50.5" could show only part of it). Dropping the
+   spinner hands that width back to the value, which is what actually
+   needs to be readable here. */
+.form-input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.form-input[type='number']::-webkit-outer-spin-button,
+.form-input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 /* Today's-rate helper under the Purchase Rate field */
@@ -177,62 +201,121 @@
     border-color: rgba(212, 175, 55, 0.35);
 }
 
+/* Live-scale helper under the Gross Weight title */
+.scale-hint {
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.78rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.scale-hint strong {
+    color: #b5892f;
+    font-family: monospace;
+}
+
+.scale-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.scale-dot.online {
+    background: #22c55e;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.scale-dot.offline {
+    background: #d1d5db;
+}
+
+.dark .scale-hint {
+    color: #9ca3af;
+}
+
+.dark .scale-hint strong {
+    color: #f0d489;
+}
+
+.dark .scale-dot.offline {
+    background: #4b5563;
+}
+
 /* Weight Section Grid */
 .weight-section {
-    margin-bottom: 2rem;
+    margin-bottom: 1.1rem;
+}
+
+.weight-section:last-child {
+    margin-bottom: 0;
 }
 
 .weight-title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #4b5563;
-    margin-bottom: 1rem;
+    margin-bottom: 0.6rem;
 }
 
 .weight-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+    gap: 0.6rem;
 }
 
-@media (min-width: 640px) {
-    .weight-grid {
-        grid-template-columns: repeat(5, 1fr);
-    }
+.weight-grid .form-input {
+    padding: 0.45rem 0.4rem !important;
+    text-align: left;
 }
 
-/* Summary Panel */
+/* Summary Panel — gold/black, matching the shop's theme (not a generic blue) */
 .summary-panel {
-    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+    background: linear-gradient(165deg, #232017, #16140f);
     border-radius: 12px;
-    padding: 1.5rem;
-    color: white;
-    position: sticky;
-    top: 2rem;
+    padding: 1.1rem 1.25rem;
+    color: #f1ece0;
+    box-sizing: border-box;
+    flex: 1 1 260px;
+    max-width: 360px;
+    min-width: 0;
 }
 
 .summary-title {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
     font-weight: 600;
     margin-top: 0;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    color: #f1ece0;
+    border-bottom: 1px solid rgba(241, 236, 224, 0.16);
+    padding-bottom: 0.6rem;
 }
 
 .summary-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+    font-size: 0.85rem;
+    color: #c7bfa9;
 }
 
 .summary-row.total {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px dashed rgba(255, 255, 255, 0.4);
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed rgba(241, 236, 224, 0.25);
+    color: #f1ece0;
+}
+
+.summary-row.total .summary-value {
+    color: #e8d18a;
 }
 
 .summary-value {
@@ -248,22 +331,48 @@
 }
 
 .btn-primary {
-    background-color: #4f46e5;
-    color: white;
+    background-color: #e8d18a;
+    color: #1c1a16;
     border: none;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    font-weight: 600;
+    padding: 0.7rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .btn-primary:hover {
-    background-color: #4338ca;
+    background-color: #ddc06b;
 }
 
 .btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #e8d18a;
+    border: 1px solid rgba(232, 209, 138, 0.45);
+    padding: 0.65rem 1.5rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(232, 209, 138, 0.12);
+}
+
+.btn-secondary:active {
     transform: scale(0.98);
 }
 

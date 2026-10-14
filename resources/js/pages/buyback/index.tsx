@@ -276,72 +276,71 @@ export default function BuyBackIndex({ metals = [], purities = [], currentRates 
                     </div>
                 </div>
 
-                <div className="bb-grid">
-                    {/* ── left: form ─────────────────────────────────────────── */}
-                    <div>
-                        <div className="bb-card">
-                            <h2 className="bb-card-title">Original sale (optional — reference only)</h2>
-                            <form className="bb-lookup-row" onSubmit={doLookup}>
-                                <input
-                                    className="bb-input"
-                                    placeholder="Item code or invoice number"
-                                    value={lookupQuery}
-                                    onChange={e => setLookupQuery(e.target.value)}
-                                />
-                                <button type="submit" className="bb-btn-ghost" disabled={lookupLoading || !lookupQuery.trim()}>
-                                    <Search size={14} style={{ verticalAlign: '-2px', marginRight: 4 }} />
-                                    {lookupLoading ? 'Searching…' : 'Find'}
-                                </button>
-                            </form>
+                {/* ── original sale lookup: a slim bar, not its own full card ───── */}
+                <div className="bb-lookup-bar">
+                    <span className="bb-lookup-bar-label">Original sale (optional — reference only)</span>
+                    <form className="bb-lookup-form" onSubmit={doLookup}>
+                        <input
+                            className="bb-input"
+                            placeholder="Item code or invoice number"
+                            value={lookupQuery}
+                            onChange={e => setLookupQuery(e.target.value)}
+                        />
+                        <button type="submit" className="bb-btn-ghost" disabled={lookupLoading || !lookupQuery.trim()}>
+                            <Search size={14} style={{ verticalAlign: '-2px', marginRight: 4 }} />
+                            {lookupLoading ? 'Searching…' : 'Find'}
+                        </button>
+                    </form>
+                </div>
 
-                            {lookupMsg && <div className="bb-lookup-miss">{lookupMsg}</div>}
+                {lookupMsg && <div className="bb-lookup-miss">{lookupMsg}</div>}
 
-                            {lookup && (
-                                <div className="bb-ref">
-                                    <div className="bb-ref-tag"><Info size={12} /> Reference only — not used for valuation</div>
-                                    <div className="bb-ref-grid">
-                                        <div>
-                                            <div className="bb-ref-label">Item</div>
-                                            <div className="bb-ref-value">{lookup.item?.item_code || '—'}</div>
-                                        </div>
-                                        <div>
-                                            <div className="bb-ref-label">Type / Metal</div>
-                                            <div className="bb-ref-value" style={{ textTransform: 'capitalize' }}>
-                                                {(lookup.item?.item_type || lookup.sale_transaction?.item?.item_type || '—')}
-                                                {' · '}
-                                                {lookup.item?.metal_type?.name || lookup.sale_transaction?.metal_type?.name || ''}
-                                                {' '}
-                                                {lookup.item?.purity?.name || lookup.sale_transaction?.purity?.name || ''}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="bb-ref-label">Original sale weight</div>
-                                            <div className="bb-ref-value">{formatNumber(lookup.sale_transaction?.weight_grams ?? 0, 3)} g</div>
-                                        </div>
-                                        <div>
-                                            <div className="bb-ref-label">Original sale rate</div>
-                                            <div className="bb-ref-value">{fmt(lookup.sale_transaction?.rate_per_gram ?? 0)}</div>
-                                        </div>
-                                        <div>
-                                            <div className="bb-ref-label">Original sale total</div>
-                                            <div className="bb-ref-value">{fmt(lookup.sale_transaction?.total_amount ?? 0)}</div>
-                                        </div>
-                                        <div>
-                                            <div className="bb-ref-label">Invoice</div>
-                                            <div className="bb-ref-value">{lookup.sale_transaction?.invoice?.invoice_number || '—'}</div>
-                                        </div>
-                                    </div>
-                                    <div className="bb-ref-note">{lookup.disclaimer}</div>
-                                    <button type="button" className="bb-btn-ghost" style={{ marginTop: '0.7rem' }} onClick={clearReference}>
-                                        Remove reference
-                                    </button>
+                {lookup && (
+                    <div className="bb-ref">
+                        <div className="bb-ref-tag"><Info size={12} /> Reference only — not used for valuation</div>
+                        <div className="bb-ref-grid">
+                            <div>
+                                <div className="bb-ref-label">Item</div>
+                                <div className="bb-ref-value">{lookup.item?.item_code || '—'}</div>
+                            </div>
+                            <div>
+                                <div className="bb-ref-label">Type / Metal</div>
+                                <div className="bb-ref-value" style={{ textTransform: 'capitalize' }}>
+                                    {(lookup.item?.item_type || lookup.sale_transaction?.item?.item_type || '—')}
+                                    {' · '}
+                                    {lookup.item?.metal_type?.name || lookup.sale_transaction?.metal_type?.name || ''}
+                                    {' '}
+                                    {lookup.item?.purity?.name || lookup.sale_transaction?.purity?.name || ''}
                                 </div>
-                            )}
+                            </div>
+                            <div>
+                                <div className="bb-ref-label">Original sale weight</div>
+                                <div className="bb-ref-value">{formatNumber(lookup.sale_transaction?.weight_grams ?? 0, 3)} g</div>
+                            </div>
+                            <div>
+                                <div className="bb-ref-label">Original sale rate</div>
+                                <div className="bb-ref-value">{fmt(lookup.sale_transaction?.rate_per_gram ?? 0)}</div>
+                            </div>
+                            <div>
+                                <div className="bb-ref-label">Original sale total</div>
+                                <div className="bb-ref-value">{fmt(lookup.sale_transaction?.total_amount ?? 0)}</div>
+                            </div>
+                            <div>
+                                <div className="bb-ref-label">Invoice</div>
+                                <div className="bb-ref-value">{lookup.sale_transaction?.invoice?.invoice_number || '—'}</div>
+                            </div>
                         </div>
+                        <div className="bb-ref-note">{lookup.disclaimer}</div>
+                        <button type="button" className="bb-btn-ghost" style={{ marginTop: '0.7rem' }} onClick={clearReference}>
+                            Remove reference
+                        </button>
+                    </div>
+                )}
 
-                        <div className="bb-card">
-                            <h2 className="bb-card-title">Metal being bought back</h2>
-                            <div className="bb-field-grid">
+                <div className="bb-row">
+                    <div className="bb-card bb-card-wide">
+                        <h2 className="bb-card-title">Metal being bought back</h2>
+                        <div className="bb-field-grid">
                                 <div className="bb-field">
                                     <label className="bb-label">Metal</label>
                                     <select className="bb-select" value={metalTypeId} onChange={e => { setMetalTypeId(e.target.value); setPurityId(''); }}>
@@ -376,22 +375,25 @@ export default function BuyBackIndex({ metals = [], purities = [], currentRates 
                                     <div className="bb-hint">Enter a fresh weigh-in — the original sale weight is not used.</div>
                                     {err('weight_grams') && <div className="bb-error">{err('weight_grams')}</div>}
                                 </div>
+                            </div>
 
-                                <div className="bb-field">
-                                    <label className="bb-label">Rate per gram (today)</label>
-                                    <input
-                                        type="number" step="any" min="0" className="bb-input"
-                                        value={ratePerGram}
-                                        onChange={e => { rateTouched.current = true; setRatePerGram(e.target.value); }}
-                                    />
-                                    {purityId && currentRates[purityId] != null && (
-                                        <div className="bb-hint">Today's {purityName} rate: {fmt(currentRates[purityId])}</div>
-                                    )}
-                                    {err('rate_per_gram') && <div className="bb-error">{err('rate_per_gram')}</div>}
-                                </div>
+                            {/* Rate gets its own row, Deduction the row below it — each reads
+                                clearly instead of competing for a shared row's width. */}
+                            <div className="bb-field" style={{ maxWidth: '220px', marginTop: '1rem' }}>
+                                <label className="bb-label">Rate per gram (today)</label>
+                                <input
+                                    type="number" step="any" min="0" className="bb-input"
+                                    value={ratePerGram}
+                                    onChange={e => { rateTouched.current = true; setRatePerGram(e.target.value); }}
+                                />
+                                {purityId && currentRates[purityId] != null && (
+                                    <div className="bb-hint">Today's {purityName} rate: {fmt(currentRates[purityId])}</div>
+                                )}
+                                {err('rate_per_gram') && <div className="bb-error">{err('rate_per_gram')}</div>}
+                            </div>
 
-                                <div className="bb-field bb-col-2">
-                                    <label className="bb-label">Deduction for wear / melting loss</label>
+                            <div className="bb-field" style={{ marginTop: '1rem' }}>
+                                <label className="bb-label">Deduction for wear / melting loss</label>
                                     <div className="bb-mode-tabs">
                                         <button
                                             type="button"
@@ -463,7 +465,6 @@ export default function BuyBackIndex({ metals = [], purities = [], currentRates 
                                         </>
                                     )}
                                 </div>
-                            </div>
                         </div>
 
                         <div className="bb-card">
@@ -499,10 +500,8 @@ export default function BuyBackIndex({ metals = [], purities = [], currentRates 
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* ── right: valuation ───────────────────────────────────── */}
-                    <div>
+                        {/* ── valuation ───────────────────────────────────── */}
                         <div className="bb-summary">
                             <div className="bb-summary-head">Buy-Back Valuation</div>
                             <div className="bb-summary-body">
@@ -533,7 +532,6 @@ export default function BuyBackIndex({ metals = [], purities = [], currentRates 
                                 </button>
                             </div>
                         </div>
-                    </div>
                 </div>
             </div>
         </AppLayout>

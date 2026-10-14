@@ -1,0 +1,229 @@
+/* ============================================================================
+   Item Entry "Weight & Value Slip" — self-contained stylesheet.
+   Mirrors pos-print.css's pattern: off-screen by default, revealed only
+   under @media print. Classes namespaced `ies-`.
+
+   Width / height / padding come from Admin → Settings → Item Entry Slip
+   Print Size, passed in as CSS custom properties on the root element (see
+   item-entry-print-slip.tsx), so the printed size can be tuned per shop
+   without touching code — a 58mm thermal roll, an 80mm one, or a full
+   regular-printer sheet all just set different numbers in Settings.
+   ============================================================================ */
+
+.ies-area {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #111827;
+    width: var(--ies-width, 80mm);
+    padding: var(--ies-padding, 4mm);
+    box-sizing: border-box;
+}
+
+.ies-area.ies-has-height {
+    min-height: var(--ies-height, auto);
+}
+
+.ies-header {
+    text-align: center;
+    margin-bottom: 0.6rem;
+}
+
+.ies-logo {
+    max-height: 44px;
+    max-width: 130px;
+    margin: 0 auto 0.35rem;
+    display: block;
+}
+
+.ies-shop-name {
+    font-weight: 800;
+    font-size: 1.05rem;
+}
+
+.ies-shop-line {
+    font-size: 0.74rem;
+    color: #4b5563;
+}
+
+.ies-title {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #fdf6e3;
+    color: #7a5c12;
+    border: 1px solid #e8d18a;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.ies-meta {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+/* Identity fields — label left, value right, one per row (same reasoning as
+   POS's print slip: avoids multi-column overlap at narrow paper widths). */
+.ies-fields {
+    border-top: 1px solid #111827;
+    border-bottom: 1px solid #111827;
+    padding: 0.35rem 0;
+    margin-bottom: 0.6rem;
+}
+
+.ies-field {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.76rem;
+    padding: 0.08rem 0;
+}
+
+.ies-field span:first-child {
+    color: #6b7280;
+}
+
+.ies-field span:last-child {
+    font-weight: 600;
+    text-align: right;
+}
+
+/* Weight breakdown table — safe as an actual table here (unlike the POS
+   cart) because every cell is a short plain number, never mixed with a
+   name or a currency symbol, so columns stay narrow and predictable at
+   any paper width. */
+.ies-section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.3rem;
+}
+
+.ies-weight-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-bottom: 0.6rem;
+    font-size: 0.68rem;
+}
+
+.ies-weight-table th,
+.ies-weight-table td {
+    border: 1px solid #9ca3af;
+    padding: 0.2rem 0.15rem;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ies-weight-table thead th {
+    background: #f3f4f6;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: 0.6rem;
+}
+
+.ies-weight-table tbody th {
+    text-align: left;
+    font-weight: 600;
+    background: #fafafa;
+}
+
+.ies-weight-table tbody tr:last-child th,
+.ies-weight-table tbody tr:last-child td {
+    font-weight: 700;
+}
+
+.ies-costing {
+    border-top: 1px dashed #9ca3af;
+    padding-top: 0.4rem;
+}
+
+.ies-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    padding: 0.15rem 0;
+}
+
+.ies-row-grand {
+    font-weight: 800;
+    font-size: 0.95rem;
+    border-top: 1px solid #111827;
+    margin-top: 0.3rem;
+    padding-top: 0.4rem;
+}
+
+.ies-footer {
+    margin-top: 0.9rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #9ca3af;
+    font-size: 0.65rem;
+    color: #6b7280;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.ies-footer strong {
+    color: #374151;
+}
+
+/* ── Thermal variant — receipt-roll styling ───────────────────────────── */
+
+.ies-thermal {
+    font-family: 'Courier New', monospace;
+}
+
+/* ── Regular variant — full-width sheet for an A4/letter printer ───────── */
+
+.ies-regular {
+    max-width: 700px;
+}
+
+/* ============================================================================
+   Print — reveal only the slip, hide everything else on the page.
+   Isolation by visibility (not .no-print/.print-only) so this also works
+   when the slip is rendered off-screen inside a normal working page — like
+   Item Entry's "Save & Print", which prints without ever navigating away
+   from the full app chrome (sidebar/header) — not just on a dedicated
+   print-only page like items/slip.tsx.
+   ============================================================================ */
+
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    .ies-area,
+    .ies-area * {
+        visibility: visible !important;
+    }
+
+    .ies-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    .ies-regular {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    @page {
+        margin: 4mm;
+    }
+}
