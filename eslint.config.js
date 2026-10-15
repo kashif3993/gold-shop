@@ -41,7 +41,10 @@ export default [
         },
     },
     {
-        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js'],
+        // scale-bridge is a standalone Node.js utility (its own package.json and
+        // node_modules), not part of this Vite/React frontend — it doesn't use
+        // browser globals and isn't meant to be linted by these rules.
+        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'scale-bridge'],
     },
     prettier, // Turn off all rules that might conflict with Prettier
 ];
