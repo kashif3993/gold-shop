@@ -9,7 +9,11 @@
     position: absolute;
     left: -9999px;
     top: 0;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
     color: #111827;
 }
 

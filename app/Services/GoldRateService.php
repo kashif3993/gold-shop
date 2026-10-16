@@ -232,7 +232,7 @@ class GoldRateService
                     continue;
                 }
                 $base = $bases[$metal->name];
-                $summaryParts[] = "{$metal->name} " . number_format($base, 2) . '/g';
+                $summaryParts[] = "{$metal->name} ".number_format($base, 2).'/g';
                 foreach ($metal->purities as $purity) {
                     $this->storeRate($metal->id, $purity->id, $this->deriveForPurity($base, $purity), 'api', $userId);
                     $stored++;
@@ -242,7 +242,7 @@ class GoldRateService
             return RateFetchLog::create([
                 'success' => true,
                 'source_api' => $host,
-                'response_summary' => "Stored {$stored} rates — " . implode(', ', $summaryParts),
+                'response_summary' => "Stored {$stored} rates — ".implode(', ', $summaryParts),
                 'fallback_used' => false,
             ]);
         } catch (\Throwable $e) {
@@ -251,7 +251,7 @@ class GoldRateService
             return RateFetchLog::create([
                 'success' => false,
                 'source_api' => $host,
-                'response_summary' => substr('Fetch failed: ' . $e->getMessage(), 0, 255),
+                'response_summary' => substr('Fetch failed: '.$e->getMessage(), 0, 255),
                 'fallback_used' => true,
             ]);
         }

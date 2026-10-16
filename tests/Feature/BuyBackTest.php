@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\BuybackDeductionSetting;
+use App\Models\DailyRate;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\MetalType;
@@ -21,13 +22,21 @@ class BuyBackTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private MetalType $goldMetal;
+
     private MetalType $silverMetal;
+
     private Purity $purity22k;
+
     private Purity $purity24k;
+
     private Purity $silverPurity;
+
     private PartyType $customerPartyType;
+
     private TransactionType $saleTransType;
+
     private TransactionType $buybackTransType;
 
     protected function setUp(): void
@@ -85,7 +94,7 @@ class BuyBackTest extends TestCase
 
     public function test_buyback_screen_renders_with_metals_purities_and_current_rates(): void
     {
-        \App\Models\DailyRate::create([
+        DailyRate::create([
             'metal_type_id' => $this->goldMetal->id,
             'purity_id' => $this->purity22k->id,
             'rate_per_gram' => 22460,
@@ -376,7 +385,7 @@ class BuyBackTest extends TestCase
             'status' => 'bought_back',
         ]);
 
-        $item = \App\Models\Item::where('item_type', 'old_gold')->latest('id')->first();
+        $item = Item::where('item_type', 'old_gold')->latest('id')->first();
         $this->assertEqualsWithDelta(0.364, (float) $item->cutting_loss_grams, 0.001);
         $this->assertEqualsWithDelta(11.3, (float) $item->net_weight_grams, 0.001);
     }

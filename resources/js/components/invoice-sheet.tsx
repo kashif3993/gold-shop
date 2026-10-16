@@ -44,7 +44,9 @@ export default function InvoiceSheet({ invoice, subtotal, exchangeLines = [], sh
                 </div>
                 <div>
                     <div className="inv-meta-label">Payment Method</div>
-                    <div className="inv-meta-value" style={{ textTransform: 'capitalize' }}>{prettyMethod(invoice.payment_method)}</div>
+                    <div className="inv-meta-value" style={{ textTransform: 'capitalize' }}>
+                        {prettyMethod(invoice.payment_method)}
+                    </div>
                 </div>
                 <div>
                     <div className="inv-meta-label">Issued By</div>
@@ -88,7 +90,9 @@ export default function InvoiceSheet({ invoice, subtotal, exchangeLines = [], sh
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td className="inv-foot-label" colSpan={4} style={{ textAlign: 'right' }}>Subtotal</td>
+                        <td className="inv-foot-label" colSpan={4} style={{ textAlign: 'right' }}>
+                            Subtotal
+                        </td>
                         <td>{fmt(invoice.total_metal_cost)}</td>
                         <td>{fmt(invoice.total_labour_cost)}</td>
                         <td>{fmt(invoice.total_polish_cost)}</td>
@@ -98,12 +102,16 @@ export default function InvoiceSheet({ invoice, subtotal, exchangeLines = [], sh
                     {Number(invoice.total_discount) > 0 && (
                         <>
                             <tr>
-                                <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right' }}>Discount</td>
+                                <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right' }}>
+                                    Discount
+                                </td>
                                 <td className="inv-negative-amt">− {fmt(invoice.total_discount)}</td>
                             </tr>
                             {invoice.discount_reason && (
                                 <tr>
-                                    <td className="inv-foot-reason" colSpan={8}>Reason: {invoice.discount_reason}</td>
+                                    <td className="inv-foot-reason" colSpan={8}>
+                                        Reason: {invoice.discount_reason}
+                                    </td>
                                 </tr>
                             )}
                         </>
@@ -111,7 +119,9 @@ export default function InvoiceSheet({ invoice, subtotal, exchangeLines = [], sh
 
                     {Number(invoice.total_tax) > 0 && (
                         <tr>
-                            <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right' }}>Sales Tax</td>
+                            <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right' }}>
+                                Sales Tax
+                            </td>
                             <td>+ {fmt(invoice.total_tax)}</td>
                         </tr>
                     )}
@@ -119,22 +129,23 @@ export default function InvoiceSheet({ invoice, subtotal, exchangeLines = [], sh
                     {exchangeLines.map((ex: any) => (
                         <tr key={ex.id}>
                             <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right' }}>
-                                Old-gold exchange — {ex.description} ({wt(ex.weight_grams)} g @ {fmt(ex.rate_per_gram)}, less {Number(ex.deduction_percent).toFixed(2)}%)
+                                Old-gold exchange — {ex.description} ({wt(ex.weight_grams)} g @ {fmt(ex.rate_per_gram)}, less{' '}
+                                {Number(ex.deduction_percent).toFixed(2)}%)
                             </td>
                             <td className="inv-negative-amt">− {fmt(ex.valuation)}</td>
                         </tr>
                     ))}
 
                     <tr className="inv-grand">
-                        <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right', fontFamily: 'inherit', fontWeight: 800 }}>Grand Total</td>
+                        <td className="inv-foot-label" colSpan={7} style={{ textAlign: 'right', fontFamily: 'inherit', fontWeight: 800 }}>
+                            Grand Total
+                        </td>
                         <td>{fmt(invoice.grand_total)}</td>
                     </tr>
                 </tfoot>
             </table>
 
-            <div className="inv-sheet-note">
-                Goods once sold are subject to the shop's exchange policy. This is a computer-generated invoice.
-            </div>
+            <div className="inv-sheet-note">Goods once sold are subject to the shop's exchange policy. This is a computer-generated invoice.</div>
         </div>
     );
 }

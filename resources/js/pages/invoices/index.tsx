@@ -1,9 +1,9 @@
-import { Head, router } from '@inertiajs/react';
-import { useCallback, useEffect, useState } from 'react';
+import InvoiceSheet from '@/components/invoice-sheet';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { Head, router } from '@inertiajs/react';
 import { Eye, Printer, Receipt, X } from 'lucide-react';
-import InvoiceSheet from '@/components/invoice-sheet';
+import { useCallback, useEffect, useState } from 'react';
 import '../../../css/invoices.css';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Invoices', href: '/invoices' }];
@@ -36,13 +36,23 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
 
     const applyFilters = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get('/invoices', {
-            search, payment_method: method, date_from: dateFrom, date_to: dateTo,
-        }, { preserveState: true, preserveScroll: true });
+        router.get(
+            '/invoices',
+            {
+                search,
+                payment_method: method,
+                date_from: dateFrom,
+                date_to: dateTo,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const clearFilters = () => {
-        setSearch(''); setMethod(''); setDateFrom(''); setDateTo('');
+        setSearch('');
+        setMethod('');
+        setDateFrom('');
+        setDateTo('');
         router.get('/invoices');
     };
 
@@ -52,7 +62,7 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
         setError('');
         setLoading(true);
         fetch(`/invoices/${id}/data`, { headers: { Accept: 'application/json' } })
-            .then(r => {
+            .then((r) => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
                 return r.json();
             })
@@ -69,7 +79,9 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
 
     useEffect(() => {
         if (openId === null) return;
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') closeModal();
+        };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, [openId, closeModal]);
@@ -108,27 +120,40 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
                 <form className="inv-filters" onSubmit={applyFilters}>
                     <div className="inv-filter-group">
                         <label className="inv-filter-label">Search (invoice # / customer)</label>
-                        <input className="inv-filter-input" value={search} onChange={e => setSearch(e.target.value)} placeholder="INV-2026... or name" />
+                        <input
+                            className="inv-filter-input"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="INV-2026... or name"
+                        />
                     </div>
                     <div className="inv-filter-group">
                         <label className="inv-filter-label">Payment Method</label>
-                        <select className="inv-filter-input" value={method} onChange={e => setMethod(e.target.value)}>
+                        <select className="inv-filter-input" value={method} onChange={(e) => setMethod(e.target.value)}>
                             <option value="">All</option>
                             {paymentMethods.map((m: string) => (
-                                <option key={m} value={m} style={{ textTransform: 'capitalize' }}>{prettyMethod(m)}</option>
+                                <option key={m} value={m} style={{ textTransform: 'capitalize' }}>
+                                    {prettyMethod(m)}
+                                </option>
                             ))}
                         </select>
                     </div>
                     <div className="inv-filter-group">
                         <label className="inv-filter-label">From</label>
-                        <input type="date" className="inv-filter-input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                        <input type="date" className="inv-filter-input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
                     </div>
                     <div className="inv-filter-group">
                         <label className="inv-filter-label">To</label>
-                        <input type="date" className="inv-filter-input" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                        <input type="date" className="inv-filter-input" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                     </div>
-                    <button type="submit" className="inv-filter-btn">Apply</button>
-                    {hasFilters && <button type="button" className="inv-filter-clear" onClick={clearFilters}>Clear</button>}
+                    <button type="submit" className="inv-filter-btn">
+                        Apply
+                    </button>
+                    {hasFilters && (
+                        <button type="button" className="inv-filter-clear" onClick={clearFilters}>
+                            Clear
+                        </button>
+                    )}
                 </form>
 
                 <div className="inv-table-wrap">
@@ -149,7 +174,9 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
                             <tbody>
                                 {invoices.data.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className="inv-empty">No invoices match your filters.</td>
+                                        <td colSpan={8} className="inv-empty">
+                                            No invoices match your filters.
+                                        </td>
                                     </tr>
                                 ) : (
                                     invoices.data.map((inv: any) => (
@@ -165,7 +192,10 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
                                             <td>
                                                 <span className={`inv-pay-badge ${inv.payment_method}`}>{prettyMethod(inv.payment_method)}</span>
                                                 {inv.bank_txn_id && (
-                                                    <div className="inv-muted" style={{ fontSize: '0.72rem', marginTop: '0.2rem', fontFamily: 'monospace' }}>
+                                                    <div
+                                                        className="inv-muted"
+                                                        style={{ fontSize: '0.72rem', marginTop: '0.2rem', fontFamily: 'monospace' }}
+                                                    >
                                                         Txn: {inv.bank_txn_id}
                                                     </div>
                                                 )}
@@ -173,13 +203,18 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
                                             <td style={{ textAlign: 'right' }} className="inv-money">
                                                 {Number(inv.total_discount) > 0 ? fmt(inv.total_discount) : <span className="inv-muted">-</span>}
                                             </td>
-                                            <td style={{ textAlign: 'right' }} className="inv-money">{fmt(inv.grand_total)}</td>
+                                            <td style={{ textAlign: 'right' }} className="inv-money">
+                                                {fmt(inv.grand_total)}
+                                            </td>
                                             <td style={{ textAlign: 'right' }}>
                                                 <div style={{ display: 'inline-flex', gap: '0.4rem' }}>
                                                     {inv.bank_qr_slip_url && (
                                                         <a
-                                                            href={inv.bank_qr_slip_url} target="_blank" rel="noopener noreferrer"
-                                                            className="inv-view-btn" title="View payment slip"
+                                                            href={inv.bank_qr_slip_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inv-view-btn"
+                                                            title="View payment slip"
                                                         >
                                                             <Receipt size={14} />
                                                         </a>
@@ -198,7 +233,9 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
 
                     {invoices.total > 0 && (
                         <div className="inv-pagination">
-                            <div>Showing {invoices.from || 0} to {invoices.to || 0} of {invoices.total} invoices</div>
+                            <div>
+                                Showing {invoices.from || 0} to {invoices.to || 0} of {invoices.total} invoices
+                            </div>
                             {invoices.links && invoices.links.length > 3 && (
                                 <div className="inv-pagination-links">
                                     {invoices.links.map((link: any, i: number) => (
@@ -219,7 +256,7 @@ export default function InvoicesIndex({ invoices, filters, paymentMethods, summa
 
                 {openId !== null && (
                     <div className="inv-modal-overlay" onMouseDown={closeModal}>
-                        <div className="inv-modal" onMouseDown={e => e.stopPropagation()}>
+                        <div className="inv-modal" onMouseDown={(e) => e.stopPropagation()}>
                             <div className="inv-modal-head">
                                 <h3>Invoice</h3>
                                 <div className="inv-modal-head-actions">

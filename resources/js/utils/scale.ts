@@ -23,7 +23,10 @@ export function useScaleReading() {
 
         poll();
         const id = setInterval(poll, 1000);
-        return () => { cancelled = true; clearInterval(id); };
+        return () => {
+            cancelled = true;
+            clearInterval(id);
+        };
     }, []);
 
     return scale;

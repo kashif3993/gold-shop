@@ -20,8 +20,11 @@ class InvoiceModuleTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Party $customer;
+
     private MetalType $gold;
+
     private Purity $p22;
 
     protected function setUp(): void
@@ -56,7 +59,7 @@ class InvoiceModuleTest extends TestCase
         ], $overrides));
 
         $item = Item::create([
-            'item_code' => 'GLD-RNG-' . substr(md5($invoice->invoice_number), 0, 8),
+            'item_code' => 'GLD-RNG-'.substr(md5($invoice->invoice_number), 0, 8),
             'item_type' => 'ring',
             'metal_type_id' => $this->gold->id,
             'purity_id' => $this->p22->id,

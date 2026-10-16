@@ -34,7 +34,7 @@ export default function AuthSplitLayout({ children, title, description }: AuthLa
                         <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
                     </Link>
                     <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">
-                        <h1 className="text-xl font-medium">{title}</h1>                        
+                        <h1 className="text-xl font-medium">{title}</h1>
                     </div>
                     {children}
                 </div>

@@ -2,17 +2,19 @@
 
 namespace Tests\Feature;
 
-use App\Models\AuditLog;
+use App\Jobs\FetchGoldRatesJob;
 use App\Models\DailyRate;
 use App\Models\MetalType;
 use App\Models\Purity;
 use App\Models\RateAdjustmentSetting;
 use App\Models\RateFetchLog;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\GoldRateService;
 use App\Services\RateAdjustmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class RateManagementTest extends TestCase
@@ -20,10 +22,15 @@ class RateManagementTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private MetalType $gold;
+
     private MetalType $silver;
+
     private Purity $g24;
+
     private Purity $g22;
+
     private Purity $s999;
 
     protected function setUp(): void
@@ -309,13 +316,13 @@ class RateManagementTest extends TestCase
         $svc = app(GoldRateService::class);
         $this->assertEquals((float) config('services.gold_api.usd_pkr'), $svc->usdPkr());
 
-        \App\Models\Setting::put('usd_pkr', 284.5);
+        Setting::put('usd_pkr', 284.5);
         $this->assertEquals(284.5, $svc->usdPkr());
     }
 
     public function test_auto_fx_is_fetched_stored_and_used_on_refresh(): void
     {
-        \App\Models\Setting::put('usd_pkr_auto', true);
+        Setting::put('usd_pkr_auto', true);
 
         Http::fake([
             '*open.er-api.com*' => Http::response(['result' => 'success', 'rates' => ['PKR' => 285.25]]),
@@ -326,8 +333,8 @@ class RateManagementTest extends TestCase
         $log = app(GoldRateService::class)->refreshFromApi($this->user->id);
 
         $this->assertTrue($log->success);
-        $this->assertEquals(285.25, (float) \App\Models\Setting::get('usd_pkr'));
-        $this->assertNotNull(\App\Models\Setting::get('usd_pkr_fetched_at'));
+        $this->assertEquals(285.25, (float) Setting::get('usd_pkr'));
+        $this->assertNotNull(Setting::get('usd_pkr_fetched_at'));
 
         // 24K raw ≈ 4400 / 31.1034768 × 285.25 × 0.999
         $expected = round(4400 / GoldRateService::TROY_OUNCE_GRAMS * 285.25 * 0.999, 2);
@@ -340,8 +347,8 @@ class RateManagementTest extends TestCase
 
     public function test_auto_fx_failure_falls_back_to_the_stored_rate(): void
     {
-        \App\Models\Setting::put('usd_pkr_auto', true);
-        \App\Models\Setting::put('usd_pkr', 280);
+        Setting::put('usd_pkr_auto', true);
+        Setting::put('usd_pkr', 280);
 
         Http::fake([
             '*open.er-api.com*' => Http::response('', 500),
@@ -352,7 +359,7 @@ class RateManagementTest extends TestCase
         $log = app(GoldRateService::class)->refreshFromApi($this->user->id);
 
         $this->assertTrue($log->success); // gold still fetched
-        $this->assertEquals(280.0, (float) \App\Models\Setting::get('usd_pkr')); // unchanged
+        $this->assertEquals(280.0, (float) Setting::get('usd_pkr')); // unchanged
         $expected = round(4400 / GoldRateService::TROY_OUNCE_GRAMS * 280 * 0.999, 2);
         $this->assertEqualsWithDelta(
             $expected,
@@ -371,8 +378,8 @@ class RateManagementTest extends TestCase
         $this->actingAs($this->user)->post('/rate-management/fx', ['usd_pkr' => 286.75, 'auto' => false])
             ->assertRedirect()->assertSessionHas('success');
 
-        $this->assertEquals(286.75, (float) \App\Models\Setting::get('usd_pkr'));
-        $this->assertEquals('0', \App\Models\Setting::get('usd_pkr_auto'));
+        $this->assertEquals(286.75, (float) Setting::get('usd_pkr'));
+        $this->assertEquals('0', Setting::get('usd_pkr_auto'));
         $this->assertDatabaseHas('audit_log', ['entity_type' => 'rate', 'field_name' => 'usd_pkr']);
         $this->assertGreaterThan(0, DailyRate::where('is_current', true)->count());
     }
@@ -395,7 +402,7 @@ class RateManagementTest extends TestCase
             '*/price/XAG' => Http::response(['price' => 32.0]),
         ]);
 
-        app(\App\Jobs\FetchGoldRatesJob::class)->handle(app(GoldRateService::class));
+        app(FetchGoldRatesJob::class)->handle(app(GoldRateService::class));
 
         $this->assertEquals(1, RateFetchLog::where('success', true)->count());
     }
@@ -404,9 +411,9 @@ class RateManagementTest extends TestCase
     {
         Http::fake(['*' => Http::response('', 503)]);
 
-        \Illuminate\Support\Facades\Log::shouldReceive('warning')->once();
+        Log::shouldReceive('warning')->once();
 
-        app(\App\Jobs\FetchGoldRatesJob::class)->handle(app(GoldRateService::class));
+        app(FetchGoldRatesJob::class)->handle(app(GoldRateService::class));
 
         $this->assertEquals(1, RateFetchLog::where('success', false)->count());
     }

@@ -50,7 +50,7 @@ class BuyBackController extends Controller
     public function lookupOriginalSale(Request $request): JsonResponse
     {
         $query = $request->query('query');
-        if (!$query) {
+        if (! $query) {
             return response()->json(['error' => 'Query parameter is required'], 400);
         }
 
@@ -77,7 +77,7 @@ class BuyBackController extends Controller
                 ->first();
         }
 
-        if (!$saleTransaction && !$item) {
+        if (! $saleTransaction && ! $item) {
             return response()->json(['message' => 'Original sale record not found'], 404);
         }
 
@@ -100,13 +100,13 @@ class BuyBackController extends Controller
             return DB::transaction(function () use ($validated) {
                 // 1. Resolve Customer / Party
                 $partyId = $validated['party_id'] ?? null;
-                if (!$partyId) {
+                if (! $partyId) {
                     $partyType = PartyType::where('name', 'Customer')->first();
-                    if (!empty($validated['customer_phone'])) {
+                    if (! empty($validated['customer_phone'])) {
                         $party = Party::firstOrCreate(
                             ['phone' => $validated['customer_phone']],
                             [
-                                'name' => !empty($validated['customer_name']) ? $validated['customer_name'] : 'Customer',
+                                'name' => ! empty($validated['customer_name']) ? $validated['customer_name'] : 'Customer',
                                 'party_type_id' => $partyType?->id,
                             ]
                         );
@@ -170,7 +170,7 @@ class BuyBackController extends Controller
                 } else {
                     // Create new scrap / bought back item
                     $item = Item::create([
-                        'item_code' => 'BB-' . strtoupper(uniqid()),
+                        'item_code' => 'BB-'.strtoupper(uniqid()),
                         'item_type' => 'old_gold',
                         'metal_type_id' => $metalTypeId,
                         'purity_id' => $purityId,
@@ -224,7 +224,8 @@ class BuyBackController extends Controller
                 ], 201);
             });
         } catch (\Exception $e) {
-            Log::error('Buy-Back Transaction Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Buy-Back Transaction Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'An error occurred while processing the buy-back transaction.',

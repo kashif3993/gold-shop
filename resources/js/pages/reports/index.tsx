@@ -1,8 +1,8 @@
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { BarChart, LineChart } from '@/components/simple-charts';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { BarChart, LineChart } from '@/components/simple-charts';
+import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 import '../../../css/reports.css';
 
 /** Consistent per-metal line/bar color across every chart on this page. */
@@ -58,8 +58,18 @@ interface RateSeries {
 }
 
 export default function ReportsIndex({
-    filters, sales, profit, stock, rateHistory,
-}: { filters: Filters; sales: Sales; profit: Profit; stock: Stock; rateHistory: RateSeries[] }) {
+    filters,
+    sales,
+    profit,
+    stock,
+    rateHistory,
+}: {
+    filters: Filters;
+    sales: Sales;
+    profit: Profit;
+    stock: Stock;
+    rateHistory: RateSeries[];
+}) {
     const [dateFrom, setDateFrom] = useState(filters.date_from);
     const [dateTo, setDateTo] = useState(filters.date_to);
 
@@ -76,20 +86,25 @@ export default function ReportsIndex({
                 <div className="rpt-head">
                     <div>
                         <h1 className="rpt-title">Reports</h1>
-                        <p className="rpt-desc">Sales, profit, and stock valuation — every number here is computed on the server from your actual transactions and current rates.</p>
+                        <p className="rpt-desc">
+                            Sales, profit, and stock valuation — every number here is computed on the server from your actual transactions and current
+                            rates.
+                        </p>
                     </div>
                 </div>
 
                 <form className="rpt-filters" onSubmit={applyFilters}>
                     <div className="rpt-filter-group">
                         <label className="rpt-filter-label">From</label>
-                        <input type="date" className="rpt-filter-input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                        <input type="date" className="rpt-filter-input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
                     </div>
                     <div className="rpt-filter-group">
                         <label className="rpt-filter-label">To</label>
-                        <input type="date" className="rpt-filter-input" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                        <input type="date" className="rpt-filter-input" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                     </div>
-                    <button type="submit" className="rpt-filter-btn">Apply</button>
+                    <button type="submit" className="rpt-filter-btn">
+                        Apply
+                    </button>
                     <span className="rpt-filter-hint">Applies to Sales and Profit below. Stock valuation is always as of right now.</span>
                 </form>
 
@@ -111,7 +126,9 @@ export default function ReportsIndex({
 
                     {sales.by_day.length > 0 && (
                         <div style={{ marginBottom: '1.25rem' }}>
-                            <LineChart series={[{ name: 'Revenue', color: '#d4af37', points: sales.by_day.map(d => ({ x: d.date, y: d.revenue })) }]} />
+                            <LineChart
+                                series={[{ name: 'Revenue', color: '#d4af37', points: sales.by_day.map((d) => ({ x: d.date, y: d.revenue })) }]}
+                            />
                         </div>
                     )}
 
@@ -135,11 +152,15 @@ export default function ReportsIndex({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {sales.by_day.map(row => (
+                                    {sales.by_day.map((row) => (
                                         <tr key={row.date}>
                                             <td>{new Date(row.date).toLocaleDateString()}</td>
-                                            <td style={{ textAlign: 'right' }} className="rpt-num">{row.count}</td>
-                                            <td style={{ textAlign: 'right' }} className="rpt-num">{fmt(row.revenue)}</td>
+                                            <td style={{ textAlign: 'right' }} className="rpt-num">
+                                                {row.count}
+                                            </td>
+                                            <td style={{ textAlign: 'right' }} className="rpt-num">
+                                                {fmt(row.revenue)}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -151,7 +172,9 @@ export default function ReportsIndex({
                 {/* ── Profit ────────────────────────────────────────── */}
                 <section className="rpt-card">
                     <h2 className="rpt-card-title">Profit</h2>
-                    <p className="rpt-card-sub">Sale price minus each item&rsquo;s own locked purchase cost — not an estimate, the exact cost recorded at Item Entry.</p>
+                    <p className="rpt-card-sub">
+                        Sale price minus each item&rsquo;s own locked purchase cost — not an estimate, the exact cost recorded at Item Entry.
+                    </p>
 
                     <div className="rpt-stat-grid">
                         <div className="rpt-stat">
@@ -170,7 +193,7 @@ export default function ReportsIndex({
 
                     {profit.by_metal.length > 0 && (
                         <div style={{ marginBottom: '1.25rem' }}>
-                            <BarChart data={profit.by_metal.map(row => ({ label: row.metal, value: row.profit, color: metalColor(row.metal) }))} />
+                            <BarChart data={profit.by_metal.map((row) => ({ label: row.metal, value: row.profit, color: metalColor(row.metal) }))} />
                         </div>
                     )}
 
@@ -188,7 +211,9 @@ export default function ReportsIndex({
                 {/* ── Stock valuation ──────────────────────────────── */}
                 <section className="rpt-card">
                     <h2 className="rpt-card-title">Stock valuation</h2>
-                    <p className="rpt-card-sub">Everything currently in stock, valued at today&rsquo;s live rate — not what it cost when purchased.</p>
+                    <p className="rpt-card-sub">
+                        Everything currently in stock, valued at today&rsquo;s live rate — not what it cost when purchased.
+                    </p>
 
                     <div className="rpt-stat-grid">
                         <div className="rpt-stat">
@@ -221,10 +246,10 @@ export default function ReportsIndex({
                     <p className="rpt-card-sub">The purest active purity of each metal, one point per day, over the selected range.</p>
 
                     <LineChart
-                        series={rateHistory.map(s => ({
+                        series={rateHistory.map((s) => ({
                             name: `${s.metal} (${s.purity})`,
                             color: metalColor(s.metal),
-                            points: s.points.map(p => ({ x: p.date, y: p.rate })),
+                            points: s.points.map((p) => ({ x: p.date, y: p.rate })),
                         }))}
                     />
                 </section>
@@ -244,14 +269,18 @@ function MetalTable({ rows, columns }: { rows: MetalRow[]; columns: { key: strin
                 <thead>
                     <tr>
                         <th>Metal</th>
-                        {columns.map(c => <th key={c.key} style={{ textAlign: 'right' }}>{c.label}</th>)}
+                        {columns.map((c) => (
+                            <th key={c.key} style={{ textAlign: 'right' }}>
+                                {c.label}
+                            </th>
+                        ))}
                     </tr>
                 </thead>
                 <tbody>
-                    {rows.map(row => (
+                    {rows.map((row) => (
                         <tr key={row.metal}>
                             <td>{row.metal}</td>
-                            {columns.map(c => (
+                            {columns.map((c) => (
                                 <td key={c.key} style={{ textAlign: 'right' }} className="rpt-num">
                                     {c.format ? c.format(row[c.key]) : row[c.key]}
                                 </td>

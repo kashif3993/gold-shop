@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { CartState, CartAction, CartItem, ExchangeItem } from '../types/pos';
+import React, { createContext, ReactNode, useContext, useReducer } from 'react';
+import { CartAction, CartItem, CartState, ExchangeItem } from '../types/pos';
 
 const initialState: CartState = {
     items: [],
@@ -22,19 +22,23 @@ const initialState: CartState = {
 // This is a preview only — the server (POSSaleService) recomputes everything
 // authoritatively, including tax, from the same Admin → Settings values.
 const calculateTotals = (
-    items: CartItem[], exchanges: ExchangeItem[], discount: number, discountType: 'flat' | 'percentage',
-    taxEnabled: boolean, taxRatePercent: number,
+    items: CartItem[],
+    exchanges: ExchangeItem[],
+    discount: number,
+    discountType: 'flat' | 'percentage',
+    taxEnabled: boolean,
+    taxRatePercent: number,
 ) => {
     // 1. Calculate each item's total dynamically
     let subtotal = 0;
-    items.forEach(item => {
+    items.forEach((item) => {
         const itemGoldValue = item.net_weight_grams * item.rate_per_gram;
         const lineTotal = itemGoldValue + item.labour_cost + item.polish_cost;
         subtotal += lineTotal;
     });
 
     let exchangeTotal = 0;
-    exchanges.forEach(exc => {
+    exchanges.forEach((exc) => {
         exchangeTotal += exc.valuation;
     });
 
@@ -63,23 +67,42 @@ const calculateTotals = (
 const posReducer = (state: CartState, action: CartAction): CartState => {
     switch (action.type) {
         case 'ADD_ITEM': {
-            if (state.items.find(i => i.id === action.payload.id)) {
+            if (state.items.find((i) => i.id === action.payload.id)) {
                 return state;
             }
             const newItems = [...state.items, action.payload];
-            const { subtotal, taxAmount, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType, state.taxEnabled, state.taxRatePercent);
+            const { subtotal, taxAmount, total } = calculateTotals(
+                newItems,
+                state.exchanges,
+                state.discount,
+                state.discountType,
+                state.taxEnabled,
+                state.taxRatePercent,
+            );
             return { ...state, items: newItems, subtotal, taxAmount, total };
         }
         case 'REMOVE_ITEM': {
-            const newItems = state.items.filter(i => i.id !== action.payload.id);
-            const { subtotal, taxAmount, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType, state.taxEnabled, state.taxRatePercent);
+            const newItems = state.items.filter((i) => i.id !== action.payload.id);
+            const { subtotal, taxAmount, total } = calculateTotals(
+                newItems,
+                state.exchanges,
+                state.discount,
+                state.discountType,
+                state.taxEnabled,
+                state.taxRatePercent,
+            );
             return { ...state, items: newItems, subtotal, taxAmount, total };
         }
         case 'UPDATE_ITEM_RATE': {
-            const newItems = state.items.map(i =>
-                i.id === action.payload.id ? { ...i, rate_per_gram: action.payload.rate_per_gram } : i
+            const newItems = state.items.map((i) => (i.id === action.payload.id ? { ...i, rate_per_gram: action.payload.rate_per_gram } : i));
+            const { subtotal, taxAmount, total } = calculateTotals(
+                newItems,
+                state.exchanges,
+                state.discount,
+                state.discountType,
+                state.taxEnabled,
+                state.taxRatePercent,
             );
-            const { subtotal, taxAmount, total } = calculateTotals(newItems, state.exchanges, state.discount, state.discountType, state.taxEnabled, state.taxRatePercent);
             return { ...state, items: newItems, subtotal, taxAmount, total };
         }
         case 'SET_DISCOUNT': {
@@ -102,7 +125,14 @@ const posReducer = (state: CartState, action: CartAction): CartState => {
         }
         case 'SET_TAX_CONFIG': {
             const { enabled, ratePercent } = action.payload;
-            const { subtotal, taxAmount, total } = calculateTotals(state.items, state.exchanges, state.discount, state.discountType, enabled, ratePercent);
+            const { subtotal, taxAmount, total } = calculateTotals(
+                state.items,
+                state.exchanges,
+                state.discount,
+                state.discountType,
+                enabled,
+                ratePercent,
+            );
             return { ...state, taxEnabled: enabled, taxRatePercent: ratePercent, subtotal, taxAmount, total };
         }
         case 'CLEAR_CART': {
@@ -111,12 +141,26 @@ const posReducer = (state: CartState, action: CartAction): CartState => {
         }
         case 'ADD_EXCHANGE': {
             const newExchanges = [...state.exchanges, action.payload];
-            const { subtotal, taxAmount, total } = calculateTotals(state.items, newExchanges, state.discount, state.discountType, state.taxEnabled, state.taxRatePercent);
+            const { subtotal, taxAmount, total } = calculateTotals(
+                state.items,
+                newExchanges,
+                state.discount,
+                state.discountType,
+                state.taxEnabled,
+                state.taxRatePercent,
+            );
             return { ...state, exchanges: newExchanges, subtotal, taxAmount, total };
         }
         case 'REMOVE_EXCHANGE': {
-            const newExchanges = state.exchanges.filter(e => e.id !== action.payload.id);
-            const { subtotal, taxAmount, total } = calculateTotals(state.items, newExchanges, state.discount, state.discountType, state.taxEnabled, state.taxRatePercent);
+            const newExchanges = state.exchanges.filter((e) => e.id !== action.payload.id);
+            const { subtotal, taxAmount, total } = calculateTotals(
+                state.items,
+                newExchanges,
+                state.discount,
+                state.discountType,
+                state.taxEnabled,
+                state.taxRatePercent,
+            );
             return { ...state, exchanges: newExchanges, subtotal, taxAmount, total };
         }
         default:
@@ -134,11 +178,7 @@ const POSContext = createContext<POSContextProps | undefined>(undefined);
 export const POSProvider = ({ children }: { children: ReactNode }) => {
     const [state, dispatch] = useReducer(posReducer, initialState);
 
-    return (
-        <POSContext.Provider value={{ state, dispatch }}>
-            {children}
-        </POSContext.Provider>
-    );
+    return <POSContext.Provider value={{ state, dispatch }}>{children}</POSContext.Provider>;
 };
 
 export const usePOS = () => {

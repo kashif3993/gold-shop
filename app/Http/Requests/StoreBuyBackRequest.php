@@ -28,20 +28,20 @@ class StoreBuyBackRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_name'                 => 'nullable|string|max:255',
-            'customer_phone'                => 'nullable|string|max:50',
-            'party_id'                      => 'nullable|exists:parties,id',
-            'item_id'                       => 'nullable|exists:items,id',
-            'original_sale_transaction_id'  => 'nullable|exists:transactions,id',
-            'metal_type_id'                 => 'required|exists:metal_types,id',
-            'purity_id'                     => 'required|exists:purities,id',
-            'weight_grams'                  => 'required|numeric|gt:0',
-            'rate_per_gram'                 => 'required|numeric|gt:0',
-            'deduction_percent'             => 'nullable|numeric|min:0|max:100',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:50',
+            'party_id' => 'nullable|exists:parties,id',
+            'item_id' => 'nullable|exists:items,id',
+            'original_sale_transaction_id' => 'nullable|exists:transactions,id',
+            'metal_type_id' => 'required|exists:metal_types,id',
+            'purity_id' => 'required|exists:purities,id',
+            'weight_grams' => 'required|numeric|gt:0',
+            'rate_per_gram' => 'required|numeric|gt:0',
+            'deduction_percent' => 'nullable|numeric|min:0|max:100',
             // Fixed weight cut ("cut 3 ratti / half a masha") — wins over the percentage.
-            'deduction_weight_grams'        => 'nullable|numeric|min:0|lt:weight_grams',
-            'payment_method'                => 'required|in:cash,card,transfer,bank_transfer,credit',
-            'notes'                         => 'nullable|string|max:1000',
+            'deduction_weight_grams' => 'nullable|numeric|min:0|lt:weight_grams',
+            'payment_method' => 'required|in:cash,card,transfer,bank_transfer,credit',
+            'notes' => 'nullable|string|max:1000',
         ];
     }
 }

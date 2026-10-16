@@ -11,11 +11,14 @@ use App\Models\MetalType;
 use App\Models\Party;
 use App\Models\PartyType;
 use App\Models\Purity;
+use App\Models\RateFetchLog;
 use App\Models\Transaction;
 use App\Models\TransactionType;
 use App\Models\User;
+use App\Services\BuybackDeductionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -202,7 +205,7 @@ class DummyDataSeeder extends Seeder
         }
 
         // A few fetch-log rows so the Rate Management history table has content.
-        \App\Models\RateFetchLog::insert([
+        RateFetchLog::insert([
             ['attempted_at' => Carbon::today()->subDays(6)->setTime(10, 0), 'success' => true, 'source_api' => 'api.gold-api.com', 'response_summary' => 'Stored 8 rates — Gold 24350.00/g, Silver 305.00/g', 'fallback_used' => false],
             ['attempted_at' => Carbon::today()->subDays(4)->setTime(10, 0), 'success' => false, 'source_api' => 'api.gold-api.com', 'response_summary' => 'Fetch failed: XAU request returned HTTP 503', 'fallback_used' => true],
             ['attempted_at' => Carbon::today()->subDays(1)->setTime(9, 30), 'success' => true, 'source_api' => 'manual', 'response_summary' => 'Manual rate entry — Gold 24500/g', 'fallback_used' => false],
@@ -284,7 +287,7 @@ class DummyDataSeeder extends Seeder
             'biscuit' => 'BSC', 'coin' => 'CON', 'piece' => 'PCE'];
 
         foreach ($specs as [$type, $metal, $purityName, $gross, $stone, $cutting, $labour, $polish, $rate, $sourceName, $daysAgo]) {
-            $prefix = ($metal === 'Gold' ? 'GLD' : 'SLV') . '-' . $typeAbbr[$type];
+            $prefix = ($metal === 'Gold' ? 'GLD' : 'SLV').'-'.$typeAbbr[$type];
             $seq[$prefix] = ($seq[$prefix] ?? 0) + 1;
             $code = sprintf('%s-%04d', $prefix, $seq[$prefix]);
 
@@ -365,7 +368,7 @@ class DummyDataSeeder extends Seeder
      * Mirrors POSController::store math (all components rounded to 2dp so the
      * invoice totals equal the exact sum of the stored line items).
      *
-     * @param  \Illuminate\Support\Collection<int,Item>  $items
+     * @param  Collection<int,Item>  $items
      */
     private function buildSaleInvoice(
         $items,
@@ -485,7 +488,7 @@ class DummyDataSeeder extends Seeder
         $netWeight = round($exc['weight_grams'] * (1 - $exc['deduction_percent'] / 100), 3);
 
         $scrap = $this->makeItem([
-            'item_code' => 'EXC-' . strtoupper(bin2hex(random_bytes(4))),
+            'item_code' => 'EXC-'.strtoupper(bin2hex(random_bytes(4))),
             'item_type' => 'old_gold',
             'metal_type_id' => $exc['metal_type_id'],
             'purity_id' => $exc['purity_id'],
@@ -562,7 +565,7 @@ class DummyDataSeeder extends Seeder
 
     private function seedBuyBacks(): void
     {
-        $service = app(\App\Services\BuybackDeductionService::class);
+        $service = app(BuybackDeductionService::class);
 
         // Buy back an item we sold earlier — value is recomputed from a fresh
         // re-weigh + today's rate, fully independent of the original sale.
@@ -625,7 +628,7 @@ class DummyDataSeeder extends Seeder
         $total = $valuation['total_amount'];
 
         $item = $this->makeItem([
-            'item_code' => 'BB-' . strtoupper(bin2hex(random_bytes(4))),
+            'item_code' => 'BB-'.strtoupper(bin2hex(random_bytes(4))),
             'item_type' => 'old_gold',
             'metal_type_id' => $metalId,
             'purity_id' => $purityId,

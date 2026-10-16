@@ -21,13 +21,21 @@ class POSTransactionTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private MetalType $goldMetal;
+
     private MetalType $silverMetal;
+
     private Purity $purity22k;
+
     private Purity $purity24k;
+
     private Purity $silverPurity;
+
     private PartyType $customerPartyType;
+
     private TransactionType $saleTransType;
+
     private TransactionType $exchangeTransType;
 
     protected function setUp(): void
@@ -78,7 +86,7 @@ class POSTransactionTest extends TestCase
         $net = $gross - $stone - $cutting;
 
         return Item::create(array_merge([
-            'item_code' => 'ITM-' . strtoupper(uniqid()),
+            'item_code' => 'ITM-'.strtoupper(uniqid()),
             'item_type' => 'ring',
             'metal_type_id' => $this->goldMetal->id,
             'purity_id' => $this->purity22k->id,

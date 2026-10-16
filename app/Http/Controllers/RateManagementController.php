@@ -89,7 +89,7 @@ class RateManagementController extends Controller
         Setting::put('usd_pkr', $data['usd_pkr'], auth()->id());
         Setting::put('usd_pkr_auto', (bool) ($data['auto'] ?? false), auth()->id());
 
-        $this->audit->log('rate', 0, 'usd_pkr', (string) $old, $data['usd_pkr'] . (($data['auto'] ?? false) ? ' (auto)' : ''), 'USD→PKR rate updated');
+        $this->audit->log('rate', 0, 'usd_pkr', (string) $old, $data['usd_pkr'].(($data['auto'] ?? false) ? ' (auto)' : ''), 'USD→PKR rate updated');
 
         // Re-fetch so the change takes effect on the current rates immediately.
         $log = $this->rates->refreshFromApi(auth()->id());
@@ -106,7 +106,7 @@ class RateManagementController extends Controller
 
         return $log->success
             ? back()->with('success', $log->response_summary)
-            : back()->with('error', $log->response_summary . ' — kept the last cached rate.');
+            : back()->with('error', $log->response_summary.' — kept the last cached rate.');
     }
 
     /** Enter today's pure-metal spot manually; every purity is derived from it. */

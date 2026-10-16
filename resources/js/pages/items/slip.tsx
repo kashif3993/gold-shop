@@ -1,7 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
-import { useEffect } from 'react';
-import { ArrowLeft, Printer, Plus } from 'lucide-react';
 import ItemEntryPrintSlip from '@/components/item-entry-print-slip';
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft, Plus, Printer } from 'lucide-react';
+import { useEffect } from 'react';
 import '../../../css/item-entry-print.css';
 
 interface Shop {
@@ -37,35 +37,35 @@ export default function ItemSlip({ item, shop, printerType, printDimensions }: S
             <Head title={`Slip — ${item.item_code}`} />
 
             {/* ─── Screen controls + preview (hidden on print) ─── */}
-            <div className="no-print min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 px-4 py-8 flex flex-col items-center gap-6">
-                <div className="w-full max-w-md flex items-center justify-between flex-wrap gap-3">
+            <div className="no-print flex min-h-screen flex-col items-center gap-6 bg-gradient-to-br from-slate-100 to-slate-200 px-4 py-8 dark:from-slate-900 dark:to-slate-800">
+                <div className="flex w-full max-w-md flex-wrap items-center justify-between gap-3">
                     <Link
                         href={route('inventory.index')}
-                        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-gold transition-colors font-medium"
+                        className="hover:text-gold flex items-center gap-2 font-medium text-slate-600 transition-colors dark:text-slate-400"
                     >
                         <ArrowLeft size={18} />
                         Back to Inventory
                     </Link>
                     <button
                         onClick={() => window.print()}
-                        className="flex items-center gap-2 bg-gold hover:bg-gold/90 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg transition-all hover:shadow-gold/30"
+                        className="bg-gold hover:bg-gold/90 hover:shadow-gold/30 flex items-center gap-2 rounded-xl px-5 py-2.5 font-semibold text-white shadow-lg transition-all"
                     >
                         <Printer size={18} />
                         Print Again
                     </button>
                 </div>
 
-                <div className="w-full max-w-md bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-xl px-5 py-3 text-emerald-800 dark:text-emerald-300 text-sm font-medium text-center">
+                <div className="w-full max-w-md rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-center text-sm font-medium text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
                     Item <strong>{item.item_code}</strong> saved. Sending the weight &amp; value slip to your printer...
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                     <ItemEntryPrintSlip item={item} shop={shop} printerType={printerType} printDimensions={printDimensions} />
                 </div>
 
                 <Link
                     href={route('items.create')}
-                    className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
+                    className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-500"
                 >
                     <Plus size={15} />
                     Add Another Item

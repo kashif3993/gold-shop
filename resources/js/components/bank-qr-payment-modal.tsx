@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { X, Lock, CheckCircle2, Clock, Upload } from 'lucide-react';
+import { CheckCircle2, Clock, Lock, Upload, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface BankInfo {
     qr_image: string | null;
@@ -21,11 +21,12 @@ interface Payment {
     bank: BankInfo;
 }
 
-const formatPKR = (amount: number) =>
-    'Rs ' + new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 }).format(amount);
+const formatPKR = (amount: number) => 'Rs ' + new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 }).format(amount);
 
 export default function BankQrPaymentModal({
-    startPayload, onClose, onCompleted,
+    startPayload,
+    onClose,
+    onCompleted,
 }: {
     startPayload: Record<string, any>;
     onClose: () => void;
@@ -48,13 +49,16 @@ export default function BankQrPaymentModal({
 
     // Release the blob URL once it's no longer shown, and always on unmount.
     useEffect(() => {
-        return () => { if (slipPreview) URL.revokeObjectURL(slipPreview); };
+        return () => {
+            if (slipPreview) URL.revokeObjectURL(slipPreview);
+        };
     }, [slipPreview]);
 
     const start = () => {
         setStage('starting');
         setError('');
-        axios.post('/api/v1/pos/bank-qr', startPayload)
+        axios
+            .post('/api/v1/pos/bank-qr', startPayload)
             .then(({ data }) => {
                 setPayment(data.payment);
                 setStage('showing');
@@ -76,12 +80,17 @@ export default function BankQrPaymentModal({
         if (!payment || payment.status !== 'pending') return;
 
         pollRef.current = window.setInterval(() => {
-            axios.get(`/api/v1/pos/bank-qr/${payment.reference}`)
+            axios
+                .get(`/api/v1/pos/bank-qr/${payment.reference}`)
                 .then(({ data }) => setPayment(data.payment))
-                .catch(() => { /* keep showing what we have */ });
+                .catch(() => {
+                    /* keep showing what we have */
+                });
         }, 5000);
 
-        return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
+        return () => {
+            if (pollRef.current) window.clearInterval(pollRef.current);
+        };
     }, [payment?.reference, payment?.status]);
 
     const scanSlip = (file: File) => {
@@ -95,7 +104,8 @@ export default function BankQrPaymentModal({
         setSlipPreview(URL.createObjectURL(file));
         const form = new FormData();
         form.append('slip', file);
-        axios.post(`/admin/pos/bank-qr/${payment.reference}/scan-slip`, form)
+        axios
+            .post(`/admin/pos/bank-qr/${payment.reference}/scan-slip`, form)
             .then(({ data }) => {
                 if (data.transaction_id) {
                     setTxnId(data.transaction_id);
@@ -113,7 +123,8 @@ export default function BankQrPaymentModal({
         if (!payment || !txnId.trim()) return;
         setConfirming(true);
         setError('');
-        axios.post(`/admin/pos/bank-qr/${payment.reference}/confirm`, { bank_txn_id: txnId.trim() })
+        axios
+            .post(`/admin/pos/bank-qr/${payment.reference}/confirm`, { bank_txn_id: txnId.trim() })
             .then(({ data }) => setPayment(data.payment))
             .catch((err) => setError(err.response?.data?.message || 'Could not confirm this payment.'))
             .finally(() => setConfirming(false));
@@ -139,8 +150,10 @@ export default function BankQrPaymentModal({
         return (
             <ModalShell onClose={onClose} title="Bank QR payment">
                 <div className="py-6 text-center">
-                    <p className="text-sm text-red-600 mb-4">{error || 'Something went wrong.'}</p>
-                    <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium">Close</button>
+                    <p className="mb-4 text-sm text-red-600">{error || 'Something went wrong.'}</p>
+                    <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium">
+                        Close
+                    </button>
                 </div>
             </ModalShell>
         );
@@ -150,11 +163,11 @@ export default function BankQrPaymentModal({
         return (
             <ModalShell onClose={onClose} title="Payment confirmed">
                 <div className="flex flex-col items-center gap-3 py-4 text-center">
-                    <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full border border-amber-200 bg-amber-50">
                         <CheckCircle2 className="h-7 w-7 text-[#b38a36]" />
                     </div>
                     <h3 className="text-base font-bold text-gray-900">Payment confirmed</h3>
-                    <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-left space-y-1.5">
+                    <div className="w-full space-y-1.5 rounded-lg border border-gray-200 bg-gray-50 p-3 text-left text-sm">
                         <Row label="Invoice" value={payment.invoice_number || '—'} />
                         <Row label="Amount" value={formatPKR(payment.amount)} />
                         <Row label="Bank txn ID" value={payment.bank_txn_id || '—'} />
@@ -162,7 +175,7 @@ export default function BankQrPaymentModal({
                     </div>
                     <button
                         onClick={() => onCompleted(payment.invoice_number || '')}
-                        className="mt-1 w-full py-2.5 rounded-lg bg-[#b38a36] hover:bg-[#a17a2d] text-white text-sm font-bold transition"
+                        className="mt-1 w-full rounded-lg bg-[#b38a36] py-2.5 text-sm font-bold text-white transition hover:bg-[#a17a2d]"
                     >
                         Continue
                     </button>
@@ -175,12 +188,17 @@ export default function BankQrPaymentModal({
         return (
             <ModalShell onClose={onClose} title="Bank QR payment">
                 <div className="flex flex-col items-center gap-3 py-4 text-center">
-                    <div className="w-14 h-14 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full border border-red-200 bg-red-50">
                         <Clock className="h-7 w-7 text-red-500" />
                     </div>
                     <h3 className="text-base font-bold text-gray-900">Payment window expired</h3>
-                    <p className="text-sm text-gray-500">No confirmation came in within the time limit. That reference is retired — start again to show the QR with a fresh one.</p>
-                    <button onClick={restart} className="mt-1 w-full py-2.5 rounded-lg bg-[#b38a36] hover:bg-[#a17a2d] text-white text-sm font-bold transition">
+                    <p className="text-sm text-gray-500">
+                        No confirmation came in within the time limit. That reference is retired — start again to show the QR with a fresh one.
+                    </p>
+                    <button
+                        onClick={restart}
+                        className="mt-1 w-full rounded-lg bg-[#b38a36] py-2.5 text-sm font-bold text-white transition hover:bg-[#a17a2d]"
+                    >
                         Start a new payment attempt
                     </button>
                 </div>
@@ -194,18 +212,24 @@ export default function BankQrPaymentModal({
             <div className="flex flex-col gap-4">
                 <div className="text-xs font-semibold text-gray-500">Show this screen to the customer</div>
 
-                <div className="flex gap-4 items-center bg-gray-50 border border-gray-200 rounded-xl p-4">
-                    <div className="w-28 h-28 flex-shrink-0 bg-white border border-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                        {payment.bank.qr_image
-                            ? <img src={payment.bank.qr_image} alt="Bank QR" className="max-w-full max-h-full" />
-                            : <span className="text-[10px] text-gray-400 text-center px-1">No QR uploaded — ask an admin to set one up</span>}
+                <div className="flex items-center gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="flex h-28 w-28 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white">
+                        {payment.bank.qr_image ? (
+                            <img src={payment.bank.qr_image} alt="Bank QR" className="max-h-full max-w-full" />
+                        ) : (
+                            <span className="px-1 text-center text-[10px] text-gray-400">No QR uploaded — ask an admin to set one up</span>
+                        )}
                     </div>
                     <div className="min-w-0 flex-1">
                         <div className="text-xl font-extrabold text-gray-900 tabular-nums">{formatPKR(payment.amount)}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{payment.bank.account_title} · {payment.bank.bank_name}</div>
+                        <div className="mt-0.5 text-xs text-gray-500">
+                            {payment.bank.account_title} · {payment.bank.bank_name}
+                        </div>
                         <div className="mt-2">
-                            <div className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Reference — must be in the transfer note</div>
-                            <span className="inline-block mt-1 font-mono text-sm font-semibold bg-white border border-dashed border-gray-300 rounded px-2 py-1">
+                            <div className="text-[10px] font-bold tracking-wide text-gray-400 uppercase">
+                                Reference — must be in the transfer note
+                            </div>
+                            <span className="mt-1 inline-block rounded border border-dashed border-gray-300 bg-white px-2 py-1 font-mono text-sm font-semibold">
                                 {payment.reference}
                             </span>
                         </div>
@@ -213,32 +237,36 @@ export default function BankQrPaymentModal({
                 </div>
 
                 {stage !== 'confirming' && (
-                    <p className="text-xs text-gray-400">Once the customer has sent the payment, the cashier checks their own banking app for the transfer, then continues below.</p>
+                    <p className="text-xs text-gray-400">
+                        Once the customer has sent the payment, the cashier checks their own banking app for the transfer, then continues below.
+                    </p>
                 )}
 
                 {stage !== 'confirming' ? (
                     <div className="flex gap-2">
                         <button
                             onClick={() => setStage('confirming')}
-                            className="flex-1 py-2.5 rounded-lg bg-[#b38a36] hover:bg-[#a17a2d] text-white text-sm font-bold transition"
+                            className="flex-1 rounded-lg bg-[#b38a36] py-2.5 text-sm font-bold text-white transition hover:bg-[#a17a2d]"
                         >
                             I&rsquo;ve received the payment →
                         </button>
-                        <button onClick={onClose} className="px-4 py-2.5 rounded-lg border border-gray-200 text-sm font-medium">Cancel</button>
+                        <button onClick={onClose} className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium">
+                            Cancel
+                        </button>
                     </div>
                 ) : canConfirm ? (
                     <form onSubmit={submitConfirm} className="flex flex-col gap-3">
                         <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wide text-gray-500 mb-1">
+                            <label className="mb-1 block text-[10px] font-bold tracking-wide text-gray-500 uppercase">
                                 Bank transaction ID (from your app)
                             </label>
                             <input
                                 autoFocus
                                 type="text"
                                 value={txnId}
-                                onChange={e => setTxnId(e.target.value)}
+                                onChange={(e) => setTxnId(e.target.value)}
                                 placeholder="e.g. 482917"
-                                className="w-full font-mono text-sm border border-gray-300 rounded-lg px-3 py-2"
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm"
                             />
                         </div>
 
@@ -247,42 +275,61 @@ export default function BankQrPaymentModal({
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={e => { const f = e.target.files?.[0]; if (f) scanSlip(f); e.target.value = ''; }}
+                            onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) scanSlip(f);
+                                e.target.value = '';
+                            }}
                         />
                         <button
                             type="button"
                             disabled={scanning}
                             onClick={() => fileInputRef.current?.click()}
-                            className="flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-gray-300 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition"
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-300 py-2 text-xs font-semibold text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
                         >
                             <Upload className="h-3.5 w-3.5" />
                             {scanning ? 'Scanning slip…' : 'Or upload the bank slip to auto-fill the ID'}
                         </button>
                         {slipPreview && (
-                            <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-lg p-2">
-                                <img src={slipPreview} alt="Uploaded slip" className="h-14 w-14 object-cover rounded border border-gray-200 flex-shrink-0" />
-                                <p className="text-[11px] text-gray-500 leading-snug">{scanNote || 'Scanning…'}</p>
+                            <div className="flex items-center gap-2.5 rounded-lg border border-gray-200 bg-gray-50 p-2">
+                                <img
+                                    src={slipPreview}
+                                    alt="Uploaded slip"
+                                    className="h-14 w-14 flex-shrink-0 rounded border border-gray-200 object-cover"
+                                />
+                                <p className="text-[11px] leading-snug text-gray-500">{scanNote || 'Scanning…'}</p>
                             </div>
                         )}
 
                         {error && <p className="text-xs text-red-600">{error}</p>}
-                        <p className="text-[11px] text-gray-400">Confirming locks this invoice as paid immediately — it can&rsquo;t be undone or repeated.</p>
+                        <p className="text-[11px] text-gray-400">
+                            Confirming locks this invoice as paid immediately — it can&rsquo;t be undone or repeated.
+                        </p>
                         <div className="flex gap-2">
                             <button
                                 type="submit"
                                 disabled={confirming || !txnId.trim()}
-                                className="flex-1 py-2.5 rounded-lg bg-[#b38a36] hover:bg-[#a17a2d] disabled:opacity-50 text-white text-sm font-bold transition"
+                                className="flex-1 rounded-lg bg-[#b38a36] py-2.5 text-sm font-bold text-white transition hover:bg-[#a17a2d] disabled:opacity-50"
                             >
                                 {confirming ? 'Confirming…' : 'Confirm payment received'}
                             </button>
-                            <button type="button" onClick={() => setStage('showing')} className="px-4 py-2.5 rounded-lg border border-gray-200 text-sm font-medium">Back</button>
+                            <button
+                                type="button"
+                                onClick={() => setStage('showing')}
+                                className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium"
+                            >
+                                Back
+                            </button>
                         </div>
                     </form>
                 ) : (
-                    <div className="flex flex-col items-center gap-2 text-center bg-gray-50 border border-dashed border-gray-300 rounded-xl p-5">
+                    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5 text-center">
                         <Lock className="h-6 w-6 text-gray-400" />
                         <h4 className="text-sm font-bold text-gray-800">Only an admin (or an authorized manager) can confirm this</h4>
-                        <p className="text-xs text-gray-500 max-w-[26ch]">The customer has been shown the pay screen. Ask an admin, or a manager with this permission, to sign in and confirm the bank transaction to complete this sale.</p>
+                        <p className="max-w-[26ch] text-xs text-gray-500">
+                            The customer has been shown the pay screen. Ask an admin, or a manager with this permission, to sign in and confirm the
+                            bank transaction to complete this sale.
+                        </p>
                         <p className="text-[11px] text-gray-400">This screen updates automatically once it's confirmed.</p>
                     </div>
                 )}
@@ -293,9 +340,9 @@ export default function BankQrPaymentModal({
 
 function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
     return (
-        <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4" onMouseDown={onClose}>
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-5" onMouseDown={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" onMouseDown={onClose}>
+            <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
+                <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-sm font-bold text-gray-900">{title}</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-700" aria-label="Close">
                         <X className="h-4 w-4" />
@@ -311,7 +358,7 @@ function Row({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex justify-between gap-3">
             <span className="text-gray-500">{label}</span>
-            <span className="font-mono font-semibold text-gray-900 text-right">{value}</span>
+            <span className="text-right font-mono font-semibold text-gray-900">{value}</span>
         </div>
     );
 }

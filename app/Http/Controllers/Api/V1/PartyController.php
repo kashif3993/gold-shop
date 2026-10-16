@@ -17,7 +17,7 @@ class PartyController extends Controller
     public function ledger(Party $party, PartyLedgerService $ledgerService): JsonResponse
     {
         return response()->json([
-            'party'  => $party->load('partyType'),
+            'party' => $party->load('partyType'),
             'ledger' => $ledgerService->build($party),
         ]);
     }

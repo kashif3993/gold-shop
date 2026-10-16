@@ -30,7 +30,15 @@ interface PartyFormProps {
 }
 
 export default function PartyForm({
-    data, setData, errors, processing, partyTypes, onSubmit, submitLabel, showActiveToggle = false, onCancel,
+    data,
+    setData,
+    errors,
+    processing,
+    partyTypes,
+    onSubmit,
+    submitLabel,
+    showActiveToggle = false,
+    onCancel,
 }: PartyFormProps) {
     return (
         <form onSubmit={onSubmit} style={{ maxWidth: '720px' }}>
@@ -39,27 +47,29 @@ export default function PartyForm({
 
                 <div className="pty-form-grid">
                     <div className="pty-form-group">
-                        <label className="pty-form-label">Name <span className="pty-req">*</span></label>
+                        <label className="pty-form-label">
+                            Name <span className="pty-req">*</span>
+                        </label>
                         <input
                             type="text"
                             className="pty-input"
                             value={data.name}
-                            onChange={e => setData('name', e.target.value)}
+                            onChange={(e) => setData('name', e.target.value)}
                             placeholder="Full name or business name"
                         />
                         {errors.name && <div className="pty-error">{errors.name}</div>}
                     </div>
 
                     <div className="pty-form-group">
-                        <label className="pty-form-label">Party Type <span className="pty-req">*</span></label>
-                        <select
-                            className="pty-select"
-                            value={String(data.party_type_id)}
-                            onChange={e => setData('party_type_id', e.target.value)}
-                        >
+                        <label className="pty-form-label">
+                            Party Type <span className="pty-req">*</span>
+                        </label>
+                        <select className="pty-select" value={String(data.party_type_id)} onChange={(e) => setData('party_type_id', e.target.value)}>
                             <option value="">Select type</option>
-                            {partyTypes.map(t => (
-                                <option key={t.id} value={t.id}>{t.name}</option>
+                            {partyTypes.map((t) => (
+                                <option key={t.id} value={t.id}>
+                                    {t.name}
+                                </option>
                             ))}
                         </select>
                         {errors.party_type_id && <div className="pty-error">{errors.party_type_id}</div>}
@@ -71,12 +81,13 @@ export default function PartyForm({
                             type="text"
                             className="pty-input"
                             value={data.phone}
-                            onChange={e => setData('phone', e.target.value)}
+                            onChange={(e) => setData('phone', e.target.value)}
                             placeholder="e.g. 0300 1234567"
                         />
                         {errors.phone && (
                             <div className="pty-error">
-                                <AlertCircle size={14} /><span>{errors.phone}</span>
+                                <AlertCircle size={14} />
+                                <span>{errors.phone}</span>
                             </div>
                         )}
                     </div>
@@ -87,7 +98,7 @@ export default function PartyForm({
                             type="text"
                             className="pty-input"
                             value={data.address}
-                            onChange={e => setData('address', e.target.value)}
+                            onChange={(e) => setData('address', e.target.value)}
                             placeholder="Shop / home address"
                         />
                         {errors.address && <div className="pty-error">{errors.address}</div>}
@@ -100,7 +111,7 @@ export default function PartyForm({
                         className="pty-input"
                         rows={3}
                         value={data.notes}
-                        onChange={e => setData('notes', e.target.value)}
+                        onChange={(e) => setData('notes', e.target.value)}
                         placeholder="Anything worth remembering about this party"
                         style={{ resize: 'vertical' }}
                     />
@@ -109,11 +120,7 @@ export default function PartyForm({
 
                 {showActiveToggle && (
                     <label className="pty-check">
-                        <input
-                            type="checkbox"
-                            checked={data.is_active}
-                            onChange={e => setData('is_active', e.target.checked)}
-                        />
+                        <input type="checkbox" checked={data.is_active} onChange={(e) => setData('is_active', e.target.checked)} />
                         Active (unchecked = archived, hidden from pickers)
                     </label>
                 )}

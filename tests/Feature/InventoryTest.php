@@ -16,9 +16,13 @@ class InventoryTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private MetalType $gold;
+
     private Purity $p22;
+
     private Party $karigar;
+
     private Party $wholesaler;
 
     protected function setUp(): void
@@ -38,7 +42,7 @@ class InventoryTest extends TestCase
     private function makeItem(array $overrides = []): Item
     {
         return Item::create(array_merge([
-            'item_code' => 'GLD-RNG-' . fake()->unique()->numerify('####'),
+            'item_code' => 'GLD-RNG-'.fake()->unique()->numerify('####'),
             'item_type' => 'ring',
             'metal_type_id' => $this->gold->id,
             'purity_id' => $this->p22->id,
@@ -76,7 +80,7 @@ class InventoryTest extends TestCase
         $fromKarigar = $this->makeItem(['source_party_id' => $this->karigar->id]);
         $this->makeItem(['source_party_id' => $this->wholesaler->id]);
 
-        $this->actingAs($this->user)->get('/inventory?source_party_id=' . $this->karigar->id)
+        $this->actingAs($this->user)->get('/inventory?source_party_id='.$this->karigar->id)
             ->assertInertia(fn ($page) => $page
                 ->has('items.data', 1)
                 ->where('items.data.0.id', $fromKarigar->id)
@@ -94,7 +98,7 @@ class InventoryTest extends TestCase
         $this->makeItem(['source_party_id' => $this->karigar->id, 'item_type' => 'bangle', 'metal_type_id' => $silver->id, 'purity_id' => $sp->id]);
 
         $this->actingAs($this->user)
-            ->get('/inventory?source_party_id=' . $this->karigar->id . '&item_type=bangle&metal_type_id=' . $this->gold->id)
+            ->get('/inventory?source_party_id='.$this->karigar->id.'&item_type=bangle&metal_type_id='.$this->gold->id)
             ->assertInertia(fn ($page) => $page
                 ->has('items.data', 1)
                 ->where('items.data.0.id', $target->id));

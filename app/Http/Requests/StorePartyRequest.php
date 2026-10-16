@@ -24,11 +24,11 @@ class StorePartyRequest extends FormRequest
     {
         return [
             'party_type_id' => ['required', 'integer', 'exists:party_types,id'],
-            'name'          => ['required', 'string', 'max:150'],
-            'phone'         => ['nullable', 'string', 'max:30', 'regex:/^\+?[0-9\s\-]+$/'],
-            'address'       => ['nullable', 'string', 'max:255'],
-            'notes'         => ['nullable', 'string', 'max:2000'],
-            'is_active'     => ['sometimes', 'boolean'],
+            'name' => ['required', 'string', 'max:150'],
+            'phone' => ['nullable', 'string', 'max:30', 'regex:/^\+?[0-9\s\-]+$/'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'is_active' => ['sometimes', 'boolean'],
         ];
     }
 

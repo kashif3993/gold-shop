@@ -1,9 +1,9 @@
-import { Head, router, Link, usePage, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import PartyForm from '@/components/party-form';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Eye, Edit, Trash2, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import PartyForm from '@/components/party-form';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight, Edit, Eye, Plus, Trash2, X } from 'lucide-react';
+import { useState } from 'react';
 import '../../../css/parties.css';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Parties', href: '/parties' }];
@@ -46,12 +46,16 @@ export default function PartiesIndex({ parties, partyTypes, filters, perPage, pe
 
     const applyFilters = (e: any) => {
         e.preventDefault();
-        router.get('/parties', {
-            party_type_id: typeFilter,
-            status: statusFilter,
-            search: search,
-            per_page: perPage,
-        }, { preserveState: true, preserveScroll: true });
+        router.get(
+            '/parties',
+            {
+                party_type_id: typeFilter,
+                status: statusFilter,
+                search: search,
+                per_page: perPage,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const clearFilters = () => {
@@ -62,12 +66,16 @@ export default function PartiesIndex({ parties, partyTypes, filters, perPage, pe
     };
 
     const changeRowsPerPage = (value: string) => {
-        router.get('/parties', {
-            party_type_id: typeFilter,
-            status: statusFilter,
-            search: search,
-            per_page: value,
-        }, { preserveState: true, preserveScroll: true });
+        router.get(
+            '/parties',
+            {
+                party_type_id: typeFilter,
+                status: statusFilter,
+                search: search,
+                per_page: value,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const handleDelete = (party: any) => {
@@ -86,7 +94,12 @@ export default function PartiesIndex({ parties, partyTypes, filters, perPage, pe
                         <h1 className="pty-page-title">Parties</h1>
                         <p className="pty-page-desc">Customers, karigars, wholesalers, other shops and companies you deal with.</p>
                     </div>
-                    <button type="button" onClick={() => setShowCreate(true)} className="pty-filter-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <button
+                        type="button"
+                        onClick={() => setShowCreate(true)}
+                        className="pty-filter-btn"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
                         <Plus size={16} /> Add Party
                     </button>
                 </div>
@@ -97,17 +110,19 @@ export default function PartiesIndex({ parties, partyTypes, filters, perPage, pe
                 <form className="pty-filters" onSubmit={applyFilters}>
                     <div className="pty-filter-group">
                         <label className="pty-filter-label">Party Type</label>
-                        <select className="pty-filter-input" value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+                        <select className="pty-filter-input" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
                             <option value="">All Types</option>
                             {partyTypes.map((t: any) => (
-                                <option key={t.id} value={t.id}>{t.name}</option>
+                                <option key={t.id} value={t.id}>
+                                    {t.name}
+                                </option>
                             ))}
                         </select>
                     </div>
 
                     <div className="pty-filter-group">
                         <label className="pty-filter-label">Status</label>
-                        <select className="pty-filter-input" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                        <select className="pty-filter-input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                             <option value="">All</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
@@ -116,114 +131,153 @@ export default function PartiesIndex({ parties, partyTypes, filters, perPage, pe
 
                     <div className="pty-filter-group">
                         <label className="pty-filter-label">Search (name / phone)</label>
-                        <input className="pty-filter-input" value={search} onChange={e => setSearch(e.target.value)} placeholder="e.g. Ahmed or 0300..." />
+                        <input
+                            className="pty-filter-input"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="e.g. Ahmed or 0300..."
+                        />
                     </div>
 
                     <div className="pty-filter-group">
                         <label className="pty-filter-label">Rows per page</label>
-                        <select className="pty-filter-input" value={perPage} onChange={e => changeRowsPerPage(e.target.value)}>
+                        <select className="pty-filter-input" value={perPage} onChange={(e) => changeRowsPerPage(e.target.value)}>
                             {rowsOptions.map((n: number) => (
-                                <option key={n} value={n}>{n}</option>
+                                <option key={n} value={n}>
+                                    {n}
+                                </option>
                             ))}
                         </select>
                     </div>
 
-                    <button type="submit" className="pty-filter-btn">Apply Filters</button>
+                    <button type="submit" className="pty-filter-btn">
+                        Apply Filters
+                    </button>
                     {(typeFilter || statusFilter || search) && (
-                        <button type="button" onClick={clearFilters} className="pty-filter-clear">Clear</button>
+                        <button type="button" onClick={clearFilters} className="pty-filter-clear">
+                            Clear
+                        </button>
                     )}
                 </form>
 
                 <div className="pty-table-wrap">
                     <div className="pty-table-scroll">
-                    <table className="pty-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Phone</th>
-                                <th>Dealings</th>
-                                <th>Status</th>
-                                <th style={{ textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {parties.data.length === 0 ? (
+                        <table className="pty-table">
+                            <thead>
                                 <tr>
-                                    <td colSpan={6} className="pty-empty" style={{ padding: 0 }}>
-                                        <div style={{ position: 'sticky', left: 0, width: '100%', padding: '4rem 1rem', display: 'flex', justifyContent: 'center' }}>
-                                            No parties match your filters.
-                                        </div>
-                                    </td>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Phone</th>
+                                    <th>Dealings</th>
+                                    <th>Status</th>
+                                    <th style={{ textAlign: 'right' }}>Actions</th>
                                 </tr>
-                            ) : (
-                                parties.data.map((party: any) => (
-                                    <tr key={party.id}>
-                                        <td>
-                                            <Link href={`/parties/${party.id}`} className="pty-link">
-                                                {party.name}
-                                            </Link>
-                                        </td>
-                                        <td><span className={partyTypeClass(party.party_type?.name)}>{party.party_type?.name || '-'}</span></td>
-                                        <td>{party.phone || <span className="led-muted">-</span>}</td>
-                                        <td>
-                                            {party.transactions_count + party.invoices_count} record{party.transactions_count + party.invoices_count === 1 ? '' : 's'}
-                                        </td>
-                                        <td>
-                                            {party.is_active
-                                                ? <span className="pty-active">Active</span>
-                                                : <span className="pty-inactive-tag">Inactive</span>}
-                                        </td>
-                                        <td>
-                                            <div className="pty-actions" style={{ justifyContent: 'flex-end' }}>
-                                                <Link href={`/parties/${party.id}`} className="pty-action-btn view" title="View ledger">
-                                                    <Eye size={16} />
-                                                </Link>
-                                                <Link href={`/parties/${party.id}/edit`} className="pty-action-btn edit" title="Edit">
-                                                    <Edit size={16} />
-                                                </Link>
-                                                <button type="button" className="pty-action-btn delete" title="Delete" onClick={() => handleDelete(party)}>
-                                                    <Trash2 size={16} />
-                                                </button>
+                            </thead>
+                            <tbody>
+                                {parties.data.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="pty-empty" style={{ padding: 0 }}>
+                                            <div
+                                                style={{
+                                                    position: 'sticky',
+                                                    left: 0,
+                                                    width: '100%',
+                                                    padding: '4rem 1rem',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                }}
+                                            >
+                                                No parties match your filters.
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    parties.data.map((party: any) => (
+                                        <tr key={party.id}>
+                                            <td>
+                                                <Link href={`/parties/${party.id}`} className="pty-link">
+                                                    {party.name}
+                                                </Link>
+                                            </td>
+                                            <td>
+                                                <span className={partyTypeClass(party.party_type?.name)}>{party.party_type?.name || '-'}</span>
+                                            </td>
+                                            <td>{party.phone || <span className="led-muted">-</span>}</td>
+                                            <td>
+                                                {party.transactions_count + party.invoices_count} record
+                                                {party.transactions_count + party.invoices_count === 1 ? '' : 's'}
+                                            </td>
+                                            <td>
+                                                {party.is_active ? (
+                                                    <span className="pty-active">Active</span>
+                                                ) : (
+                                                    <span className="pty-inactive-tag">Inactive</span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <div className="pty-actions" style={{ justifyContent: 'flex-end' }}>
+                                                    <Link href={`/parties/${party.id}`} className="pty-action-btn view" title="View ledger">
+                                                        <Eye size={16} />
+                                                    </Link>
+                                                    <Link href={`/parties/${party.id}/edit`} className="pty-action-btn edit" title="Edit">
+                                                        <Edit size={16} />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        className="pty-action-btn delete"
+                                                        title="Delete"
+                                                        onClick={() => handleDelete(party)}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
 
                     <div className="pty-pagination">
-                        <span>Showing {parties.from || 0} to {parties.to || 0} of {parties.total} parties</span>
+                        <span>
+                            Showing {parties.from || 0} to {parties.to || 0} of {parties.total} parties
+                        </span>
 
                         <div className="pty-pagination-links">
                             <Link
                                 href={parties.prev_page_url || '#'}
                                 preserveScroll
                                 aria-label="Previous page"
-                                onClick={e => { if (!parties.prev_page_url) e.preventDefault(); }}
+                                onClick={(e) => {
+                                    if (!parties.prev_page_url) e.preventDefault();
+                                }}
                                 className={`pty-page-link pty-page-nav ${!parties.prev_page_url ? 'disabled' : ''}`}
                             >
                                 <ChevronLeft size={15} />
                             </Link>
 
-                            {parties.links && parties.links.slice(1, -1).map((link: any, index: number) => (
-                                <Link
-                                    key={index}
-                                    href={link.url || '#'}
-                                    preserveScroll
-                                    onClick={e => { if (!link.url) e.preventDefault(); }}
-                                    className={`pty-page-link ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            ))}
+                            {parties.links &&
+                                parties.links.slice(1, -1).map((link: any, index: number) => (
+                                    <Link
+                                        key={index}
+                                        href={link.url || '#'}
+                                        preserveScroll
+                                        onClick={(e) => {
+                                            if (!link.url) e.preventDefault();
+                                        }}
+                                        className={`pty-page-link ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
 
                             <Link
                                 href={parties.next_page_url || '#'}
                                 preserveScroll
                                 aria-label="Next page"
-                                onClick={e => { if (!parties.next_page_url) e.preventDefault(); }}
+                                onClick={(e) => {
+                                    if (!parties.next_page_url) e.preventDefault();
+                                }}
                                 className={`pty-page-link pty-page-nav ${!parties.next_page_url ? 'disabled' : ''}`}
                             >
                                 <ChevronRight size={15} />
@@ -234,7 +288,7 @@ export default function PartiesIndex({ parties, partyTypes, filters, perPage, pe
 
                 {showCreate && (
                     <div className="pty-modal-overlay" onMouseDown={closeCreate}>
-                        <div className="pty-modal" onMouseDown={e => e.stopPropagation()}>
+                        <div className="pty-modal" onMouseDown={(e) => e.stopPropagation()}>
                             <div className="pty-modal-head">
                                 <h3>Add Party</h3>
                                 <button type="button" className="pty-modal-close" onClick={closeCreate} aria-label="Close">

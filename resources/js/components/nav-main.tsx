@@ -1,7 +1,7 @@
 import { SidebarGroup, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { cn } from '@/lib/utils';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
@@ -21,16 +21,13 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                     'group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0',
                                     isActive
                                         ? 'bg-[#b38a36] hover:bg-[#a17a2e]'
-                                        : 'bg-transparent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                                        : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground bg-transparent',
                                 )}
                             >
                                 <Link href={item.url} prefetch className="flex items-center gap-[14px]">
                                     {item.icon && (
                                         <item.icon
-                                            className={cn(
-                                                'size-[20px] shrink-0 stroke-[2]',
-                                                isActive ? 'text-black' : 'text-sidebar-foreground/60',
-                                            )}
+                                            className={cn('size-[20px] shrink-0 stroke-[2]', isActive ? 'text-black' : 'text-sidebar-foreground/60')}
                                         />
                                     )}
                                     <span
@@ -43,7 +40,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                     </span>
 
                                     {isActive && (
-                                        <div className="absolute right-3 top-1/2 h-[18px] w-[5px] -translate-y-1/2 rounded-full bg-black group-data-[collapsible=icon]:hidden" />
+                                        <div className="absolute top-1/2 right-3 h-[18px] w-[5px] -translate-y-1/2 rounded-full bg-black group-data-[collapsible=icon]:hidden" />
                                     )}
                                 </Link>
                             </SidebarMenuButton>

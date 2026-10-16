@@ -1,12 +1,12 @@
-import { Head, useForm, usePage, Link } from '@inertiajs/react';
-import { useState, useEffect, useMemo, useRef } from 'react';
-import AppLayout from '@/layouts/app-layout';
-import { gramsToTraditional, traditionalToGrams, carryTraditional, formatNumber } from '@/utils/weight';
-import { useScaleReading } from '@/utils/scale';
-import { Info, AlertCircle, ArrowLeft, Printer } from 'lucide-react';
 import ItemEntryPrintSlip from '@/components/item-entry-print-slip';
-import '../../../css/item-entry.css';
+import AppLayout from '@/layouts/app-layout';
+import { useScaleReading } from '@/utils/scale';
+import { carryTraditional, formatNumber, gramsToTraditional, traditionalToGrams } from '@/utils/weight';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { AlertCircle, ArrowLeft, Info, Printer } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import '../../../css/item-entry-print.css';
+import '../../../css/item-entry.css';
 
 interface Metal {
     id: number;
@@ -67,19 +67,19 @@ function is22KPurity(name?: string): boolean {
 }
 
 function resolveDefaultPurityId(itemType: string, metalId: number | string, puritiesList: Purity[]): number | string {
-    const metalPurities = puritiesList.filter(p => !metalId || String(p.metal_type_id) === String(metalId));
+    const metalPurities = puritiesList.filter((p) => !metalId || String(p.metal_type_id) === String(metalId));
     if (metalPurities.length === 0) return '';
 
     if (isBullion(itemType)) {
-        const p24 = metalPurities.find(p => is24KPurity(p.name));
+        const p24 = metalPurities.find((p) => is24KPurity(p.name));
         if (p24) return p24.id;
     } else {
-        const p22 = metalPurities.find(p => is22KPurity(p.name));
+        const p22 = metalPurities.find((p) => is22KPurity(p.name));
         if (p22) return p22.id;
     }
 
     if (itemType.toLowerCase() === 'ring') {
-        const non24 = metalPurities.find(p => !is24KPurity(p.name));
+        const non24 = metalPurities.find((p) => !is24KPurity(p.name));
         if (non24) return non24.id;
     }
 
@@ -94,7 +94,16 @@ function getUnitsFromGrams(grams: number) {
     return { gram: formatNumber(num, 3), ...gramsToTraditional(num) };
 }
 
-export default function ItemEdit({ item, metals = [], purities = [], parties = [], currentRates = {}, shop, printerType, printDimensions }: ItemEditProps) {
+export default function ItemEdit({
+    item,
+    metals = [],
+    purities = [],
+    parties = [],
+    currentRates = {},
+    shop,
+    printerType,
+    printDimensions,
+}: ItemEditProps) {
     const { flash } = usePage().props as any;
     // On edit we already have a saved rate — don't auto-overwrite it, just offer "use this".
     const rateTouched = useRef(true);
@@ -142,40 +151,38 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
 
     const availablePurities = useMemo(() => {
         if (!data.metal_type_id) return purities;
-        return purities.filter(p => String(p.metal_type_id) === String(data.metal_type_id));
+        return purities.filter((p) => String(p.metal_type_id) === String(data.metal_type_id));
     }, [purities, data.metal_type_id]);
 
     // Today's rate for the chosen purity (from Rate Management), if any.
-    const liveRate = data.purity_id != null && data.purity_id !== ''
-        ? Number(currentRates[String(data.purity_id)])
-        : NaN;
+    const liveRate = data.purity_id != null && data.purity_id !== '' ? Number(currentRates[String(data.purity_id)]) : NaN;
     const hasLiveRate = Number.isFinite(liveRate) && liveRate > 0;
 
     const handleItemTypeChange = (newType: string) => {
         const isBullionType = isBullion(newType);
-        const metalPurities = purities.filter(p => !data.metal_type_id || String(p.metal_type_id) === String(data.metal_type_id));
-        
+        const metalPurities = purities.filter((p) => !data.metal_type_id || String(p.metal_type_id) === String(data.metal_type_id));
+
         let newPurityId = data.purity_id;
         let notice = '';
         const ringErr = '';
 
-        const currentPurity = purities.find(p => String(p.id) === String(data.purity_id));
+        const currentPurity = purities.find((p) => String(p.id) === String(data.purity_id));
 
         if (isBullionType) {
-            const p24 = metalPurities.find(p => is24KPurity(p.name));
+            const p24 = metalPurities.find((p) => is24KPurity(p.name));
             if (p24) {
                 newPurityId = p24.id;
                 notice = `Defaulted purity to ${p24.name} (24K pure) for ${newType}.`;
             }
         } else {
             if (newType === 'ring' && currentPurity && is24KPurity(currentPurity.name)) {
-                const p22 = metalPurities.find(p => is22KPurity(p.name)) || metalPurities.find(p => !is24KPurity(p.name));
+                const p22 = metalPurities.find((p) => is22KPurity(p.name)) || metalPurities.find((p) => !is24KPurity(p.name));
                 if (p22) {
                     newPurityId = p22.id;
                     notice = `Rings cannot be 24K gold (pure gold is too soft). Purity automatically set to ${p22.name}.`;
                 }
             } else if (currentPurity && is24KPurity(currentPurity.name)) {
-                const p22 = metalPurities.find(p => is22KPurity(p.name));
+                const p22 = metalPurities.find((p) => is22KPurity(p.name));
                 if (p22) {
                     newPurityId = p22.id;
                     notice = `Defaulted purity to ${p22.name} for jewelry item.`;
@@ -186,7 +193,7 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
         setPurityNotice(notice);
         setRingValidationError(ringErr);
 
-        setData(prev => ({
+        setData((prev) => ({
             ...prev,
             item_type: newType,
             purity_id: newPurityId,
@@ -197,7 +204,7 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
         const newPurityId = resolveDefaultPurityId(data.item_type, newMetalId, purities);
         setPurityNotice('');
         setRingValidationError('');
-        setData(prev => ({
+        setData((prev) => ({
             ...prev,
             metal_type_id: newMetalId,
             purity_id: newPurityId,
@@ -205,7 +212,7 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
     };
 
     const handlePurityChange = (newPurityId: string) => {
-        const selectedPurity = purities.find(p => String(p.id) === String(newPurityId));
+        const selectedPurity = purities.find((p) => String(p.id) === String(newPurityId));
         if (data.item_type === 'ring' && selectedPurity && is24KPurity(selectedPurity.name)) {
             setRingValidationError('Ring items cannot be 24K (pure gold is too soft for rings). Please select 22K, 21K, or 18K.');
             return;
@@ -228,10 +235,7 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
         } else {
             const draft = { ...obj, [unit]: value };
             // Roll a field up once it hits its limit: 100 point -> ratti, 8 ratti -> masha, 12 masha -> tola.
-            const needsCarry =
-                (parseFloat(draft.point) || 0) >= 100 ||
-                (parseFloat(draft.ratti) || 0) >= 8 ||
-                (parseFloat(draft.masha) || 0) >= 12;
+            const needsCarry = (parseFloat(draft.point) || 0) >= 100 || (parseFloat(draft.ratti) || 0) >= 8 || (parseFloat(draft.masha) || 0) >= 12;
             newObj = needsCarry ? { ...draft, ...carryTraditional(draft) } : draft;
             grams = traditionalToGrams(newObj);
 
@@ -268,10 +272,10 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
     // margin lives here, not as a separate Rs charge) — so it flows straight
     // into the metal value below, rather than being added on its own.
     const netGrams = Math.max(0, grossGrams - stoneGrams - cuttingGrams + polishGrams);
-    const totalPrice = (netGrams * data.purchase_rate_per_gram) + data.labour_cost;
+    const totalPrice = netGrams * data.purchase_rate_per_gram + data.labour_cost;
 
     useEffect(() => {
-        setData(data => ({
+        setData((data) => ({
             ...data,
             gross_weight_grams: Number(grossGrams.toFixed(3)),
             stone_weight_grams: Number(stoneGrams.toFixed(3)),
@@ -338,7 +342,7 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
         }
         setGrossWeightError('');
 
-        const currentPurity = purities.find(p => String(p.id) === String(data.purity_id));
+        const currentPurity = purities.find((p) => String(p.id) === String(data.purity_id));
         if (data.item_type === 'ring' && currentPurity && is24KPurity(currentPurity.name)) {
             setRingValidationError('Ring items cannot be saved with 24K purity. Please select 22K, 21K, or 18K.');
             return;
@@ -352,13 +356,29 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
             <Head title={`Edit Item - ${item.item_code}`} />
 
             <div className="item-entry-container">
-                <div className="item-entry-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div
+                    className="item-entry-header"
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}
+                >
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                            <Link href="/inventory" className="action-btn" style={{ padding: '0.4rem', borderRadius: '6px', border: '1px solid #d1d5db', textDecoration: 'none', display: 'inline-flex', color: '#4b5563' }}>
+                            <Link
+                                href="/inventory"
+                                className="action-btn"
+                                style={{
+                                    padding: '0.4rem',
+                                    borderRadius: '6px',
+                                    border: '1px solid #d1d5db',
+                                    textDecoration: 'none',
+                                    display: 'inline-flex',
+                                    color: '#4b5563',
+                                }}
+                            >
                                 <ArrowLeft size={18} />
                             </Link>
-                            <h1 className="item-entry-title" style={{ margin: 0 }}>Edit Item: {item.item_code}</h1>
+                            <h1 className="item-entry-title" style={{ margin: 0 }}>
+                                Edit Item: {item.item_code}
+                            </h1>
                         </div>
                         <p className="item-entry-desc">Update the details, weight measurements, pricing, and stock status below.</p>
                     </div>
@@ -375,7 +395,7 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
                                 fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '0.35rem'
+                                gap: '0.35rem',
                             }}
                         >
                             <Printer size={15} /> Print Tag
@@ -387,119 +407,119 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
                 </div>
 
                 {flash?.success && (
-                    <div className="item-code-preview" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af', marginBottom: '0.75rem' }}>
+                    <div
+                        className="item-code-preview"
+                        style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1e40af', marginBottom: '0.75rem' }}
+                    >
                         {flash.success}
                     </div>
                 )}
 
-                <form onSubmit={e => { e.preventDefault(); submit('save'); }} className="item-entry-form">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        submit('save');
+                    }}
+                    className="item-entry-form"
+                >
+                    {/* Basic Details Card */}
+                    <div className="item-card">
+                        <h2 className="card-title">Basic Details</h2>
 
-                        {/* Basic Details Card */}
-                        <div className="item-card">
-                            <h2 className="card-title">Basic Details</h2>
-                            
-                            <div className="form-grid">
-                                <div className="form-group">
-                                    <label className="form-label">Item Code</label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={data.item_code}
-                                        onChange={e => setData('item_code', e.target.value)}
-                                        required
-                                    />
-                                    {errors.item_code && <div className="text-red-500 text-xs mt-1">{errors.item_code}</div>}
-                                </div>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label className="form-label">Item Code</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={data.item_code}
+                                    onChange={(e) => setData('item_code', e.target.value)}
+                                    required
+                                />
+                                {errors.item_code && <div className="mt-1 text-xs text-red-500">{errors.item_code}</div>}
+                            </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Status</label>
-                                    <select
-                                        className="form-select"
-                                        value={data.status}
-                                        onChange={e => setData('status', e.target.value)}
+                            <div className="form-group">
+                                <label className="form-label">Status</label>
+                                <select className="form-select" value={data.status} onChange={(e) => setData('status', e.target.value)}>
+                                    <option value="in_stock">In Stock</option>
+                                    <option value="sold">Sold</option>
+                                    <option value="bought_back">Bought Back</option>
+                                </select>
+                                {errors.status && <div className="mt-1 text-xs text-red-500">{errors.status}</div>}
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Item Type</label>
+                                <select className="form-select" value={data.item_type} onChange={(e) => handleItemTypeChange(e.target.value)}>
+                                    <optgroup label="Jewelry Items (Default: 22K)">
+                                        <option value="ring">Ring</option>
+                                        <option value="bangle">Bangle</option>
+                                        <option value="necklace">Necklace</option>
+                                        <option value="earring">Earring</option>
+                                        <option value="bracelet">Bracelet</option>
+                                        <option value="chain">Chain</option>
+                                        <option value="pendant">Pendant</option>
+                                        <option value="locket">Locket</option>
+                                        <option value="nose_pin">Nose Pin</option>
+                                        <option value="tops">Tops</option>
+                                        <option value="other">Other Jewelry</option>
+                                    </optgroup>
+                                    <optgroup label="Bullion & Raw Items (Default: 24K)">
+                                        <option value="biscuit">Biscuit / Bar</option>
+                                        <option value="nugget">Nugget</option>
+                                        <option value="coin">Coin</option>
+                                        <option value="piece">Raw Gold / Lagdi</option>
+                                    </optgroup>
+                                </select>
+                                {errors.item_type && <div className="mt-1 text-xs text-red-500">{errors.item_type}</div>}
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Metal Type</label>
+                                <select className="form-select" value={data.metal_type_id} onChange={(e) => handleMetalChange(e.target.value)}>
+                                    <option value="">Select Metal</option>
+                                    {metals.map((m) => (
+                                        <option key={m.id} value={m.id}>
+                                            {m.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.metal_type_id && <div className="mt-1 text-xs text-red-500">{errors.metal_type_id}</div>}
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Purity</label>
+                                <select className="form-select" value={data.purity_id} onChange={(e) => handlePurityChange(e.target.value)}>
+                                    <option value="">Select Purity</option>
+                                    {availablePurities.map((p) => {
+                                        const isRing24K = data.item_type === 'ring' && is24KPurity(p.name);
+                                        return (
+                                            <option key={p.id} value={p.id} disabled={isRing24K}>
+                                                {p.name} {isRing24K ? '— (Not allowed for rings)' : ''}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                                {errors.purity_id && <div className="mt-1 text-xs font-medium text-red-500">{errors.purity_id}</div>}
+                                {ringValidationError && (
+                                    <div
+                                        style={{
+                                            color: '#dc2626',
+                                            fontSize: '0.8rem',
+                                            marginTop: '0.35rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem',
+                                        }}
                                     >
-                                        <option value="in_stock">In Stock</option>
-                                        <option value="sold">Sold</option>
-                                        <option value="bought_back">Bought Back</option>
-                                    </select>
-                                    {errors.status && <div className="text-red-500 text-xs mt-1">{errors.status}</div>}
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">Item Type</label>
-                                    <select
-                                        className="form-select"
-                                        value={data.item_type}
-                                        onChange={e => handleItemTypeChange(e.target.value)}
-                                    >
-                                        <optgroup label="Jewelry Items (Default: 22K)">
-                                            <option value="ring">Ring</option>
-                                            <option value="bangle">Bangle</option>
-                                            <option value="necklace">Necklace</option>
-                                            <option value="earring">Earring</option>
-                                            <option value="bracelet">Bracelet</option>
-                                            <option value="chain">Chain</option>
-                                            <option value="pendant">Pendant</option>
-                                            <option value="locket">Locket</option>
-                                            <option value="nose_pin">Nose Pin</option>
-                                            <option value="tops">Tops</option>
-                                            <option value="other">Other Jewelry</option>
-                                        </optgroup>
-                                        <optgroup label="Bullion & Raw Items (Default: 24K)">
-                                            <option value="biscuit">Biscuit / Bar</option>
-                                            <option value="nugget">Nugget</option>
-                                            <option value="coin">Coin</option>
-                                            <option value="piece">Raw Gold / Lagdi</option>
-                                        </optgroup>
-                                    </select>
-                                    {errors.item_type && <div className="text-red-500 text-xs mt-1">{errors.item_type}</div>}
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">Metal Type</label>
-                                    <select
-                                        className="form-select"
-                                        value={data.metal_type_id}
-                                        onChange={e => handleMetalChange(e.target.value)}
-                                    >
-                                        <option value="">Select Metal</option>
-                                        {metals.map(m => (
-                                            <option key={m.id} value={m.id}>{m.name}</option>
-                                        ))}
-                                    </select>
-                                    {errors.metal_type_id && <div className="text-red-500 text-xs mt-1">{errors.metal_type_id}</div>}
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">Purity</label>
-                                    <select
-                                        className="form-select"
-                                        value={data.purity_id}
-                                        onChange={e => handlePurityChange(e.target.value)}
-                                    >
-                                        <option value="">Select Purity</option>
-                                        {availablePurities.map(p => {
-                                            const isRing24K = data.item_type === 'ring' && is24KPurity(p.name);
-                                            return (
-                                                <option
-                                                    key={p.id}
-                                                    value={p.id}
-                                                    disabled={isRing24K}
-                                                >
-                                                    {p.name} {isRing24K ? '— (Not allowed for rings)' : ''}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                    {errors.purity_id && <div className="text-red-500 text-xs mt-1 font-medium">{errors.purity_id}</div>}
-                                    {ringValidationError && (
-                                        <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                            <AlertCircle size={14} />
-                                            <span>{ringValidationError}</span>
-                                        </div>
-                                    )}
-                                    {purityNotice && (
-                                        <div style={{
+                                        <AlertCircle size={14} />
+                                        <span>{ringValidationError}</span>
+                                    </div>
+                                )}
+                                {purityNotice && (
+                                    <div
+                                        style={{
                                             marginTop: '0.5rem',
                                             padding: '0.5rem 0.75rem',
                                             borderRadius: '6px',
@@ -509,245 +529,304 @@ export default function ItemEdit({ item, metals = [], purities = [], parties = [
                                             fontSize: '0.8rem',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '0.4rem'
-                                        }}>
-                                            <Info size={15} style={{ flexShrink: 0, color: '#2563eb' }} />
-                                            <span>{purityNotice}</span>
-                                        </div>
+                                            gap: '0.4rem',
+                                        }}
+                                    >
+                                        <Info size={15} style={{ flexShrink: 0, color: '#2563eb' }} />
+                                        <span>{purityNotice}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Source Party</label>
+                                <select
+                                    className="form-select"
+                                    value={data.source_party_id}
+                                    onChange={(e) => setData('source_party_id', e.target.value)}
+                                >
+                                    <option value="">Select Party (Optional)</option>
+                                    {parties.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.source_party_id && <div className="mt-1 text-xs text-red-500">{errors.source_party_id}</div>}
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Date Received</label>
+                                <input
+                                    type="date"
+                                    className="form-input"
+                                    value={data.date_received}
+                                    onChange={(e) => setData('date_received', e.target.value)}
+                                />
+                                {errors.date_received && <div className="mt-1 text-xs text-red-500">{errors.date_received}</div>}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Weight Management Card */}
+                    <div className="item-card item-card-wide">
+                        <h2 className="card-title">Weight Management</h2>
+
+                        <div className="weight-section">
+                            <div className="weight-title">Gross Weight</div>
+                            {(scale.ok || scaleEverConnected.current) && (
+                                <div className="scale-hint">
+                                    {scale.ok ? (
+                                        <>
+                                            <span className="scale-dot online" />
+                                            Scale: <strong>{formatNumber(scale.grams ?? 0, 2)} g</strong> — auto-filling
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="scale-dot offline" />
+                                            Scale disconnected — enter weight manually
+                                        </>
                                     )}
                                 </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">Source Party</label>
-                                    <select className="form-select" value={data.source_party_id} onChange={e => setData('source_party_id', e.target.value)}>
-                                        <option value="">Select Party (Optional)</option>
-                                        {parties.map(p => (
-                                            <option key={p.id} value={p.id}>{p.name}</option>
-                                        ))}
-                                    </select>
-                                    {errors.source_party_id && <div className="text-red-500 text-xs mt-1">{errors.source_party_id}</div>}
+                            )}
+                            <div className="weight-grid">
+                                {(['gram', 'tola', 'masha', 'ratti', 'point'] as const).map((u) => (
+                                    <div key={u} className="form-group">
+                                        <label className="form-label" style={{ textTransform: 'capitalize' }}>
+                                            {u}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            min="0"
+                                            className="form-input"
+                                            value={(gross as any)[u]}
+                                            onFocus={() => {
+                                                grossWeightFocused.current = true;
+                                            }}
+                                            onBlur={() => {
+                                                grossWeightFocused.current = false;
+                                            }}
+                                            onChange={(e) => {
+                                                setGrossWeightError('');
+                                                handleUnitChange(setGross, gross, u, e.target.value, setGrossGrams);
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {(grossWeightError || errors.gross_weight_grams) && (
+                                <div
+                                    style={{
+                                        color: '#dc2626',
+                                        fontSize: '0.825rem',
+                                        marginTop: '0.5rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.3rem',
+                                    }}
+                                >
+                                    <AlertCircle size={15} />
+                                    <span>{grossWeightError || errors.gross_weight_grams}</span>
                                 </div>
+                            )}
+                        </div>
 
+                        <div className="weight-section">
+                            <div className="weight-title">Stone &amp; Polish Weight (Gram)</div>
+                            <div className="weight-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
                                 <div className="form-group">
-                                    <label className="form-label">Date Received</label>
-                                    <input type="date" className="form-input" value={data.date_received} onChange={e => setData('date_received', e.target.value)} />
-                                    {errors.date_received && <div className="text-red-500 text-xs mt-1">{errors.date_received}</div>}
+                                    <label className="form-label">Stone Weight (−)</label>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        min="0"
+                                        className="form-input"
+                                        value={stone.gram}
+                                        onChange={(e) => handleStoneGramChange(e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Polish Weight (+)</label>
+                                    <input
+                                        type="number"
+                                        step="any"
+                                        min="0"
+                                        className="form-input"
+                                        value={polish.gram}
+                                        onChange={(e) => handlePolishGramChange(e.target.value)}
+                                    />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Weight Management Card */}
-                        <div className="item-card item-card-wide">
-                            <h2 className="card-title">Weight Management</h2>
-                            
-                            <div className="weight-section">
-                                <div className="weight-title">Gross Weight</div>
-                                {(scale.ok || scaleEverConnected.current) && (
-                                    <div className="scale-hint">
-                                        {scale.ok ? (
-                                            <>
-                                                <span className="scale-dot online" />
-                                                Scale: <strong>{formatNumber(scale.grams ?? 0, 2)} g</strong> — auto-filling
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className="scale-dot offline" />
-                                                Scale disconnected — enter weight manually
-                                            </>
+                        <div className="weight-section">
+                            <div className="weight-title">Cutting Loss (Deduction)</div>
+                            <div className="weight-grid">
+                                {(['gram', 'tola', 'masha', 'ratti', 'point'] as const).map((u) => (
+                                    <div key={u} className="form-group">
+                                        <label className="form-label" style={{ textTransform: 'capitalize' }}>
+                                            {u}
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="any"
+                                            min="0"
+                                            className="form-input"
+                                            value={(cutting as any)[u]}
+                                            onChange={(e) => handleUnitChange(setCutting, cutting, u, e.target.value, setCuttingGrams)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Costing Card */}
+                    <div className="item-card">
+                        <h2 className="card-title">Costing & Pricing</h2>
+
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label className="form-label">Purchase Rate (per Gram)</label>
+                                <input
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    className="form-input"
+                                    value={data.purchase_rate_per_gram || ''}
+                                    onChange={(e) => {
+                                        rateTouched.current = true;
+                                        setData('purchase_rate_per_gram', parseFloat(e.target.value) || 0);
+                                    }}
+                                />
+                                {hasLiveRate && (
+                                    <div className="rate-hint">
+                                        Today's {availablePurities.find((p) => String(p.id) === String(data.purity_id))?.name} rate:{' '}
+                                        <strong>Rs {formatNumber(liveRate, 2)}</strong> / g
+                                        {Number(data.purchase_rate_per_gram) !== liveRate && (
+                                            <button
+                                                type="button"
+                                                className="rate-hint-use"
+                                                onClick={() => {
+                                                    rateTouched.current = true;
+                                                    setData('purchase_rate_per_gram', liveRate);
+                                                }}
+                                            >
+                                                use this
+                                            </button>
                                         )}
                                     </div>
                                 )}
-                                <div className="weight-grid">
-                                    {(['gram', 'tola', 'masha', 'ratti', 'point'] as const).map((u) => (
-                                        <div key={u} className="form-group">
-                                            <label className="form-label" style={{textTransform: 'capitalize'}}>{u}</label>
-                                            <input
-                                                type="number" step="any" min="0" className="form-input"
-                                                value={(gross as any)[u]}
-                                                onFocus={() => { grossWeightFocused.current = true; }}
-                                                onBlur={() => { grossWeightFocused.current = false; }}
-                                                onChange={(e) => {
-                                                    setGrossWeightError('');
-                                                    handleUnitChange(setGross, gross, u, e.target.value, setGrossGrams);
-                                                }}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                                {(grossWeightError || errors.gross_weight_grams) && (
-                                    <div style={{ color: '#dc2626', fontSize: '0.825rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                        <AlertCircle size={15} />
-                                        <span>{grossWeightError || errors.gross_weight_grams}</span>
-                                    </div>
-                                )}
                             </div>
-
-                            <div className="weight-section">
-                                <div className="weight-title">Stone &amp; Polish Weight (Gram)</div>
-                                <div className="weight-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                                    <div className="form-group">
-                                        <label className="form-label">Stone Weight (−)</label>
-                                        <input
-                                            type="number" step="any" min="0" className="form-input"
-                                            value={stone.gram}
-                                            onChange={(e) => handleStoneGramChange(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Polish Weight (+)</label>
-                                        <input
-                                            type="number" step="any" min="0" className="form-input"
-                                            value={polish.gram}
-                                            onChange={(e) => handlePolishGramChange(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="weight-section">
-                                <div className="weight-title">Cutting Loss (Deduction)</div>
-                                <div className="weight-grid">
-                                    {(['gram', 'tola', 'masha', 'ratti', 'point'] as const).map((u) => (
-                                        <div key={u} className="form-group">
-                                            <label className="form-label" style={{textTransform: 'capitalize'}}>{u}</label>
-                                            <input
-                                                type="number" step="any" min="0" className="form-input"
-                                                value={(cutting as any)[u]}
-                                                onChange={(e) => handleUnitChange(setCutting, cutting, u, e.target.value, setCuttingGrams)}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Costing Card */}
-                        <div className="item-card">
-                            <h2 className="card-title">Costing & Pricing</h2>
-                            
-                            <div className="form-grid">
-                                <div className="form-group">
-                                    <label className="form-label">Purchase Rate (per Gram)</label>
-                                    <input
-                                        type="number" step="any" min="0" className="form-input"
-                                        value={data.purchase_rate_per_gram || ''}
-                                        onChange={e => { rateTouched.current = true; setData('purchase_rate_per_gram', parseFloat(e.target.value) || 0); }}
-                                    />
-                                    {hasLiveRate && (
-                                        <div className="rate-hint">
-                                            Today's {availablePurities.find(p => String(p.id) === String(data.purity_id))?.name} rate:{' '}
-                                            <strong>Rs {formatNumber(liveRate, 2)}</strong> / g
-                                            {Number(data.purchase_rate_per_gram) !== liveRate && (
-                                                <button
-                                                    type="button"
-                                                    className="rate-hint-use"
-                                                    onClick={() => { rateTouched.current = true; setData('purchase_rate_per_gram', liveRate); }}
-                                                >
-                                                    use this
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Labour Cost (Total)</label>
-                                    <input type="number" step="any" min="0" className="form-input" value={data.labour_cost || ''} onChange={e => setData('labour_cost', parseFloat(e.target.value) || 0)} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Summary & Actions */}
-                        <div className="summary-panel">
-                            <h2 className="summary-title">Calculation Summary</h2>
-
-                            <div className="summary-row">
-                                <span>Gross Weight</span>
-                                <span className="summary-value">{formatNumber(grossGrams, 3)} g</span>
-                            </div>
-                            <div className="summary-row">
-                                <span>- Stone Weight</span>
-                                <span className="summary-value">{formatNumber(stoneGrams, 3)} g</span>
-                            </div>
-                            <div className="summary-row">
-                                <span>- Cutting Loss</span>
-                                <span className="summary-value">{formatNumber(cuttingGrams, 3)} g</span>
-                            </div>
-                            <div className="summary-row">
-                                <span>+ Polish (Added Weight)</span>
-                                <span className="summary-value">{formatNumber(polishGrams, 3)} g</span>
-                            </div>
-
-                            <div className="summary-row total" style={{marginTop: '0.6rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(241,236,224,0.16)'}}>
-                                <span>Net Weight</span>
-                                <span className="summary-value">{formatNumber(netGrams, 3)} g</span>
-                            </div>
-
-                            <div className="summary-row" style={{marginTop: '1.1rem'}}>
-                                <span>Metal Value (Net x Rate)</span>
-                                <span className="summary-value">{(netGrams * data.purchase_rate_per_gram).toFixed(2)}</span>
-                            </div>
-                            <div className="summary-row">
-                                <span>+ Labour Cost</span>
-                                <span className="summary-value">{data.labour_cost.toFixed(2)}</span>
-                            </div>
-
-                            <div className="summary-row total">
-                                <span>Total Price</span>
-                                <span className="summary-value">{totalPrice.toFixed(2)}</span>
-                            </div>
-
-                            <div className="form-group" style={{marginTop: '1rem'}}>
-                                <label className="form-label" style={{ color: '#c7bfa9' }}>Reason for change (optional)</label>
+                            <div className="form-group">
+                                <label className="form-label">Labour Cost (Total)</label>
                                 <input
-                                    type="text"
+                                    type="number"
+                                    step="any"
+                                    min="0"
                                     className="form-input"
-                                    value={data.edit_reason}
-                                    onChange={e => setData('edit_reason', e.target.value)}
-                                    placeholder="e.g. corrected a weighing error"
-                                    maxLength={255}
+                                    value={data.labour_cost || ''}
+                                    onChange={(e) => setData('labour_cost', parseFloat(e.target.value) || 0)}
                                 />
-                                {errors.edit_reason && <div className="text-red-500 text-xs mt-1">{errors.edit_reason}</div>}
-                                <span style={{ fontSize: '0.78rem', opacity: 0.75, marginTop: '0.35rem', display: 'block' }}>
-                                    Only matters if you're changing the price or weight — it's saved to the audit trail.
-                                </span>
-                            </div>
-
-                            <div className="form-actions" style={{marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem'}}>
-                                <div style={{display: 'flex', flexDirection: 'row', gap: '0.6rem'}}>
-                                    <button type="submit" className="btn-primary" style={{flex: 1}} disabled={processing || pendingAction !== null}>
-                                        {pendingAction === 'save' ? 'Updating...' : 'Save'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="btn-secondary"
-                                        style={{flex: 1}}
-                                        disabled={processing || pendingAction !== null}
-                                        onClick={() => submit('print')}
-                                    >
-                                        {pendingAction === 'print' ? (printItem ? 'Printing...' : 'Updating...') : 'Print'}
-                                    </button>
-                                </div>
-                                <Link
-                                    href="/inventory"
-                                    style={{
-                                        textAlign: 'center',
-                                        color: 'rgba(241,236,224,0.85)',
-                                        fontSize: '0.9rem',
-                                        textDecoration: 'underline',
-                                        padding: '0.5rem'
-                                    }}
-                                >
-                                    Cancel & Return
-                                </Link>
                             </div>
                         </div>
+                    </div>
 
+                    {/* Summary & Actions */}
+                    <div className="summary-panel">
+                        <h2 className="summary-title">Calculation Summary</h2>
+
+                        <div className="summary-row">
+                            <span>Gross Weight</span>
+                            <span className="summary-value">{formatNumber(grossGrams, 3)} g</span>
+                        </div>
+                        <div className="summary-row">
+                            <span>- Stone Weight</span>
+                            <span className="summary-value">{formatNumber(stoneGrams, 3)} g</span>
+                        </div>
+                        <div className="summary-row">
+                            <span>- Cutting Loss</span>
+                            <span className="summary-value">{formatNumber(cuttingGrams, 3)} g</span>
+                        </div>
+                        <div className="summary-row">
+                            <span>+ Polish (Added Weight)</span>
+                            <span className="summary-value">{formatNumber(polishGrams, 3)} g</span>
+                        </div>
+
+                        <div
+                            className="summary-row total"
+                            style={{ marginTop: '0.6rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(241,236,224,0.16)' }}
+                        >
+                            <span>Net Weight</span>
+                            <span className="summary-value">{formatNumber(netGrams, 3)} g</span>
+                        </div>
+
+                        <div className="summary-row" style={{ marginTop: '1.1rem' }}>
+                            <span>Metal Value (Net x Rate)</span>
+                            <span className="summary-value">{(netGrams * data.purchase_rate_per_gram).toFixed(2)}</span>
+                        </div>
+                        <div className="summary-row">
+                            <span>+ Labour Cost</span>
+                            <span className="summary-value">{data.labour_cost.toFixed(2)}</span>
+                        </div>
+
+                        <div className="summary-row total">
+                            <span>Total Price</span>
+                            <span className="summary-value">{totalPrice.toFixed(2)}</span>
+                        </div>
+
+                        <div className="form-group" style={{ marginTop: '1rem' }}>
+                            <label className="form-label" style={{ color: '#c7bfa9' }}>
+                                Reason for change (optional)
+                            </label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                value={data.edit_reason}
+                                onChange={(e) => setData('edit_reason', e.target.value)}
+                                placeholder="e.g. corrected a weighing error"
+                                maxLength={255}
+                            />
+                            {errors.edit_reason && <div className="mt-1 text-xs text-red-500">{errors.edit_reason}</div>}
+                            <span style={{ fontSize: '0.78rem', opacity: 0.75, marginTop: '0.35rem', display: 'block' }}>
+                                Only matters if you're changing the price or weight — it's saved to the audit trail.
+                            </span>
+                        </div>
+
+                        <div className="form-actions" style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'row', gap: '0.6rem' }}>
+                                <button type="submit" className="btn-primary" style={{ flex: 1 }} disabled={processing || pendingAction !== null}>
+                                    {pendingAction === 'save' ? 'Updating...' : 'Save'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    style={{ flex: 1 }}
+                                    disabled={processing || pendingAction !== null}
+                                    onClick={() => submit('print')}
+                                >
+                                    {pendingAction === 'print' ? (printItem ? 'Printing...' : 'Updating...') : 'Print'}
+                                </button>
+                            </div>
+                            <Link
+                                href="/inventory"
+                                style={{
+                                    textAlign: 'center',
+                                    color: 'rgba(241,236,224,0.85)',
+                                    fontSize: '0.9rem',
+                                    textDecoration: 'underline',
+                                    padding: '0.5rem',
+                                }}
+                            >
+                                Cancel & Return
+                            </Link>
+                        </div>
+                    </div>
                 </form>
 
                 <div className="print-only">
-                    {printItem && (
-                        <ItemEntryPrintSlip item={printItem} shop={shop} printerType={printerType} printDimensions={printDimensions} />
-                    )}
+                    {printItem && <ItemEntryPrintSlip item={printItem} shop={shop} printerType={printerType} printDimensions={printDimensions} />}
                 </div>
             </div>
 

@@ -1,11 +1,11 @@
-import { Head, router, Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Eye, Edit, Trash2, X, Printer } from 'lucide-react';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import '../../../css/inventory.css';
 import { formatNumber, fromGrams } from '@/utils/weight';
+import { Head, Link, router } from '@inertiajs/react';
+import { Edit, Eye, Printer, Trash2, X } from 'lucide-react';
+import { useState } from 'react';
+import '../../../css/inventory.css';
 
 /** Sentinel for Radix's "no value selected" — it can't accept an empty string. */
 const ALL = '__all__';
@@ -27,7 +27,11 @@ interface SelectOptionGroup {
  * display-scaling settings. This one is a real DOM popup we control.
  */
 function FilterSelect({
-    value, onChange, placeholder, options, groups,
+    value,
+    onChange,
+    placeholder,
+    options,
+    groups,
 }: {
     value: string;
     onChange: (v: string) => void;
@@ -36,20 +40,26 @@ function FilterSelect({
     groups?: SelectOptionGroup[];
 }) {
     return (
-        <Select value={value || ALL} onValueChange={v => onChange(v === ALL ? '' : v)}>
+        <Select value={value || ALL} onValueChange={(v) => onChange(v === ALL ? '' : v)}>
             <SelectTrigger className="inv-select-trigger">
                 <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent className="inv-select-content">
-                <SelectItem className="inv-select-item" value={ALL}>{placeholder}</SelectItem>
-                {options?.map(o => (
-                    <SelectItem key={o.value} className="inv-select-item" value={o.value}>{o.label}</SelectItem>
+                <SelectItem className="inv-select-item" value={ALL}>
+                    {placeholder}
+                </SelectItem>
+                {options?.map((o) => (
+                    <SelectItem key={o.value} className="inv-select-item" value={o.value}>
+                        {o.label}
+                    </SelectItem>
                 ))}
-                {groups?.map(g => (
+                {groups?.map((g) => (
                     <SelectGroup key={g.label}>
                         <SelectLabel className="inv-select-group-label">{g.label}</SelectLabel>
-                        {g.options.map(o => (
-                            <SelectItem key={o.value} className="inv-select-item" value={o.value}>{o.label}</SelectItem>
+                        {g.options.map((o) => (
+                            <SelectItem key={o.value} className="inv-select-item" value={o.value}>
+                                {o.label}
+                            </SelectItem>
                         ))}
                     </SelectGroup>
                 ))}
@@ -118,16 +128,20 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
 
     const handleFilter = (e: any) => {
         e.preventDefault();
-        router.get('/inventory', {
-            metal_type_id: metalFilter,
-            purity_id: purityFilter,
-            item_type: typeFilter,
-            date: dateFilter,
-            source_party_id: sourceFilter,
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/inventory',
+            {
+                metal_type_id: metalFilter,
+                purity_id: purityFilter,
+                item_type: typeFilter,
+                date: dateFilter,
+                source_party_id: sourceFilter,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const clearFilters = () => {
@@ -176,7 +190,8 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                                 </div>
                                 {row.bought_back_count > 0 && (
                                     <div className="inv-stock-scrap">
-                                        + {formatNumber(row.bought_back_grams, 3)} g from {row.bought_back_count} bought-back piece{row.bought_back_count === 1 ? '' : 's'} (not yet reprocessed)
+                                        + {formatNumber(row.bought_back_grams, 3)} g from {row.bought_back_count} bought-back piece
+                                        {row.bought_back_count === 1 ? '' : 's'} (not yet reprocessed)
                                     </div>
                                 )}
                             </div>
@@ -207,12 +222,7 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
 
                     <div className="filter-group">
                         <label className="filter-label">Item Type</label>
-                        <FilterSelect
-                            value={typeFilter}
-                            onChange={setTypeFilter}
-                            placeholder="All Types"
-                            groups={ITEM_TYPE_GROUPS}
-                        />
+                        <FilterSelect value={typeFilter} onChange={setTypeFilter} placeholder="All Types" groups={ITEM_TYPE_GROUPS} />
                     </div>
 
                     <div className="filter-group">
@@ -227,121 +237,151 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
 
                     <div className="filter-group">
                         <label className="filter-label">Date Received</label>
-                        <input type="date" className="filter-input" value={dateFilter} onChange={e => setDateFilter(e.target.value)} />
+                        <input type="date" className="filter-input" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
                     </div>
 
-                    <button type="submit" className="filter-btn">Apply Filters</button>
+                    <button type="submit" className="filter-btn">
+                        Apply Filters
+                    </button>
                     {(metalFilter || purityFilter || typeFilter || dateFilter || sourceFilter) && (
-                        <button type="button" onClick={clearFilters} className="filter-clear">Clear</button>
+                        <button type="button" onClick={clearFilters} className="filter-clear">
+                            Clear
+                        </button>
                     )}
                 </form>
 
                 <div className="table-container">
                     <div className="table-scroll">
-                    <table className="inventory-table">
-                        <thead>
-                            <tr>
-                                <th>Item Code</th>
-                                <th>Type & Metal</th>
-                                <th>Source</th>
-                                <th>Net Weight</th>
-                                <th>Total Cost</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Age</th>
-                                <th style={{ textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {items.data.length === 0 ? (
+                        <table className="inventory-table">
+                            <thead>
                                 <tr>
-                                    <td colSpan={9} className="empty-state" style={{ padding: 0 }}>
-                                        <div style={{ position: 'sticky', left: 0, width: '100%', padding: '4rem 1rem', display: 'flex', justifyContent: 'center' }}>
-                                            No items found in inventory matching your filters.
-                                        </div>
-                                    </td>
+                                    <th>Item Code</th>
+                                    <th>Type & Metal</th>
+                                    <th>Source</th>
+                                    <th>Net Weight</th>
+                                    <th>Total Cost</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Age</th>
+                                    <th style={{ textAlign: 'right' }}>Actions</th>
                                 </tr>
-                            ) : (
-                                items.data.map((item: any) => (
-                                    <tr key={item.id}>
-                                        <td><strong>{item.item_code}</strong></td>
-                                        <td>
-                                            <div style={{ textTransform: 'capitalize', marginBottom: '0.25rem' }}>{item.item_type}</div>
-                                            <span className={`badge ${item.metal_type?.name?.toLowerCase() === 'gold' ? 'badge-gold' : 'badge-silver'}`}>
-                                                {item.metal_type?.name} • {item.purity?.name}
-                                            </span>
-                                        </td>
-                                        <td>{item.source_party?.name || '-'}</td>
-                                        <td className="weight-text">{formatNumber(item.net_weight_grams, 3)} g</td>
-                                        <td className="price-text">Rs {formatNumber(item.purchase_price, 2)}</td>
-                                        <td>
-                                            <span style={{
-                                                color: item.status === 'in_stock' ? '#16a34a' : '#9ca3af',
-                                                textTransform: 'capitalize',
-                                                fontWeight: 500
-                                            }}>
-                                                {item.status.replace('_', ' ')}
-                                            </span>
-                                        </td>
-                                        <td>{new Date(item.date_received).toLocaleDateString()}</td>
-                                        <td>
-                                            {(() => {
-                                                const a = agingInfo(item.date_received, item.status);
-                                                return <span className={`inv-age ${a.cls}`}>{a.text}</span>;
-                                            })()}
-                                        </td>
-                                        <td>
-                                            <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                                                <button
-                                                    type="button"
-                                                    className="action-btn view"
-                                                    title="View Item Details"
-                                                    onClick={() => setViewItem(item)}
-                                                >
-                                                    <Eye size={16} />
-                                                </button>
-                                                <Link
-                                                    href={`/items/${item.id}/tag`}
-                                                    className="action-btn"
-                                                    title="Print Tag"
-                                                    style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}
-                                                >
-                                                    <Printer size={16} />
-                                                </Link>
-                                                <Link
-                                                    href={`/items/${item.id}/edit`}
-                                                    className="action-btn edit"
-                                                    title="Edit Item"
-                                                    style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                                                >
-                                                    <Edit size={16} />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    className="action-btn delete"
-                                                    title="Delete Item"
-                                                    onClick={() => handleDelete(item)}
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
+                            </thead>
+                            <tbody>
+                                {items.data.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={9} className="empty-state" style={{ padding: 0 }}>
+                                            <div
+                                                style={{
+                                                    position: 'sticky',
+                                                    left: 0,
+                                                    width: '100%',
+                                                    padding: '4rem 1rem',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                }}
+                                            >
+                                                No items found in inventory matching your filters.
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    items.data.map((item: any) => (
+                                        <tr key={item.id}>
+                                            <td>
+                                                <strong>{item.item_code}</strong>
+                                            </td>
+                                            <td>
+                                                <div style={{ textTransform: 'capitalize', marginBottom: '0.25rem' }}>{item.item_type}</div>
+                                                <span
+                                                    className={`badge ${item.metal_type?.name?.toLowerCase() === 'gold' ? 'badge-gold' : 'badge-silver'}`}
+                                                >
+                                                    {item.metal_type?.name} • {item.purity?.name}
+                                                </span>
+                                            </td>
+                                            <td>{item.source_party?.name || '-'}</td>
+                                            <td className="weight-text">{formatNumber(item.net_weight_grams, 3)} g</td>
+                                            <td className="price-text">Rs {formatNumber(item.purchase_price, 2)}</td>
+                                            <td>
+                                                <span
+                                                    style={{
+                                                        color: item.status === 'in_stock' ? '#16a34a' : '#9ca3af',
+                                                        textTransform: 'capitalize',
+                                                        fontWeight: 500,
+                                                    }}
+                                                >
+                                                    {item.status.replace('_', ' ')}
+                                                </span>
+                                            </td>
+                                            <td>{new Date(item.date_received).toLocaleDateString()}</td>
+                                            <td>
+                                                {(() => {
+                                                    const a = agingInfo(item.date_received, item.status);
+                                                    return <span className={`inv-age ${a.cls}`}>{a.text}</span>;
+                                                })()}
+                                            </td>
+                                            <td>
+                                                <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        type="button"
+                                                        className="action-btn view"
+                                                        title="View Item Details"
+                                                        onClick={() => setViewItem(item)}
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
+                                                    <Link
+                                                        href={`/items/${item.id}/tag`}
+                                                        className="action-btn"
+                                                        title="Print Tag"
+                                                        style={{
+                                                            textDecoration: 'none',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            color: '#6366f1',
+                                                        }}
+                                                    >
+                                                        <Printer size={16} />
+                                                    </Link>
+                                                    <Link
+                                                        href={`/items/${item.id}/edit`}
+                                                        className="action-btn edit"
+                                                        title="Edit Item"
+                                                        style={{
+                                                            textDecoration: 'none',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                        }}
+                                                    >
+                                                        <Edit size={16} />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        className="action-btn delete"
+                                                        title="Delete Item"
+                                                        onClick={() => handleDelete(item)}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
 
                     {/* Basic Pagination */}
                     {items.links && items.links.length > 3 && (
                         <div className="pagination">
-                        <div style={{ color: 'var(--color-muted-foreground, #6b7280)', fontSize: '0.9rem' }}>
+                            <div style={{ color: 'var(--color-muted-foreground, #6b7280)', fontSize: '0.9rem' }}>
                                 Showing {items.from || 0} to {items.to || 0} of {items.total} results
                             </div>
                             <div className="pagination-links">
                                 {items.links.map((link: any, index: number) => (
-                                    <Link 
+                                    <Link
                                         key={index}
                                         href={link.url || '#'}
                                         className={`page-link ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
@@ -356,7 +396,7 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                 {/* Quick View Item Modal */}
                 {viewItem && (
                     <div className="item-modal-overlay" onMouseDown={() => setViewItem(null)}>
-                        <div className="item-modal" onMouseDown={e => e.stopPropagation()}>
+                        <div className="item-modal" onMouseDown={(e) => e.stopPropagation()}>
                             {/* Modal Header */}
                             <div className="item-modal-head">
                                 <div>
@@ -395,10 +435,18 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                                 <div className="item-modal-trad">
                                     <div className="item-modal-trad-title">Net Weight in Traditional Units</div>
                                     <div className="item-modal-trad-grid">
-                                        <div>Tola <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'tola'), 3)}</strong></div>
-                                        <div>Masha <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'masha'), 3)}</strong></div>
-                                        <div>Ratti <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'ratti'), 3)}</strong></div>
-                                        <div>Point <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'point'), 3)}</strong></div>
+                                        <div>
+                                            Tola <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'tola'), 3)}</strong>
+                                        </div>
+                                        <div>
+                                            Masha <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'masha'), 3)}</strong>
+                                        </div>
+                                        <div>
+                                            Ratti <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'ratti'), 3)}</strong>
+                                        </div>
+                                        <div>
+                                            Point <strong>{formatNumber(fromGrams(parseFloat(viewItem.net_weight_grams) || 0, 'point'), 3)}</strong>
+                                        </div>
                                     </div>
                                 </div>
 

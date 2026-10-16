@@ -34,7 +34,11 @@
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
     color: var(--zk-ink);
 }
 
@@ -261,7 +265,10 @@
     width: 100%;
     box-sizing: border-box;
     font-family: inherit;
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        background 0.15s,
+        box-shadow 0.15s;
 }
 
 .zk-input:focus,

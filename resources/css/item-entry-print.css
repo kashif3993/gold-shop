@@ -11,7 +11,11 @@
    ============================================================================ */
 
 .ies-area {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
     color: #111827;
     width: var(--ies-width, 80mm);
     padding: var(--ies-padding, 4mm);

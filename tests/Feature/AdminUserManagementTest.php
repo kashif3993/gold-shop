@@ -11,6 +11,7 @@ class AdminUserManagementTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $shopkeeper;
 
     protected function setUp(): void

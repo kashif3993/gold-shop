@@ -1,12 +1,15 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { LineChart } from '@/components/simple-charts';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
-import { LineChart } from '@/components/simple-charts';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import '../../../../css/admin.css';
 import '../../../../css/simple-charts.css';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admin', href: '/admin' }, { title: 'Daily Rates', href: '/admin/daily-rates' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Admin', href: '/admin' },
+    { title: 'Daily Rates', href: '/admin/daily-rates' },
+];
 
 const fmt = (n: number | string | null) =>
     n == null ? '—' : 'Rs ' + new Intl.NumberFormat('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n));
@@ -30,7 +33,17 @@ interface ChartSeries {
     points: { date: string; rate: number }[];
 }
 
-export default function DailyRatesIndex({ rates, filters, metals, chartSeries }: { rates: any; filters: any; metals: Metal[]; chartSeries: ChartSeries[] }) {
+export default function DailyRatesIndex({
+    rates,
+    filters,
+    metals,
+    chartSeries,
+}: {
+    rates: any;
+    filters: any;
+    metals: Metal[];
+    chartSeries: ChartSeries[];
+}) {
     const { flash } = usePage().props as any;
     const [metalId, setMetalId] = useState(filters.metal_type_id || '');
     const [purityId, setPurityId] = useState(filters.purity_id || '');
@@ -38,17 +51,29 @@ export default function DailyRatesIndex({ rates, filters, metals, chartSeries }:
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
 
-    const availablePurities = metals.find(m => String(m.id) === String(metalId))?.purities ?? [];
+    const availablePurities = metals.find((m) => String(m.id) === String(metalId))?.purities ?? [];
 
     const applyFilters = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get('/admin/daily-rates', {
-            metal_type_id: metalId, purity_id: purityId, source, date_from: dateFrom, date_to: dateTo,
-        }, { preserveState: true, preserveScroll: true });
+        router.get(
+            '/admin/daily-rates',
+            {
+                metal_type_id: metalId,
+                purity_id: purityId,
+                source,
+                date_from: dateFrom,
+                date_to: dateTo,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const clearFilters = () => {
-        setMetalId(''); setPurityId(''); setSource(''); setDateFrom(''); setDateTo('');
+        setMetalId('');
+        setPurityId('');
+        setSource('');
+        setDateFrom('');
+        setDateTo('');
         router.get('/admin/daily-rates');
     };
 
@@ -70,21 +95,36 @@ export default function DailyRatesIndex({ rates, filters, metals, chartSeries }:
                 <form className="adm-card adm-form-row" onSubmit={applyFilters}>
                     <div className="adm-field">
                         <label className="adm-label">Metal</label>
-                        <select className="adm-select" value={metalId} onChange={e => { setMetalId(e.target.value); setPurityId(''); }}>
+                        <select
+                            className="adm-select"
+                            value={metalId}
+                            onChange={(e) => {
+                                setMetalId(e.target.value);
+                                setPurityId('');
+                            }}
+                        >
                             <option value="">All</option>
-                            {metals.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                            {metals.map((m) => (
+                                <option key={m.id} value={m.id}>
+                                    {m.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div className="adm-field">
                         <label className="adm-label">Purity</label>
-                        <select className="adm-select" value={purityId} onChange={e => setPurityId(e.target.value)}>
+                        <select className="adm-select" value={purityId} onChange={(e) => setPurityId(e.target.value)}>
                             <option value="">All</option>
-                            {availablePurities.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            {availablePurities.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                    {p.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div className="adm-field">
                         <label className="adm-label">Source</label>
-                        <select className="adm-select" value={source} onChange={e => setSource(e.target.value)}>
+                        <select className="adm-select" value={source} onChange={(e) => setSource(e.target.value)}>
                             <option value="">All</option>
                             <option value="api">API</option>
                             <option value="manual">Manual / Override</option>
@@ -92,24 +132,30 @@ export default function DailyRatesIndex({ rates, filters, metals, chartSeries }:
                     </div>
                     <div className="adm-field">
                         <label className="adm-label">From</label>
-                        <input type="date" className="adm-input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                        <input type="date" className="adm-input" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
                     </div>
                     <div className="adm-field">
                         <label className="adm-label">To</label>
-                        <input type="date" className="adm-input" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                        <input type="date" className="adm-input" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
                     </div>
-                    <button type="submit" className="adm-btn adm-btn-gold">Apply</button>
-                    {hasFilters && <button type="button" className="adm-btn adm-btn-ghost" onClick={clearFilters}>Clear</button>}
+                    <button type="submit" className="adm-btn adm-btn-gold">
+                        Apply
+                    </button>
+                    {hasFilters && (
+                        <button type="button" className="adm-btn adm-btn-ghost" onClick={clearFilters}>
+                            Clear
+                        </button>
+                    )}
                 </form>
 
                 <div className="adm-card">
                     <h2 className="adm-card-title">Rate trend</h2>
                     <p className="adm-card-sub">One line per purity currently in view, matching the filters above.</p>
                     <LineChart
-                        series={chartSeries.map(s => ({
+                        series={chartSeries.map((s) => ({
                             name: `${s.metal} (${s.purity})`,
                             color: metalColor(s.metal),
-                            points: s.points.map(p => ({ x: p.date, y: p.rate })),
+                            points: s.points.map((p) => ({ x: p.date, y: p.rate })),
                         }))}
                     />
                 </div>
@@ -130,15 +176,25 @@ export default function DailyRatesIndex({ rates, filters, metals, chartSeries }:
                             </thead>
                             <tbody>
                                 {rates.data.length === 0 ? (
-                                    <tr><td colSpan={7} className="adm-empty">No rates match your filters.</td></tr>
+                                    <tr>
+                                        <td colSpan={7} className="adm-empty">
+                                            No rates match your filters.
+                                        </td>
+                                    </tr>
                                 ) : (
                                     rates.data.map((r: any) => (
                                         <tr key={r.id}>
                                             <td>{r.rate_date}</td>
                                             <td>{r.metal_type?.name ?? '—'}</td>
                                             <td>{r.purity?.name ?? '—'}</td>
-                                            <td style={{ textAlign: 'right' }} className="adm-num">{fmt(r.rate_per_gram)}</td>
-                                            <td><span className={`adm-badge ${r.source === 'api' ? 'adm-badge-api' : 'adm-badge-manual'}`}>{r.source}</span></td>
+                                            <td style={{ textAlign: 'right' }} className="adm-num">
+                                                {fmt(r.rate_per_gram)}
+                                            </td>
+                                            <td>
+                                                <span className={`adm-badge ${r.source === 'api' ? 'adm-badge-api' : 'adm-badge-manual'}`}>
+                                                    {r.source}
+                                                </span>
+                                            </td>
                                             <td>{r.entered_by?.username ?? <span className="adm-muted">system</span>}</td>
                                             <td className="adm-muted">{r.fetched_at ? new Date(r.fetched_at).toLocaleString() : '—'}</td>
                                         </tr>
@@ -150,7 +206,9 @@ export default function DailyRatesIndex({ rates, filters, metals, chartSeries }:
 
                     {rates.total > 0 && (
                         <div className="adm-pagination">
-                            <div>Showing {rates.from} to {rates.to} of {rates.total}</div>
+                            <div>
+                                Showing {rates.from} to {rates.to} of {rates.total}
+                            </div>
                             {rates.links && rates.links.length > 3 && (
                                 <div className="adm-page-links">
                                     {rates.links.map((link: any, i: number) => (

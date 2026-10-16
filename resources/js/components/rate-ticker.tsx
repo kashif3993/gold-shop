@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
 import '../../css/rate-ticker.css';
 
 interface TickerRate {
@@ -11,12 +11,10 @@ interface TickerRate {
     is_stale: boolean;
 }
 
-const money = (n: number) =>
-    'Rs ' + new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 }).format(Math.round(Number(n) || 0));
+const money = (n: number) => 'Rs ' + new Intl.NumberFormat('en-PK', { maximumFractionDigits: 0 }).format(Math.round(Number(n) || 0));
 
 // "Silver" + "835 Silver" → "835 Silver"; "Gold" + "22K" → "Gold 22K"
-const rateLabel = (metal: string, purity: string) =>
-    purity.toLowerCase().includes(metal.toLowerCase()) ? purity : `${metal} ${purity}`;
+const rateLabel = (metal: string, purity: string) => (purity.toLowerCase().includes(metal.toLowerCase()) ? purity : `${metal} ${purity}`);
 
 /**
  * Sliding marquee of the current gold/silver rates (per tola, with per-gram
@@ -65,7 +63,7 @@ export default function RateTicker({ className = '' }: { className?: string }) {
     ));
 
     return (
-        <div className={`rtk${feedStale ? ' rtk-is-stale' : ''}${className ? ' ' + className : ''}`} aria-label="Current metal rates">
+        <div className={`rtk${feedStale ? 'rtk-is-stale' : ''}${className ? ' ' + className : ''}`} aria-label="Current metal rates">
             <span className="rtk-tag">{feedStale ? 'Rate · stale' : 'Live rate'}</span>
             <div className="rtk-viewport">
                 {/* duplicated once for a seamless -50% loop */}

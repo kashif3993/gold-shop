@@ -15,8 +15,11 @@ class AdminPanelTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $shopkeeper;
+
     private MetalType $gold;
+
     private Purity $purity;
 
     protected function setUp(): void

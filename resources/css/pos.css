@@ -50,7 +50,9 @@
     border: 1px solid #e9e3d8;
     border-radius: 1rem;
     padding: 1.25rem;
-    box-shadow: 0 4px 24px 0 rgba(179, 138, 54, 0.07), 0 1px 4px 0 rgba(0,0,0,0.04);
+    box-shadow:
+        0 4px 24px 0 rgba(179, 138, 54, 0.07),
+        0 1px 4px 0 rgba(0, 0, 0, 0.04);
     position: sticky;
     top: 1rem;
     max-height: calc(100vh - 90px);
@@ -131,8 +133,15 @@
 }
 
 @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.45; transform: scale(0.75); }
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.45;
+        transform: scale(0.75);
+    }
 }
 
 /* ── Gold Rate Input ────────────────────── */
@@ -142,7 +151,9 @@
 
 .pos-input-prefix {
     position: absolute;
-    top: 0; bottom: 0; left: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
     padding-left: 0.75rem;
     display: flex;
     align-items: center;
@@ -154,7 +165,9 @@
 
 .pos-input-suffix {
     position: absolute;
-    top: 0; bottom: 0; right: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
     padding-right: 0.75rem;
     display: flex;
     align-items: center;
@@ -174,7 +187,9 @@
     font-weight: 800;
     font-size: 1.05rem;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .pos-gold-rate-input:focus {
@@ -214,8 +229,12 @@
     text-align: right;
 }
 
-.pos-bill-row-value--gold  { color: #b38a36; }
-.pos-bill-row-value--red   { color: #ef4444; }
+.pos-bill-row-value--gold {
+    color: #b38a36;
+}
+.pos-bill-row-value--red {
+    color: #ef4444;
+}
 
 /* Discount row */
 .pos-discount-row {
@@ -260,7 +279,9 @@
     background: transparent;
     color: #9ca3af;
     cursor: pointer;
-    transition: background 0.1s, color 0.1s;
+    transition:
+        background 0.1s,
+        color 0.1s;
     line-height: 1;
 }
 
@@ -281,7 +302,9 @@
     color: #111827;
     background: #fff;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .pos-discount-input:focus {
@@ -368,14 +391,14 @@
 
 .pos-payment-tab:hover {
     color: #374151;
-    background: rgba(255,255,255,0.6);
+    background: rgba(255, 255, 255, 0.6);
 }
 
 .pos-payment-tab.active {
     background: #fffbf0;
     color: #b38a36;
     border-color: #e6d5a7;
-    box-shadow: 0 1px 3px rgba(179,138,54,0.12);
+    box-shadow: 0 1px 3px rgba(179, 138, 54, 0.12);
 }
 
 /* ── Action Buttons ──────────────────────── */
@@ -404,7 +427,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.08), transparent);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.08), transparent);
     pointer-events: none;
 }
 

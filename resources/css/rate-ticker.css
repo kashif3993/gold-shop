@@ -12,7 +12,11 @@
     background: linear-gradient(90deg, #fdf6e3, #fffdf6);
     border-radius: 10px;
     height: 40px;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
 }
 
 .rtk-tag {
@@ -46,9 +50,15 @@
 }
 
 @keyframes rtk-pulse {
-    0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.55); }
-    70% { box-shadow: 0 0 0 6px rgba(212, 175, 55, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    0% {
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.55);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(212, 175, 55, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+    }
 }
 
 .rtk-viewport {
@@ -78,8 +88,12 @@
 }
 
 @keyframes rtk-scroll {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
 }
 
 .rtk-item {

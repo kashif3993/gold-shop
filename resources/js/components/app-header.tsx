@@ -11,7 +11,22 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Database, SquarePen, Users, FileText, BarChart2, TrendingUp, Settings, ShoppingCart, LayoutGrid, Folder, BookOpen, Menu, Search, ShieldCheck } from 'lucide-react';
+import {
+    BarChart2,
+    BookOpen,
+    Database,
+    FileText,
+    Folder,
+    LayoutDashboard,
+    Menu,
+    Search,
+    Settings,
+    ShieldCheck,
+    ShoppingCart,
+    SquarePen,
+    TrendingUp,
+    Users,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
@@ -87,9 +102,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const { auth } = page.props;
     const getInitials = useInitials();
     const isAdmin = (auth?.user as any)?.role === 'admin';
-    const mainNavItemsWithAdmin = isAdmin
-        ? [...mainNavItems, { title: 'Admin', url: '/admin', icon: ShieldCheck }]
-        : mainNavItems;
+    const mainNavItemsWithAdmin = isAdmin ? [...mainNavItems, { title: 'Admin', url: '/admin', icon: ShieldCheck }] : mainNavItems;
     return (
         <>
             <div className="border-sidebar-border/80 border-b">
@@ -102,7 +115,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <Menu className="h-5 w-5" />
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent side="left" className="flex h-full w-64 flex-col items-stretch justify-between bg-sidebar">
+                            <SheetContent side="left" className="bg-sidebar flex h-full w-64 flex-col items-stretch justify-between">
                                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                                 <SheetHeader className="flex justify-start text-left">
                                     <AppLogoIcon className="h-6 w-6 fill-current text-black dark:text-white" />

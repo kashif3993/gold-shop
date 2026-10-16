@@ -35,7 +35,7 @@ class PartyController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
@@ -45,10 +45,10 @@ class PartyController extends Controller
         }
 
         return Inertia::render('parties/index', [
-            'parties'       => $query->paginate($perPage)->withQueryString(),
-            'partyTypes'    => PartyType::orderBy('id')->get(),
-            'filters'       => $request->only(['party_type_id', 'status', 'search']),
-            'perPage'       => $perPage,
+            'parties' => $query->paginate($perPage)->withQueryString(),
+            'partyTypes' => PartyType::orderBy('id')->get(),
+            'filters' => $request->only(['party_type_id', 'status', 'search']),
+            'perPage' => $perPage,
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
     }
@@ -73,8 +73,8 @@ class PartyController extends Controller
         $party->loadCount(['sourcedItems']);
 
         return Inertia::render('parties/show', [
-            'party'        => $party->load('partyType'),
-            'ledger'       => $ledgerService->build($party),
+            'party' => $party->load('partyType'),
+            'ledger' => $ledgerService->build($party),
             'sourcedItems' => $party->sourcedItems()
                 ->with(['metalType', 'purity'])
                 ->latest('id')
@@ -86,7 +86,7 @@ class PartyController extends Controller
     public function edit(Party $party)
     {
         return Inertia::render('parties/edit', [
-            'party'      => $party->load('partyType'),
+            'party' => $party->load('partyType'),
             'partyTypes' => PartyType::orderBy('id')->get(),
         ]);
     }

@@ -1,9 +1,12 @@
-import { Head, router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
 import '../../../../css/admin.css';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admin', href: '/admin' }, { title: 'Users', href: '/admin/users' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Admin', href: '/admin' },
+    { title: 'Users', href: '/admin/users' },
+];
 
 interface UserRow {
     id: number;
@@ -57,18 +60,20 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {users.map(user => {
+                                {users.map((user) => {
                                     const isSelf = user.id === currentUserId;
                                     return (
                                         <tr key={user.id} className={user.is_active ? '' : 'inactive'}>
-                                            <td>{user.username} {isSelf && <span className="adm-muted">(you)</span>}</td>
+                                            <td>
+                                                {user.username} {isSelf && <span className="adm-muted">(you)</span>}
+                                            </td>
                                             <td className="adm-muted">{user.email ?? '—'}</td>
                                             <td>
                                                 <select
                                                     className="adm-select"
                                                     value={user.role}
                                                     disabled={isSelf}
-                                                    onChange={e => changeRole(user, e.target.value)}
+                                                    onChange={(e) => changeRole(user, e.target.value)}
                                                     style={{ minWidth: '120px' }}
                                                 >
                                                     <option value="shopkeeper">Shopkeeper</option>
@@ -101,7 +106,8 @@ export default function UsersIndex({ users }: { users: UserRow[] }) {
                 </div>
 
                 <p className="adm-card-sub" style={{ maxWidth: '60ch' }}>
-                    New logins are created from the sign-up screen (always as a shopkeeper) — promote someone to admin here afterward. You can't change your own role or deactivate your own account, so the shop can never lock itself out.
+                    New logins are created from the sign-up screen (always as a shopkeeper) — promote someone to admin here afterward. You can't
+                    change your own role or deactivate your own account, so the shop can never lock itself out.
                 </p>
             </div>
         </AdminLayout>

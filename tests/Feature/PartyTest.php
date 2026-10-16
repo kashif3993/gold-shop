@@ -10,6 +10,7 @@ use App\Models\Purity;
 use App\Models\Transaction;
 use App\Models\TransactionType;
 use App\Models\User;
+use App\Services\PartyLedgerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,9 +19,13 @@ class PartyTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private PartyType $customerType;
+
     private PartyType $karigarType;
+
     private MetalType $gold;
+
     private Purity $purity22k;
 
     protected function setUp(): void
@@ -85,7 +90,7 @@ class PartyTest extends TestCase
 
         // Filter by type
         $this->actingAs($this->user)
-            ->get('/parties?party_type_id=' . $this->karigarType->id)
+            ->get('/parties?party_type_id='.$this->karigarType->id)
             ->assertOk()
             ->assertSee('Ustad Bashir')
             ->assertDontSee('Ahmed Khan');
@@ -237,7 +242,7 @@ class PartyTest extends TestCase
             'invoice_id' => Invoice::first()->id,
         ]);
 
-        $ledger = app(\App\Services\PartyLedgerService::class)->build($party->fresh());
+        $ledger = app(PartyLedgerService::class)->build($party->fresh());
 
         $this->assertEquals(206000.0, $ledger['total_out']);
         $this->assertEquals(50000.0, $ledger['total_in']);
@@ -259,7 +264,7 @@ class PartyTest extends TestCase
         $this->makeTransaction($karigar, 'OUT', 40000, ['type_name' => 'karigar_issue']);
         $this->makeTransaction($karigar, 'IN', 100000, ['type_name' => 'karigar_return']);
 
-        $ledger = app(\App\Services\PartyLedgerService::class)->build($karigar->fresh());
+        $ledger = app(PartyLedgerService::class)->build($karigar->fresh());
 
         $this->assertEquals(-60000.0, $ledger['balance']);
         $this->assertStringContainsString('Payable', $ledger['balance_label']);
@@ -280,7 +285,7 @@ class PartyTest extends TestCase
             'transaction_date' => now()->subDays(2),
         ]);
 
-        $ledger = app(\App\Services\PartyLedgerService::class)->build($shop->fresh());
+        $ledger = app(PartyLedgerService::class)->build($shop->fresh());
 
         $this->assertEquals(350000.0, $ledger['total_out']);
         $this->assertEquals(120000.0, $ledger['total_in']);

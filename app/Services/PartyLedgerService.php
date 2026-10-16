@@ -44,28 +44,28 @@ class PartyLedgerService
             }
 
             return [
-                'date'        => $entry['date'],
-                'type'        => $entry['type'],
-                'direction'   => $entry['direction'],
+                'date' => $entry['date'],
+                'type' => $entry['type'],
+                'direction' => $entry['direction'],
                 'description' => $entry['description'],
-                'reference'   => $entry['reference'],
-                'debit'       => $isOut ? round($entry['amount'], 2) : 0.0,
-                'credit'      => $isOut ? 0.0 : round($entry['amount'], 2),
-                'balance'     => round($running, 2),
+                'reference' => $entry['reference'],
+                'debit' => $isOut ? round($entry['amount'], 2) : 0.0,
+                'credit' => $isOut ? 0.0 : round($entry['amount'], 2),
+                'balance' => round($running, 2),
             ];
         });
 
         $balance = round($totalOut - $totalIn, 2);
 
         return [
-            'total_out'     => round($totalOut, 2),
-            'total_in'      => round($totalIn, 2),
-            'balance'       => $balance,
+            'total_out' => round($totalOut, 2),
+            'total_in' => round($totalIn, 2),
+            'balance' => $balance,
             'balance_label' => $balance > 0
                 ? 'Receivable (party owes shop)'
                 : ($balance < 0 ? 'Payable (shop owes party)' : 'Settled'),
-            'entry_count'   => $rows->count(),
-            'entries'       => $rows->all(),
+            'entry_count' => $rows->count(),
+            'entries' => $rows->all(),
         ];
     }
 
@@ -75,15 +75,15 @@ class PartyLedgerService
 
         Invoice::where('party_id', $party->id)->get()->each(function (Invoice $invoice) use ($entries) {
             $entries->push([
-                'ts'          => $invoice->invoice_date?->timestamp ?? 0,
-                'src'         => 0,
-                'seq'         => $invoice->id,
-                'date'        => optional($invoice->invoice_date)->toDateString(),
-                'type'        => 'sale',
-                'direction'   => 'OUT',
+                'ts' => $invoice->invoice_date?->timestamp ?? 0,
+                'src' => 0,
+                'seq' => $invoice->id,
+                'date' => optional($invoice->invoice_date)->toDateString(),
+                'type' => 'sale',
+                'direction' => 'OUT',
                 'description' => 'Sale invoice',
-                'reference'   => $invoice->invoice_number,
-                'amount'      => (float) $invoice->grand_total,
+                'reference' => $invoice->invoice_number,
+                'amount' => (float) $invoice->grand_total,
             ]);
         });
 
@@ -95,15 +95,15 @@ class PartyLedgerService
                 $type = $txn->transactionType?->name ?? 'transaction';
 
                 $entries->push([
-                    'ts'          => $txn->transaction_date?->timestamp ?? 0,
-                    'src'         => 1,
-                    'seq'         => $txn->id,
-                    'date'        => optional($txn->transaction_date)->toDateString(),
-                    'type'        => $type,
-                    'direction'   => $txn->direction,
+                    'ts' => $txn->transaction_date?->timestamp ?? 0,
+                    'src' => 1,
+                    'seq' => $txn->id,
+                    'date' => optional($txn->transaction_date)->toDateString(),
+                    'type' => $type,
+                    'direction' => $txn->direction,
                     'description' => str($type)->replace('_', ' ')->title()->toString(),
-                    'reference'   => $txn->item?->item_code ?? ('TXN-' . $txn->id),
-                    'amount'      => (float) $txn->total_amount,
+                    'reference' => $txn->item?->item_code ?? ('TXN-'.$txn->id),
+                    'amount' => (float) $txn->total_amount,
                 ]);
             });
 

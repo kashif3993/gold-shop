@@ -1,5 +1,5 @@
+import { formatNumber, gramsToTraditional } from '@/utils/weight';
 import * as React from 'react';
-import { gramsToTraditional, formatNumber } from '@/utils/weight';
 
 interface Shop {
     name: string;
@@ -32,8 +32,7 @@ interface PrintDimensions {
     paddingMm: number;
 }
 
-const fmt = (n: number) =>
-    new Intl.NumberFormat('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
+const fmt = (n: number) => new Intl.NumberFormat('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 
 function formatItemType(type: string): string {
     return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -63,7 +62,12 @@ function weightRow(grams: number) {
  * plus costing. Hidden on screen, shown only by @media print (see
  * item-entry-print.css). Width/height/padding come from Admin → Settings.
  */
-export default function ItemEntryPrintSlip({ item, shop, printerType, printDimensions }: {
+export default function ItemEntryPrintSlip({
+    item,
+    shop,
+    printerType,
+    printDimensions,
+}: {
     item: SlipItem;
     shop: Shop;
     printerType: 'regular' | 'thermal';
@@ -106,12 +110,27 @@ export default function ItemEntryPrintSlip({ item, shop, printerType, printDimen
             <div className="ies-meta">{formatDate(item.date_received)}</div>
 
             <div className="ies-fields">
-                <div className="ies-field"><span>Item Code</span><span>{item.item_code}</span></div>
-                <div className="ies-field"><span>Type</span><span>{formatItemType(item.item_type)}</span></div>
-                <div className="ies-field"><span>Metal</span><span>{item.metal_type?.name ?? '—'}</span></div>
-                <div className="ies-field"><span>Purity</span><span>{item.purity?.name ?? '—'}</span></div>
+                <div className="ies-field">
+                    <span>Item Code</span>
+                    <span>{item.item_code}</span>
+                </div>
+                <div className="ies-field">
+                    <span>Type</span>
+                    <span>{formatItemType(item.item_type)}</span>
+                </div>
+                <div className="ies-field">
+                    <span>Metal</span>
+                    <span>{item.metal_type?.name ?? '—'}</span>
+                </div>
+                <div className="ies-field">
+                    <span>Purity</span>
+                    <span>{item.purity?.name ?? '—'}</span>
+                </div>
                 {item.source_party && (
-                    <div className="ies-field"><span>Source</span><span>{item.source_party.name}</span></div>
+                    <div className="ies-field">
+                        <span>Source</span>
+                        <span>{item.source_party.name}</span>
+                    </div>
                 )}
             </div>
 
@@ -142,14 +161,28 @@ export default function ItemEntryPrintSlip({ item, shop, printerType, printDimen
             </table>
 
             <div className="ies-costing">
-                <div className="ies-row"><span>Rate / Gram</span><span>{fmt(ratePerGram)}</span></div>
-                <div className="ies-row"><span>Metal Value</span><span>{fmt(metalValue)}</span></div>
-                <div className="ies-row"><span>Labour Cost</span><span>{fmt(labourCost)}</span></div>
-                <div className="ies-row ies-row-grand"><span>Total Price</span><span>Rs {fmt(totalPrice)}</span></div>
+                <div className="ies-row">
+                    <span>Rate / Gram</span>
+                    <span>{fmt(ratePerGram)}</span>
+                </div>
+                <div className="ies-row">
+                    <span>Metal Value</span>
+                    <span>{fmt(metalValue)}</span>
+                </div>
+                <div className="ies-row">
+                    <span>Labour Cost</span>
+                    <span>{fmt(labourCost)}</span>
+                </div>
+                <div className="ies-row ies-row-grand">
+                    <span>Total Price</span>
+                    <span>Rs {fmt(totalPrice)}</span>
+                </div>
             </div>
 
             <div className="ies-footer">
-                <div><strong>Software provided by ZK IT HUB</strong></div>
+                <div>
+                    <strong>Software provided by ZK IT HUB</strong>
+                </div>
                 <div>Contact: 0344-1196139</div>
             </div>
         </div>

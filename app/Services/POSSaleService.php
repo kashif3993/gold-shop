@@ -43,7 +43,7 @@ class POSSaleService
      * expected amount when a Bank QR payment attempt is started.
      *
      * @throws \InvalidArgumentException if an item is missing/not in stock,
-     *                                    or has no current rate set for its purity
+     *                                   or has no current rate set for its purity
      */
     public function computeTotals(array $validated, bool $lockItems = false): array
     {
@@ -158,7 +158,7 @@ class POSSaleService
      * transaction (the caller's), since it locks item rows.
      *
      * @throws \InvalidArgumentException if an item is missing/not in stock,
-     *                                    or has no current rate set for its purity
+     *                                   or has no current rate set for its purity
      */
     public function createSale(array $validated, int $userId): Invoice
     {

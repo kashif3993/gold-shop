@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutDashboard, Gem, Landmark, History, ShieldCheck, Users, ArrowLeftCircle, SlidersHorizontal, DatabaseBackup } from 'lucide-react';
+import { ArrowLeftCircle, DatabaseBackup, Gem, History, Landmark, LayoutDashboard, ShieldCheck, SlidersHorizontal, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const adminNavItems: NavItem[] = [
@@ -38,7 +38,7 @@ export function AdminSidebar() {
                 </SidebarMenu>
                 <div className="mx-4 mb-1 flex items-center gap-1.5 rounded-md border border-[#b5892f]/40 bg-[#b5892f]/10 px-2.5 py-1 group-data-[collapsible=icon]:hidden">
                     <ShieldCheck className="size-3.5 text-[#e4b248]" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#e4b248]">Admin Zone</span>
+                    <span className="text-[10px] font-bold tracking-widest text-[#e4b248] uppercase">Admin Zone</span>
                 </div>
             </SidebarHeader>
 

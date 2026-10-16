@@ -1,11 +1,14 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Pencil, X, Check } from 'lucide-react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Check, Pencil, X } from 'lucide-react';
+import { useState } from 'react';
 import '../../../../css/admin.css';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admin', href: '/admin' }, { title: 'Purities', href: '/admin/purities' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Admin', href: '/admin' },
+    { title: 'Purities', href: '/admin/purities' },
+];
 
 interface Purity {
     id: number;
@@ -68,7 +71,10 @@ export default function PuritiesIndex({ metals }: { metals: Metal[] }) {
             <div className="adm-page">
                 <div className="adm-head">
                     <h1 className="adm-title">Purities</h1>
-                    <p className="adm-desc">The purity list every item, sale, and rate is priced against. Deactivate instead of deleting — purities stay linked to historical records.</p>
+                    <p className="adm-desc">
+                        The purity list every item, sale, and rate is priced against. Deactivate instead of deleting — purities stay linked to
+                        historical records.
+                    </p>
                 </div>
 
                 {flash?.success && <div className="adm-flash adm-flash-success">{flash.success}</div>}
@@ -79,19 +85,41 @@ export default function PuritiesIndex({ metals }: { metals: Metal[] }) {
                     <form className="adm-form-row" onSubmit={submitAdd}>
                         <div className="adm-field">
                             <label className="adm-label">Metal</label>
-                            <select className="adm-select" value={addForm.data.metal_type_id} onChange={e => addForm.setData('metal_type_id', e.target.value)}>
-                                {metals.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                            <select
+                                className="adm-select"
+                                value={addForm.data.metal_type_id}
+                                onChange={(e) => addForm.setData('metal_type_id', e.target.value)}
+                            >
+                                {metals.map((m) => (
+                                    <option key={m.id} value={m.id}>
+                                        {m.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div className="adm-field">
                             <label className="adm-label">Name</label>
-                            <input className="adm-input" value={addForm.data.name} onChange={e => addForm.setData('name', e.target.value)} placeholder="e.g. 18K" />
+                            <input
+                                className="adm-input"
+                                value={addForm.data.name}
+                                onChange={(e) => addForm.setData('name', e.target.value)}
+                                placeholder="e.g. 18K"
+                            />
                             {addForm.errors.name && <span className="adm-error">{addForm.errors.name}</span>}
                         </div>
                         <div className="adm-field">
                             <label className="adm-label">Fineness %</label>
-                            <input type="number" step="0.01" min="0.01" max="100" className="adm-input" style={{ maxWidth: '110px' }}
-                                value={addForm.data.fineness_percent} onChange={e => addForm.setData('fineness_percent', e.target.value)} placeholder="75.0" />
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                max="100"
+                                className="adm-input"
+                                style={{ maxWidth: '110px' }}
+                                value={addForm.data.fineness_percent}
+                                onChange={(e) => addForm.setData('fineness_percent', e.target.value)}
+                                placeholder="75.0"
+                            />
                             {addForm.errors.fineness_percent && <span className="adm-error">{addForm.errors.fineness_percent}</span>}
                         </div>
                         <button type="submit" className="adm-btn adm-btn-gold" disabled={addForm.processing}>
@@ -100,7 +128,7 @@ export default function PuritiesIndex({ metals }: { metals: Metal[] }) {
                     </form>
                 </div>
 
-                {metals.map(metal => (
+                {metals.map((metal) => (
                     <div className="adm-card" key={metal.id}>
                         <h2 className="adm-card-title">{metal.name}</h2>
                         {metal.purities.length === 0 ? (
@@ -117,27 +145,51 @@ export default function PuritiesIndex({ metals }: { metals: Metal[] }) {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {metal.purities.map(p => (
+                                        {metal.purities.map((p) =>
                                             editingId === p.id ? (
                                                 <tr key={p.id}>
                                                     <td colSpan={4}>
-                                                        <form className="adm-form-row" onSubmit={e => submitEdit(e, p.id)}>
+                                                        <form className="adm-form-row" onSubmit={(e) => submitEdit(e, p.id)}>
                                                             <div className="adm-field">
                                                                 <label className="adm-label">Name</label>
-                                                                <input className="adm-input" value={editForm.data.name} onChange={e => editForm.setData('name', e.target.value)} />
+                                                                <input
+                                                                    className="adm-input"
+                                                                    value={editForm.data.name}
+                                                                    onChange={(e) => editForm.setData('name', e.target.value)}
+                                                                />
                                                                 {editForm.errors.name && <span className="adm-error">{editForm.errors.name}</span>}
                                                             </div>
                                                             <div className="adm-field">
                                                                 <label className="adm-label">Fineness %</label>
-                                                                <input type="number" step="0.01" min="0.01" max="100" className="adm-input" style={{ maxWidth: '110px' }}
-                                                                    value={editForm.data.fineness_percent} onChange={e => editForm.setData('fineness_percent', e.target.value)} />
-                                                                {editForm.errors.fineness_percent && <span className="adm-error">{editForm.errors.fineness_percent}</span>}
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0.01"
+                                                                    max="100"
+                                                                    className="adm-input"
+                                                                    style={{ maxWidth: '110px' }}
+                                                                    value={editForm.data.fineness_percent}
+                                                                    onChange={(e) => editForm.setData('fineness_percent', e.target.value)}
+                                                                />
+                                                                {editForm.errors.fineness_percent && (
+                                                                    <span className="adm-error">{editForm.errors.fineness_percent}</span>
+                                                                )}
                                                             </div>
                                                             <div className="adm-field" style={{ flex: 1, minWidth: '180px' }}>
                                                                 <label className="adm-label">Reason (optional)</label>
-                                                                <input className="adm-input" style={{ width: '100%' }} value={editForm.data.reason} onChange={e => editForm.setData('reason', e.target.value)} placeholder="e.g. corrected fineness typo" />
+                                                                <input
+                                                                    className="adm-input"
+                                                                    style={{ width: '100%' }}
+                                                                    value={editForm.data.reason}
+                                                                    onChange={(e) => editForm.setData('reason', e.target.value)}
+                                                                    placeholder="e.g. corrected fineness typo"
+                                                                />
                                                             </div>
-                                                            <button type="submit" className="adm-btn adm-btn-gold adm-btn-sm" disabled={editForm.processing}>
+                                                            <button
+                                                                type="submit"
+                                                                className="adm-btn adm-btn-gold adm-btn-sm"
+                                                                disabled={editForm.processing}
+                                                            >
                                                                 <Check size={14} /> Save
                                                             </button>
                                                             <button type="button" className="adm-btn adm-btn-ghost adm-btn-sm" onClick={cancelEdit}>
@@ -156,16 +208,25 @@ export default function PuritiesIndex({ metals }: { metals: Metal[] }) {
                                                         </span>
                                                     </td>
                                                     <td style={{ textAlign: 'right' }}>
-                                                        <button type="button" className="adm-btn adm-btn-ghost adm-btn-sm" onClick={() => startEdit(p)} style={{ marginRight: '0.5rem' }}>
+                                                        <button
+                                                            type="button"
+                                                            className="adm-btn adm-btn-ghost adm-btn-sm"
+                                                            onClick={() => startEdit(p)}
+                                                            style={{ marginRight: '0.5rem' }}
+                                                        >
                                                             <Pencil size={13} /> Edit
                                                         </button>
-                                                        <button type="button" className={`adm-btn adm-btn-sm ${p.is_active ? 'adm-btn-danger' : 'adm-btn-ghost'}`} onClick={() => toggle(p)}>
+                                                        <button
+                                                            type="button"
+                                                            className={`adm-btn adm-btn-sm ${p.is_active ? 'adm-btn-danger' : 'adm-btn-ghost'}`}
+                                                            onClick={() => toggle(p)}
+                                                        >
                                                             {p.is_active ? 'Deactivate' : 'Reactivate'}
                                                         </button>
                                                     </td>
                                                 </tr>
-                                            )
-                                        ))}
+                                            ),
+                                        )}
                                     </tbody>
                                 </table>
                             </div>

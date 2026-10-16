@@ -1,10 +1,10 @@
-﻿import AppLayout from '@/layouts/app-layout';
+﻿import RateTicker from '@/components/rate-ticker';
+import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Package, Users, UserCheck, TrendingUp, DollarSign, FileText, Plus, ArrowUpRight, ArrowDownRight, Minus, Activity, Zap } from 'lucide-react';
+import { Activity, ArrowDownRight, ArrowUpRight, DollarSign, FileText, Minus, Package, Plus, TrendingUp, UserCheck, Users, Zap } from 'lucide-react';
 import { ComponentType, useState } from 'react';
-import { cn } from '@/lib/utils';
-import RateTicker from '@/components/rate-ticker';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
 
@@ -27,28 +27,39 @@ interface DashboardProps {
     dealsIn?: { gold: boolean; silver: boolean };
 }
 
-function StatCard({ icon: Icon, label, value, sub, trendUp, delay = 0 }: {
+function StatCard({
+    icon: Icon,
+    label,
+    value,
+    sub,
+    trendUp,
+    delay = 0,
+}: {
     icon: ComponentType<{ className?: string }>;
-    label: string; value: string; sub?: string; trendUp?: boolean | null; delay?: number;
+    label: string;
+    value: string;
+    sub?: string;
+    trendUp?: boolean | null;
+    delay?: number;
 }) {
     return (
         <div
-            className="group flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
+            className="group border-border/50 bg-card animate-in fade-in slide-in-from-bottom-4 fill-mode-both flex flex-col gap-3 rounded-2xl border p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
             style={{ animationDelay: `${delay}ms`, animationDuration: '600ms' }}
         >
             <div className="flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/10 text-gold transition-all duration-300 group-hover:scale-110 group-hover:bg-gold/20">
+                <div className="bg-gold/10 text-gold group-hover:bg-gold/20 flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110">
                     <Icon className="h-5 w-5" />
                 </div>
-                <span className="text-xs text-muted-foreground font-medium">{label}</span>
+                <span className="text-muted-foreground text-xs font-medium">{label}</span>
             </div>
             <div>
-                <p className="text-2xl font-bold tracking-tight text-foreground">{value}</p>
+                <p className="text-foreground text-2xl font-bold tracking-tight">{value}</p>
                 {sub && (
-                    <p className="flex items-center gap-1 text-xs mt-1.5 font-medium">
-                        {trendUp === true  && <ArrowUpRight   className="h-3 w-3 text-emerald-500 shrink-0" />}
-                        {trendUp === false && <ArrowDownRight className="h-3 w-3 text-red-500 shrink-0" />}
-                        {trendUp === null  && <Minus          className="h-3 w-3 text-muted-foreground shrink-0" />}
+                    <p className="mt-1.5 flex items-center gap-1 text-xs font-medium">
+                        {trendUp === true && <ArrowUpRight className="h-3 w-3 shrink-0 text-emerald-500" />}
+                        {trendUp === false && <ArrowDownRight className="h-3 w-3 shrink-0 text-red-500" />}
+                        {trendUp === null && <Minus className="text-muted-foreground h-3 w-3 shrink-0" />}
                         <span className={cn(trendUp === true ? 'text-emerald-600' : trendUp === false ? 'text-red-500' : 'text-muted-foreground')}>
                             {sub}
                         </span>
@@ -61,39 +72,53 @@ function StatCard({ icon: Icon, label, value, sub, trendUp, delay = 0 }: {
 
 function GoldSparkline({ data }: { data: { date: string; rate: number }[] }) {
     if (!data || data.length < 2) {
-        return <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">No rate data yet.</div>;
+        return <div className="text-muted-foreground flex h-32 items-center justify-center text-sm">No rate data yet.</div>;
     }
-    const min = Math.min(...data.map(d => d.rate));
-    const max = Math.max(...data.map(d => d.rate));
+    const min = Math.min(...data.map((d) => d.rate));
+    const max = Math.max(...data.map((d) => d.rate));
     const range = max - min || 1;
-    const W = 600; const H = 130;
-    const padT = 12; const padB = 28; const padH = 6;
+    const W = 600;
+    const H = 130;
+    const padT = 12;
+    const padB = 28;
+    const padH = 6;
     const pts = data.map((d, i) => ({
         x: padH + (i / (data.length - 1)) * (W - padH * 2),
         y: padT + ((max - d.rate) / range) * (H - padT - padB),
         ...d,
     }));
-    const lineStr = pts.map(p => `${p.x},${p.y}`).join(' ');
-    const areaStr = `M${pts[0].x},${H - padB} ${pts.map(p => `L${p.x},${p.y}`).join(' ')} L${pts[pts.length-1].x},${H - padB} Z`;
+    const lineStr = pts.map((p) => `${p.x},${p.y}`).join(' ');
+    const areaStr = `M${pts[0].x},${H - padB} ${pts.map((p) => `L${p.x},${p.y}`).join(' ')} L${pts[pts.length - 1].x},${H - padB} Z`;
     return (
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 130 }} preserveAspectRatio="none">
             <defs>
                 <linearGradient id="gf" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#e4b248" stopOpacity="0.2"/>
-                    <stop offset="100%" stopColor="#e4b248" stopOpacity="0"/>
+                    <stop offset="0%" stopColor="#e4b248" stopOpacity="0.2" />
+                    <stop offset="100%" stopColor="#e4b248" stopOpacity="0" />
                 </linearGradient>
             </defs>
             {/* Grid lines */}
-            {[0.25,0.5,0.75].map((t, i) => (
-                <line key={i} x1={padH} x2={W-padH} y1={padT + t*(H-padT-padB)} y2={padT + t*(H-padT-padB)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 4"/>
+            {[0.25, 0.5, 0.75].map((t, i) => (
+                <line
+                    key={i}
+                    x1={padH}
+                    x2={W - padH}
+                    y1={padT + t * (H - padT - padB)}
+                    y2={padT + t * (H - padT - padB)}
+                    stroke="#e2e8f0"
+                    strokeWidth="1"
+                    strokeDasharray="4 4"
+                />
             ))}
-            <path d={areaStr} fill="url(#gf)"/>
-            <polyline points={lineStr} fill="none" stroke="#e4b248" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"/>
+            <path d={areaStr} fill="url(#gf)" />
+            <polyline points={lineStr} fill="none" stroke="#e4b248" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
             {pts.map((p, i) => (
-                <circle key={i} cx={p.x} cy={p.y} r="4" fill="#e4b248" stroke="white" strokeWidth="2"/>
+                <circle key={i} cx={p.x} cy={p.y} r="4" fill="#e4b248" stroke="white" strokeWidth="2" />
             ))}
             {pts.map((p, i) => (
-                <text key={i} x={p.x} y={H-8} textAnchor="middle" fontSize="10" fill="#94a3b8" fontFamily="system-ui,sans-serif">{p.date}</text>
+                <text key={i} x={p.x} y={H - 8} textAnchor="middle" fontSize="10" fill="#94a3b8" fontFamily="system-ui,sans-serif">
+                    {p.date}
+                </text>
             ))}
         </svg>
     );
@@ -102,13 +127,16 @@ function GoldSparkline({ data }: { data: { date: string; rate: number }[] }) {
 function PurityRow({ label, count, max, color }: { label: string; count: number; max: number; color: string }) {
     const pct = max > 0 ? Math.round((count / max) * 100) : 0;
     return (
-        <div className="space-y-1.5 mb-4">
+        <div className="mb-4 space-y-1.5">
             <div className="flex items-center justify-between text-sm">
                 <span className="font-medium">{label}</span>
                 <span className="text-muted-foreground text-xs tabular-nums">{count.toLocaleString()} items</span>
             </div>
-            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${Math.max(pct, pct > 0 ? 2 : 0)}%`, backgroundColor: color }}/>
+            <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
+                <div
+                    className="h-full rounded-full transition-all duration-1000 ease-out"
+                    style={{ width: `${Math.max(pct, pct > 0 ? 2 : 0)}%`, backgroundColor: color }}
+                />
             </div>
         </div>
     );
@@ -124,26 +152,28 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
 
     const [chartMetal, setChartMetal] = useState<'Gold' | 'Silver'>('Gold');
     const metalsWithHistory = (rateHistory ?? [])
-        .filter(r => r.points.length > 0)
-        .filter(r => (r.metal === 'Gold' ? dealsInGold : r.metal === 'Silver' ? dealsInSilver : true))
-        .map(r => r.metal);
-    const activeMetal = metalsWithHistory.includes(chartMetal) ? chartMetal : (metalsWithHistory[0] as 'Gold' | 'Silver' | undefined) ?? 'Gold';
-    const activePoints = rateHistory?.find(r => r.metal === activeMetal)?.points ?? [];
+        .filter((r) => r.points.length > 0)
+        .filter((r) => (r.metal === 'Gold' ? dealsInGold : r.metal === 'Silver' ? dealsInSilver : true))
+        .map((r) => r.metal);
+    const activeMetal = metalsWithHistory.includes(chartMetal) ? chartMetal : ((metalsWithHistory[0] as 'Gold' | 'Silver' | undefined) ?? 'Gold');
+    const activePoints = rateHistory?.find((r) => r.metal === activeMetal)?.points ?? [];
 
-    const purityRows = purities && purities.length > 0 ? purities : [
-        { label: '24K (99.9%)', metal: 'Gold',   item_count: 0, metal_color: '#d4a017' },
-        { label: '22K (91.6%)', metal: 'Gold',   item_count: 0, metal_color: '#c9963a' },
-        { label: '21K (87.5%)', metal: 'Gold',   item_count: 0, metal_color: '#bf8c31' },
-        { label: '18K (75.0%)', metal: 'Gold',   item_count: 0, metal_color: '#b07d28' },
-        { label: '999 Fine',    metal: 'Silver', item_count: 0, metal_color: '#94a3b8' },
-        { label: '925 Sterling',metal: 'Silver', item_count: 0, metal_color: '#64748b' },
-    ];
-    const goldRows   = purityRows.filter(p => p.metal === 'Gold');
-    const silverRows = purityRows.filter(p => p.metal === 'Silver');
-    const maxCount   = Math.max(...purityRows.map(p => p.item_count), 1);
+    const purityRows =
+        purities && purities.length > 0
+            ? purities
+            : [
+                  { label: '24K (99.9%)', metal: 'Gold', item_count: 0, metal_color: '#d4a017' },
+                  { label: '22K (91.6%)', metal: 'Gold', item_count: 0, metal_color: '#c9963a' },
+                  { label: '21K (87.5%)', metal: 'Gold', item_count: 0, metal_color: '#bf8c31' },
+                  { label: '18K (75.0%)', metal: 'Gold', item_count: 0, metal_color: '#b07d28' },
+                  { label: '999 Fine', metal: 'Silver', item_count: 0, metal_color: '#94a3b8' },
+                  { label: '925 Sterling', metal: 'Silver', item_count: 0, metal_color: '#64748b' },
+              ];
+    const goldRows = purityRows.filter((p) => p.metal === 'Gold');
+    const silverRows = purityRows.filter((p) => p.metal === 'Silver');
+    const maxCount = Math.max(...purityRows.map((p) => p.item_count), 1);
 
-    const fmtRate = (v: string | number | null | undefined) =>
-        v != null ? `Rs ${Number(v).toLocaleString('en-PK')}` : 'Not set';
+    const fmtRate = (v: string | number | null | undefined) => (v != null ? `Rs ${Number(v).toLocaleString('en-PK')}` : 'Not set');
     const currentGoldRate = fmtRate(stats.current_gold_rate);
     const currentSilverRate = fmtRate(stats.current_silver_rate);
     const currentRate = activeMetal === 'Silver' ? currentSilverRate : currentGoldRate;
@@ -151,19 +181,18 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard — Gold Shop ERP" />
-            <div className="flex flex-col gap-6 p-4 sm:p-6 min-h-full">
-
+            <div className="flex min-h-full flex-col gap-6 p-4 sm:p-6">
                 {/* ── Page header + live rate ──────────────────── */}
                 <div className="flex flex-col gap-3">
                     <RateTicker />
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
+                    <div className="animate-in fade-in slide-in-from-left-4 flex flex-col justify-between gap-4 duration-500 sm:flex-row sm:items-center">
                         <div>
-                            <h1 className="text-[22px] font-bold tracking-tight leading-tight">Welcome back, {firstName}</h1>
-                            <p className="text-sm text-muted-foreground mt-0.5">Today is {today} &bull; Operations</p>
+                            <h1 className="text-[22px] leading-tight font-bold tracking-tight">Welcome back, {firstName}</h1>
+                            <p className="text-muted-foreground mt-0.5 text-sm">Today is {today} &bull; Operations</p>
                         </div>
                         <Link
                             href="/items/create"
-                            className="inline-flex items-center gap-2 rounded-xl bg-[#b38a36] hover:bg-[#a17a2e] active:bg-[#8f6a20] text-black font-semibold px-5 py-2.5 text-[13px] shadow-sm hover:shadow-md transition-all duration-200 self-start sm:self-auto select-none"
+                            className="inline-flex items-center gap-2 self-start rounded-xl bg-[#b38a36] px-5 py-2.5 text-[13px] font-semibold text-black shadow-sm transition-all duration-200 select-none hover:bg-[#a17a2e] hover:shadow-md active:bg-[#8f6a20] sm:self-auto"
                         >
                             <Plus className="h-4 w-4" />
                             New Item Entry
@@ -172,49 +201,91 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
                 </div>
 
                 {/* ── 6 KPI stat cards ─────────────────────────── */}
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-7">
-                    <StatCard icon={Package}    label="Total Items in Stock"  value={stats.items_in_stock.toLocaleString()}                                                               sub="+4.2% this week"     trendUp={true}  delay={50}  />
-                    <StatCard icon={Users}      label="Registered Parties"    value={stats.total_parties.toLocaleString()}                                                                sub="+2 new this month"   trendUp={true}  delay={100} />
-                    <StatCard icon={UserCheck}  label="Team Members"          value={stats.total_users.toLocaleString()}                                                                  sub="0.0% active seats"   trendUp={null}  delay={150} />
-                    {dealsInGold && <StatCard icon={TrendingUp} label="Today's Gold Rate"   value={currentGoldRate}   sub="per gram" trendUp={null} delay={200} />}
-                    {dealsInSilver && <StatCard icon={TrendingUp} label="Today's Silver Rate" value={currentSilverRate} sub="per gram" trendUp={null} delay={225} />}
-                    <StatCard icon={DollarSign} label="Revenue This Month"    value={stats.revenue_this_month ? `Rs ${(stats.revenue_this_month/1_000_000).toFixed(1)}M` : 'Rs 0'}       sub="+18% vs last month"  trendUp={true}  delay={250} />
-                    <StatCard icon={FileText}   label="Pending Invoices"      value={String(stats.pending_invoices ?? 0)}                                                                 sub="-3 unpaid accounts"  trendUp={false} delay={300} />
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-7">
+                    <StatCard
+                        icon={Package}
+                        label="Total Items in Stock"
+                        value={stats.items_in_stock.toLocaleString()}
+                        sub="+4.2% this week"
+                        trendUp={true}
+                        delay={50}
+                    />
+                    <StatCard
+                        icon={Users}
+                        label="Registered Parties"
+                        value={stats.total_parties.toLocaleString()}
+                        sub="+2 new this month"
+                        trendUp={true}
+                        delay={100}
+                    />
+                    <StatCard
+                        icon={UserCheck}
+                        label="Team Members"
+                        value={stats.total_users.toLocaleString()}
+                        sub="0.0% active seats"
+                        trendUp={null}
+                        delay={150}
+                    />
+                    {dealsInGold && (
+                        <StatCard icon={TrendingUp} label="Today's Gold Rate" value={currentGoldRate} sub="per gram" trendUp={null} delay={200} />
+                    )}
+                    {dealsInSilver && (
+                        <StatCard icon={TrendingUp} label="Today's Silver Rate" value={currentSilverRate} sub="per gram" trendUp={null} delay={225} />
+                    )}
+                    <StatCard
+                        icon={DollarSign}
+                        label="Revenue This Month"
+                        value={stats.revenue_this_month ? `Rs ${(stats.revenue_this_month / 1_000_000).toFixed(1)}M` : 'Rs 0'}
+                        sub="+18% vs last month"
+                        trendUp={true}
+                        delay={250}
+                    />
+                    <StatCard
+                        icon={FileText}
+                        label="Pending Invoices"
+                        value={String(stats.pending_invoices ?? 0)}
+                        sub="-3 unpaid accounts"
+                        trendUp={false}
+                        delay={300}
+                    />
                 </div>
 
                 {/* ── Chart + Purity config ─────────────────────── */}
                 <div className="grid gap-4 lg:grid-cols-5">
-
                     {/* Live Rate chart — Gold / Silver toggle */}
                     <div
-                        className="lg:col-span-3 rounded-2xl border border-border/50 bg-card p-5 shadow-sm animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
+                        className="border-border/50 bg-card animate-in fade-in slide-in-from-bottom-4 fill-mode-both rounded-2xl border p-5 shadow-sm lg:col-span-3"
                         style={{ animationDelay: '350ms', animationDuration: '600ms' }}
                     >
-                        <div className="flex items-start justify-between gap-3 mb-5">
+                        <div className="mb-5 flex items-start justify-between gap-3">
                             <div>
-                                <h2 className="text-[15px] font-semibold leading-tight">Live {activeMetal} Rate <span className="text-muted-foreground font-normal">(Rs / gram)</span></h2>
-                                <p className="text-xs text-muted-foreground mt-1">Pakistani market · past 7 days</p>
+                                <h2 className="text-[15px] leading-tight font-semibold">
+                                    Live {activeMetal} Rate <span className="text-muted-foreground font-normal">(Rs / gram)</span>
+                                </h2>
+                                <p className="text-muted-foreground mt-1 text-xs">Pakistani market · past 7 days</p>
                             </div>
-                            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gold/30 bg-gold/8 text-gold px-3 py-1.5 text-xs font-semibold whitespace-nowrap">
+                            <span className="border-gold/30 bg-gold/8 text-gold inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold whitespace-nowrap">
                                 <Zap className="h-3 w-3" />
                                 {currentRate}
                             </span>
                         </div>
                         {metalsWithHistory.length > 1 && (
-                            <div className="flex gap-1.5 mb-4">
-                                {(['Gold', 'Silver'] as const).filter(m => metalsWithHistory.includes(m)).map(m => (
-                                    <button
-                                        key={m}
-                                        type="button"
-                                        onClick={() => setChartMetal(m)}
-                                        className={cn(
-                                            'rounded-full px-3 py-1 text-xs font-semibold transition-colors',
-                                            activeMetal === m ? 'bg-gold/15 text-gold' : 'text-muted-foreground hover:bg-muted/60',
-                                        )}
-                                    >
-                                        {m}
-                                    </button>
-                                ))}
+                            <div className="mb-4 flex gap-1.5">
+                                {(['Gold', 'Silver'] as const)
+                                    .filter((m) => metalsWithHistory.includes(m))
+                                    .map((m) => (
+                                        <button
+                                            key={m}
+                                            type="button"
+                                            onClick={() => setChartMetal(m)}
+                                            className={cn(
+                                                'rounded-full px-3 py-1 text-xs font-semibold transition-colors',
+                                                activeMetal === m ? 'bg-gold/15 text-gold' : 'text-muted-foreground hover:bg-muted/60',
+                                            )}
+                                        >
+                                            {m}
+                                        </button>
+                                    ))}
                             </div>
                         )}
                         <GoldSparkline data={activePoints} />
@@ -222,22 +293,26 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
 
                     {/* Purity breakdown */}
                     <div
-                        className="lg:col-span-2 rounded-2xl border border-border/50 bg-card p-5 shadow-sm animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
+                        className="border-border/50 bg-card animate-in fade-in slide-in-from-bottom-4 fill-mode-both rounded-2xl border p-5 shadow-sm lg:col-span-2"
                         style={{ animationDelay: '400ms', animationDuration: '600ms' }}
                     >
-                        <h2 className="text-[15px] font-semibold mb-1">Purity Configuration</h2>
-                        <p className="text-xs text-muted-foreground mb-5">{totalPurities} purities set up across your metal types</p>
+                        <h2 className="mb-1 text-[15px] font-semibold">Purity Configuration</h2>
+                        <p className="text-muted-foreground mb-5 text-xs">{totalPurities} purities set up across your metal types</p>
 
                         {goldRows.length > 0 && (
                             <>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gold mb-3">Gold Purities</p>
-                                {goldRows.map(p => <PurityRow key={p.label} label={p.label} count={p.item_count} max={maxCount} color={p.metal_color ?? '#d4a017'}/>)}
+                                <p className="text-gold mb-3 text-[10px] font-bold tracking-[0.12em] uppercase">Gold Purities</p>
+                                {goldRows.map((p) => (
+                                    <PurityRow key={p.label} label={p.label} count={p.item_count} max={maxCount} color={p.metal_color ?? '#d4a017'} />
+                                ))}
                             </>
                         )}
                         {silverRows.length > 0 && (
                             <>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-3 mt-5">Silver Purities</p>
-                                {silverRows.map(p => <PurityRow key={p.label} label={p.label} count={p.item_count} max={maxCount} color={p.metal_color ?? '#64748b'}/>)}
+                                <p className="mt-5 mb-3 text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">Silver Purities</p>
+                                {silverRows.map((p) => (
+                                    <PurityRow key={p.label} label={p.label} count={p.item_count} max={maxCount} color={p.metal_color ?? '#64748b'} />
+                                ))}
                             </>
                         )}
                     </div>
@@ -245,33 +320,36 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
 
                 {/* ── Recent Activity ───────────────────────────── */}
                 <div
-                    className="rounded-2xl border border-border/50 bg-card p-5 shadow-sm animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
+                    className="border-border/50 bg-card animate-in fade-in slide-in-from-bottom-4 fill-mode-both rounded-2xl border p-5 shadow-sm"
                     style={{ animationDelay: '450ms', animationDuration: '600ms' }}
                 >
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="mb-1 flex items-center justify-between">
                         <h2 className="text-[15px] font-semibold">Recent Activity</h2>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-5">Overrides and manual edits, most recent first</p>
+                    <p className="text-muted-foreground mb-5 text-xs">Overrides and manual edits, most recent first</p>
 
                     {recentActivity.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center gap-3 py-12 rounded-xl border border-dashed border-border/60 bg-muted/20">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
-                                <Activity className="h-5 w-5 text-muted-foreground" />
+                        <div className="border-border/60 bg-muted/20 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-12">
+                            <div className="bg-muted flex h-11 w-11 items-center justify-center rounded-full">
+                                <Activity className="text-muted-foreground h-5 w-5" />
                             </div>
-                            <p className="text-sm text-muted-foreground text-center max-w-[260px] leading-relaxed">
+                            <p className="text-muted-foreground max-w-[260px] text-center text-sm leading-relaxed">
                                 No activity yet — rate edits, price overrides, and discounts will show up here.
                             </p>
                         </div>
                     ) : (
-                        <ul className="divide-y divide-border/40">
+                        <ul className="divide-border/40 divide-y">
                             {recentActivity.map((entry, i) => (
-                                <li key={i} className="flex items-center justify-between gap-4 py-3 px-2 rounded-lg hover:bg-muted/40 transition-colors cursor-default">
+                                <li
+                                    key={i}
+                                    className="hover:bg-muted/40 flex cursor-default items-center justify-between gap-4 rounded-lg px-2 py-3 transition-colors"
+                                >
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold truncate">{entry.field_name}</p>
-                                        <p className="text-xs text-muted-foreground truncate mt-0.5">{entry.reason}</p>
+                                        <p className="truncate text-sm font-semibold">{entry.field_name}</p>
+                                        <p className="text-muted-foreground mt-0.5 truncate text-xs">{entry.reason}</p>
                                     </div>
                                     <div className="shrink-0 text-right text-xs">
-                                        <p className="font-medium text-foreground/80">{entry.changed_by ?? 'System'}</p>
+                                        <p className="text-foreground/80 font-medium">{entry.changed_by ?? 'System'}</p>
                                         <p className="text-muted-foreground mt-0.5">{entry.changed_at}</p>
                                     </div>
                                 </li>
@@ -279,7 +357,6 @@ export default function Dashboard({ stats, metalBreakdown, purities, totalPuriti
                         </ul>
                     )}
                 </div>
-
             </div>
         </AppLayout>
     );

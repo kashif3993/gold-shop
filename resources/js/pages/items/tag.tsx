@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
-import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
-import Barcode from 'react-barcode';
+import { ArrowLeft, Download, Package, Printer, QrCode } from 'lucide-react';
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
-import { Printer, ArrowLeft, Download, Package, QrCode } from 'lucide-react';
+import Barcode from 'react-barcode';
 
 /** Small physical pieces where the standard tag card is too big to attach. */
 const SMALL_ITEM_TYPES = ['ring', 'earring', 'nose_pin', 'tops'];
@@ -34,9 +34,7 @@ interface TagProps {
 }
 
 function formatItemType(type: string): string {
-    return type
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, (c) => c.toUpperCase());
+    return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function formatDate(dateStr: string): string {
@@ -50,9 +48,7 @@ export default function ItemTag({ item }: TagProps) {
     const netWeight = parseFloat(item.net_weight_grams || '0');
     const purchasePrice = parseFloat(item.purchase_price || '0');
 
-    const [tagSize, setTagSize] = useState<TagSize>(
-        SMALL_ITEM_TYPES.includes(item.item_type.toLowerCase()) ? 'compact' : 'standard'
-    );
+    const [tagSize, setTagSize] = useState<TagSize>(SMALL_ITEM_TYPES.includes(item.item_type.toLowerCase()) ? 'compact' : 'standard');
 
     const qrCanvasRef = useRef<HTMLCanvasElement>(null);
     const barcodeWrapperRef = useRef<HTMLDivElement>(null);
@@ -102,21 +98,21 @@ export default function ItemTag({ item }: TagProps) {
             <Head title={`Tag — ${item.item_code}`} />
 
             {/* ─── Screen controls (hidden on print) ─── */}
-            <div className="no-print min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 px-4 py-8 flex flex-col items-center gap-6">
+            <div className="no-print flex min-h-screen flex-col items-center gap-6 bg-gradient-to-br from-slate-100 to-slate-200 px-4 py-8 dark:from-slate-900 dark:to-slate-800">
                 {/* Top bar */}
-                <div className="w-full max-w-2xl flex items-center justify-between flex-wrap gap-3">
+                <div className="flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
                     <Link
                         href={route('inventory.index')}
-                        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-gold transition-colors font-medium"
+                        className="hover:text-gold flex items-center gap-2 font-medium text-slate-600 transition-colors dark:text-slate-400"
                     >
                         <ArrowLeft size={18} />
                         Back to Inventory
                     </Link>
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex flex-wrap items-center gap-2">
                         <button
                             onClick={downloadQR}
                             title="Download QR Code as PNG"
-                            className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-gold hover:text-gold font-medium px-4 py-2 rounded-xl shadow-sm transition-all text-sm"
+                            className="hover:border-gold hover:text-gold flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
                         >
                             <QrCode size={16} />
                             Download QR
@@ -124,14 +120,14 @@ export default function ItemTag({ item }: TagProps) {
                         <button
                             onClick={downloadBarcode}
                             title="Download Barcode as PNG"
-                            className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-gold hover:text-gold font-medium px-4 py-2 rounded-xl shadow-sm transition-all text-sm"
+                            className="hover:border-gold hover:text-gold flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
                         >
                             <Download size={16} />
                             Download Barcode
                         </button>
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 bg-gold hover:bg-gold/90 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg transition-all hover:shadow-gold/30 hover:scale-105 active:scale-95"
+                            className="bg-gold hover:bg-gold/90 hover:shadow-gold/30 flex items-center gap-2 rounded-xl px-5 py-2.5 font-semibold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
                         >
                             <Printer size={18} />
                             Print Tag
@@ -140,28 +136,26 @@ export default function ItemTag({ item }: TagProps) {
                 </div>
 
                 {/* Success banner */}
-                <div className="w-full max-w-2xl bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-xl px-5 py-3 flex items-center gap-3 text-emerald-800 dark:text-emerald-300 text-sm font-medium">
+                <div className="flex w-full max-w-2xl items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
                     <span className="text-lg">✅</span>
                     Item <strong>{item.item_code}</strong> created successfully. Print the tag below.
                 </div>
 
                 {/* Preview label + size toggle */}
                 <div className="flex items-center gap-3">
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium tracking-wide uppercase">
-                        Tag Preview
-                    </p>
-                    <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden text-sm">
+                    <p className="text-sm font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">Tag Preview</p>
+                    <div className="flex overflow-hidden rounded-lg border border-slate-200 text-sm dark:border-slate-600">
                         <button
                             type="button"
                             onClick={() => setTagSize('standard')}
-                            className={`px-3 py-1 font-medium transition-colors ${tagSize === 'standard' ? 'bg-gold text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
+                            className={`px-3 py-1 font-medium transition-colors ${tagSize === 'standard' ? 'bg-gold text-white' : 'bg-white text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}
                         >
                             Standard
                         </button>
                         <button
                             type="button"
                             onClick={() => setTagSize('compact')}
-                            className={`px-3 py-1 font-medium transition-colors ${tagSize === 'compact' ? 'bg-gold text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
+                            className={`px-3 py-1 font-medium transition-colors ${tagSize === 'compact' ? 'bg-gold text-white' : 'bg-white text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}
                         >
                             Compact (rings, earrings)
                         </button>
@@ -170,62 +164,68 @@ export default function ItemTag({ item }: TagProps) {
 
                 {/* ─── TAG CARD ─── */}
                 <div className={`tag-card ${tagSize === 'compact' ? 'compact' : ''}`}>
-                    {tagSize === 'compact'
-                        ? <CompactTagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
-                        : <TagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />}
+                    {tagSize === 'compact' ? (
+                        <CompactTagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
+                    ) : (
+                        <TagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
+                    )}
                 </div>
 
                 {/* Item details summary */}
-                <div className="w-full max-w-2xl bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-                    <h2 className="text-base font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+                <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-800 dark:text-slate-200">
                         <Package size={16} />
                         Item Summary
                     </h2>
-                    <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 text-sm">
+                    <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-3">
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Item Code</dt>
-                            <dd className="font-mono font-semibold text-slate-900 dark:text-white mt-0.5">{item.item_code}</dd>
+                            <dd className="mt-0.5 font-mono font-semibold text-slate-900 dark:text-white">{item.item_code}</dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Type</dt>
-                            <dd className="font-medium text-slate-900 dark:text-white mt-0.5">{formatItemType(item.item_type)}</dd>
+                            <dd className="mt-0.5 font-medium text-slate-900 dark:text-white">{formatItemType(item.item_type)}</dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Metal</dt>
-                            <dd className="font-medium text-slate-900 dark:text-white mt-0.5">{item.metal_type?.name ?? '—'}</dd>
+                            <dd className="mt-0.5 font-medium text-slate-900 dark:text-white">{item.metal_type?.name ?? '—'}</dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Purity</dt>
-                            <dd className="font-medium text-slate-900 dark:text-white mt-0.5">{item.purity?.name ?? '—'}</dd>
+                            <dd className="mt-0.5 font-medium text-slate-900 dark:text-white">{item.purity?.name ?? '—'}</dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Gross Weight</dt>
-                            <dd className="font-mono font-medium text-slate-900 dark:text-white mt-0.5">{parseFloat(item.gross_weight_grams).toFixed(3)} g</dd>
+                            <dd className="mt-0.5 font-mono font-medium text-slate-900 dark:text-white">
+                                {parseFloat(item.gross_weight_grams).toFixed(3)} g
+                            </dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Net Weight</dt>
-                            <dd className="font-mono font-semibold text-gold mt-0.5">{netWeight.toFixed(3)} g</dd>
+                            <dd className="text-gold mt-0.5 font-mono font-semibold">{netWeight.toFixed(3)} g</dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Stone Deduction</dt>
-                            <dd className="font-mono text-slate-900 dark:text-white mt-0.5">{parseFloat(item.stone_weight_grams).toFixed(3)} g</dd>
+                            <dd className="mt-0.5 font-mono text-slate-900 dark:text-white">{parseFloat(item.stone_weight_grams).toFixed(3)} g</dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Cutting Loss</dt>
-                            <dd className="font-mono text-slate-900 dark:text-white mt-0.5">{parseFloat(item.cutting_loss_grams).toFixed(3)} g</dd>
+                            <dd className="mt-0.5 font-mono text-slate-900 dark:text-white">{parseFloat(item.cutting_loss_grams).toFixed(3)} g</dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Purchase Price</dt>
-                            <dd className="font-mono font-semibold text-slate-900 dark:text-white mt-0.5">PKR {purchasePrice.toLocaleString('en-PK', { minimumFractionDigits: 2 })}</dd>
+                            <dd className="mt-0.5 font-mono font-semibold text-slate-900 dark:text-white">
+                                PKR {purchasePrice.toLocaleString('en-PK', { minimumFractionDigits: 2 })}
+                            </dd>
                         </div>
                         <div>
                             <dt className="text-slate-500 dark:text-slate-400">Date Received</dt>
-                            <dd className="text-slate-900 dark:text-white mt-0.5">{formatDate(item.date_received)}</dd>
+                            <dd className="mt-0.5 text-slate-900 dark:text-white">{formatDate(item.date_received)}</dd>
                         </div>
                         {item.source_party && (
                             <div>
                                 <dt className="text-slate-500 dark:text-slate-400">Source Party</dt>
-                                <dd className="text-slate-900 dark:text-white mt-0.5">{item.source_party.name}</dd>
+                                <dd className="mt-0.5 text-slate-900 dark:text-white">{item.source_party.name}</dd>
                             </div>
                         )}
                     </dl>
@@ -233,14 +233,11 @@ export default function ItemTag({ item }: TagProps) {
                     <div className="mt-6 flex gap-3">
                         <Link
                             href={route('items.edit', item.id)}
-                            className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-gold transition-colors"
+                            className="hover:text-gold text-sm font-medium text-slate-600 transition-colors dark:text-slate-400"
                         >
                             Edit Item →
                         </Link>
-                        <Link
-                            href={route('items.create')}
-                            className="text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
-                        >
+                        <Link href={route('items.create')} className="text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-500">
                             + Add Another Item
                         </Link>
                     </div>
@@ -301,49 +298,46 @@ export default function ItemTag({ item }: TagProps) {
 
             {/* Print-only standalone tag (outside screen container) */}
             <div className="print-only">
-                {tagSize === 'compact'
-                    ? <CompactTagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
-                    : <TagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />}
+                {tagSize === 'compact' ? (
+                    <CompactTagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
+                ) : (
+                    <TagCard item={item} qrValue={qrValue} netWeight={netWeight} purchasePrice={purchasePrice} />
+                )}
             </div>
         </>
     );
 }
 
 /* ─── Reusable tag card component ─── */
-function TagCard({ item, qrValue, netWeight, purchasePrice }: {
-    item: Item;
-    qrValue: string;
-    netWeight: number;
-    purchasePrice: number;
-}) {
+function TagCard({ item, qrValue, netWeight, purchasePrice }: { item: Item; qrValue: string; netWeight: number; purchasePrice: number }) {
     return (
         <div style={{ fontFamily: 'Inter, system-ui, sans-serif', background: 'white', color: '#111827' }}>
             {/* Header strip */}
-            <div style={{
-                background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2005 100%)',
-                padding: '12px 18px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-            }}>
+            <div
+                style={{
+                    background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2005 100%)',
+                    padding: '12px 18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                }}
+            >
                 <div>
-                    <div style={{ color: '#f5c842', fontWeight: 700, fontSize: '15px', letterSpacing: '0.05em' }}>
-                        ZAR &amp; NOOR
-                    </div>
-                    <div style={{ color: '#9ca3af', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                        Jewelry ERP
-                    </div>
+                    <div style={{ color: '#f5c842', fontWeight: 700, fontSize: '15px', letterSpacing: '0.05em' }}>ZAR &amp; NOOR</div>
+                    <div style={{ color: '#9ca3af', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Jewelry ERP</div>
                 </div>
-                <div style={{
-                    background: '#f5c842',
-                    color: '#111',
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    padding: '3px 10px',
-                    borderRadius: '20px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                }}>
+                <div
+                    style={{
+                        background: '#f5c842',
+                        color: '#111',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        padding: '3px 10px',
+                        borderRadius: '20px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                    }}
+                >
                     {item.status === 'in_stock' ? 'In Stock' : item.status}
                 </div>
             </div>
@@ -354,20 +348,39 @@ function TagCard({ item, qrValue, netWeight, purchasePrice }: {
                     {/* Left: info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                         {/* Item code */}
-                        <div style={{
-                            fontFamily: 'monospace', fontWeight: 700, fontSize: '16px', color: '#111',
-                            letterSpacing: '0.03em', marginBottom: '10px',
-                            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        }}>
+                        <div
+                            style={{
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                fontSize: '16px',
+                                color: '#111',
+                                letterSpacing: '0.03em',
+                                marginBottom: '10px',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                            }}
+                        >
                             {item.item_code}
                         </div>
 
                         {/* Details grid */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', fontSize: '12px' }}>
-                            <InfoRow label="Type" value={item.item_type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} />
+                            <InfoRow label="Type" value={item.item_type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} />
                             <InfoRow label="Metal" value={item.metal_type?.name ?? '—'} />
                             <InfoRow label="Purity" value={item.purity?.name ?? '—'} />
-                            <InfoRow label="Date" value={item.date_received ? new Date(item.date_received).toLocaleDateString('en-PK', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'} />
+                            <InfoRow
+                                label="Date"
+                                value={
+                                    item.date_received
+                                        ? new Date(item.date_received).toLocaleDateString('en-PK', {
+                                              day: '2-digit',
+                                              month: 'short',
+                                              year: 'numeric',
+                                          })
+                                        : '—'
+                                }
+                            />
                         </div>
                     </div>
 
@@ -375,36 +388,34 @@ function TagCard({ item, qrValue, netWeight, purchasePrice }: {
                         never has to compete with the QR for space and shrink unpredictably */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                         <div style={{ padding: '6px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                            <QRCodeSVG
-                                value={qrValue}
-                                size={78}
-                                bgColor="#ffffff"
-                                fgColor="#111827"
-                                level="M"
-                            />
+                            <QRCodeSVG value={qrValue} size={78} bgColor="#ffffff" fgColor="#111827" level="M" />
                         </div>
                         <div style={{ fontSize: '8px', color: '#6b7280', textAlign: 'center' }}>Scan for details</div>
                     </div>
                 </div>
 
                 {/* Weight highlight */}
-                <div style={{
-                    background: '#fffbeb',
-                    border: '1px solid #fde68a',
-                    borderRadius: '8px',
-                    padding: '8px 12px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}>
+                <div
+                    style={{
+                        background: '#fffbeb',
+                        border: '1px solid #fde68a',
+                        borderRadius: '8px',
+                        padding: '8px 12px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                    }}
+                >
                     <div>
-                        <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Net Weight</div>
-                        <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '18px', color: '#b45309' }}>
-                            {netWeight.toFixed(3)} g
+                        <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            Net Weight
                         </div>
+                        <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '18px', color: '#b45309' }}>{netWeight.toFixed(3)} g</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '9px', color: '#374151', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Price</div>
+                        <div style={{ fontSize: '9px', color: '#374151', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                            Price
+                        </div>
                         <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '13px', color: '#111' }}>
                             PKR {purchasePrice.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </div>
@@ -412,7 +423,16 @@ function TagCard({ item, qrValue, netWeight, purchasePrice }: {
                 </div>
 
                 {/* Barcode — full card width so it always has room to render legibly */}
-                <div style={{ background: 'white', padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: '6px', textAlign: 'center', overflow: 'hidden' }}>
+                <div
+                    style={{
+                        background: 'white',
+                        padding: '6px 10px',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        overflow: 'hidden',
+                    }}
+                >
                     <Barcode
                         value={item.item_code}
                         width={1}
@@ -428,17 +448,22 @@ function TagCard({ item, qrValue, netWeight, purchasePrice }: {
             </div>
 
             {/* Footer */}
-            <div style={{
-                borderTop: '1px solid #f3f4f6',
-                padding: '8px 18px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                fontSize: '9px',
-                color: '#9ca3af',
-            }}>
+            <div
+                style={{
+                    borderTop: '1px solid #f3f4f6',
+                    padding: '8px 18px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: '9px',
+                    color: '#9ca3af',
+                }}
+            >
                 <span>ID #{item.id}</span>
-                <span>Gross: {parseFloat(item.gross_weight_grams).toFixed(3)}g &nbsp;|&nbsp; Stone: {parseFloat(item.stone_weight_grams).toFixed(3)}g &nbsp;|&nbsp; Cut: {parseFloat(item.cutting_loss_grams).toFixed(3)}g</span>
+                <span>
+                    Gross: {parseFloat(item.gross_weight_grams).toFixed(3)}g &nbsp;|&nbsp; Stone: {parseFloat(item.stone_weight_grams).toFixed(3)}g
+                    &nbsp;|&nbsp; Cut: {parseFloat(item.cutting_loss_grams).toFixed(3)}g
+                </span>
             </div>
         </div>
     );
@@ -449,14 +474,18 @@ function TagCard({ item, qrValue, netWeight, purchasePrice }: {
  * card-sized tag — this is a tiny, vertically-stacked alternative with just
  * the essentials: code, metal/purity/weight, QR, barcode, price.
  */
-function CompactTagCard({ item, qrValue, netWeight, purchasePrice }: {
-    item: Item;
-    qrValue: string;
-    netWeight: number;
-    purchasePrice: number;
-}) {
+function CompactTagCard({ item, qrValue, netWeight, purchasePrice }: { item: Item; qrValue: string; netWeight: number; purchasePrice: number }) {
     return (
-        <div style={{ fontFamily: 'Inter, system-ui, sans-serif', background: 'white', color: '#111827', width: '100%', maxWidth: '220px', margin: '0 auto' }}>
+        <div
+            style={{
+                fontFamily: 'Inter, system-ui, sans-serif',
+                background: 'white',
+                color: '#111827',
+                width: '100%',
+                maxWidth: '220px',
+                margin: '0 auto',
+            }}
+        >
             <div style={{ background: '#1a1a1a', padding: '5px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#f5c842', fontWeight: 700, fontSize: '9px', letterSpacing: '0.05em' }}>ZAR &amp; NOOR</span>
                 <span style={{ color: '#9ca3af', fontSize: '7px', textTransform: 'uppercase' }}>
@@ -465,10 +494,18 @@ function CompactTagCard({ item, qrValue, netWeight, purchasePrice }: {
             </div>
 
             <div style={{ padding: '10px', textAlign: 'center' }}>
-                <div style={{
-                    fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', letterSpacing: '0.02em', marginBottom: '3px',
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                }}>
+                <div
+                    style={{
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        fontSize: '12px',
+                        letterSpacing: '0.02em',
+                        marginBottom: '3px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                    }}
+                >
                     {item.item_code}
                 </div>
                 <div style={{ fontSize: '9px', color: '#4b5563', marginBottom: '8px' }}>

@@ -1,10 +1,13 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import '../../../../css/admin.css';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admin', href: '/admin' }, { title: 'Backups', href: '/admin/backups' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Admin', href: '/admin' },
+    { title: 'Backups', href: '/admin/backups' },
+];
 
 interface BackupRow {
     disk: string;
@@ -33,10 +36,14 @@ export default function BackupsIndex({ backups, secondaryConfigured, secondaryAv
 
     const runNow = () => {
         setRunning(true);
-        router.post('/admin/backups/run', {}, {
-            preserveScroll: true,
-            onFinish: () => setRunning(false),
-        });
+        router.post(
+            '/admin/backups/run',
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setRunning(false),
+            },
+        );
     };
 
     const isStale = newestAgeHours !== null && newestAgeHours > 26;
@@ -49,8 +56,7 @@ export default function BackupsIndex({ backups, secondaryConfigured, secondaryAv
                 <div className="adm-head">
                     <h1 className="adm-title">Backups</h1>
                     <p className="adm-desc">
-                        A full database backup is taken automatically every night — no download needed, and it doesn't depend on
-                        the internet.{' '}
+                        A full database backup is taken automatically every night — no download needed, and it doesn't depend on the internet.{' '}
                         {secondaryConfigured
                             ? "Every backup is saved in two places at once: this computer, and a second location, so a problem with one doesn't lose both."
                             : 'It saves to this computer. A second, physically separate location can be added later (see BACKUP_SECOND_DRIVE_PATH) for extra protection against this drive itself failing.'}
@@ -62,8 +68,8 @@ export default function BackupsIndex({ backups, secondaryConfigured, secondaryAv
 
                 {secondaryConfigured && !secondaryAvailable && (
                     <div className="adm-flash adm-flash-error">
-                        The second backup location isn't reachable right now — backups are still being saved to this computer,
-                        but that copy will be skipped until it's back. Check that the drive is connected / powered on.
+                        The second backup location isn't reachable right now — backups are still being saved to this computer, but that copy will be
+                        skipped until it's back. Check that the drive is connected / powered on.
                     </div>
                 )}
 
@@ -71,17 +77,27 @@ export default function BackupsIndex({ backups, secondaryConfigured, secondaryAv
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
                             <div>
-                                <div className="adm-muted" style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>Last backup</div>
+                                <div className="adm-muted" style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                                    Last backup
+                                </div>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>
-                                    {newestAgeHours === null ? 'None yet' : newestAgeHours < 1 ? 'Less than an hour ago' : `${newestAgeHours} hours ago`}
+                                    {newestAgeHours === null
+                                        ? 'None yet'
+                                        : newestAgeHours < 1
+                                          ? 'Less than an hour ago'
+                                          : `${newestAgeHours} hours ago`}
                                 </div>
                             </div>
                             <div>
-                                <div className="adm-muted" style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>Backups kept</div>
+                                <div className="adm-muted" style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                                    Backups kept
+                                </div>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>{backups.length}</div>
                             </div>
                             <div>
-                                <div className="adm-muted" style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>Total size</div>
+                                <div className="adm-muted" style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                                    Total size
+                                </div>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>{totalSizeMb} MB</div>
                             </div>
                         </div>
@@ -92,9 +108,9 @@ export default function BackupsIndex({ backups, secondaryConfigured, secondaryAv
 
                     {isStale && (
                         <div className="adm-flash adm-flash-error" style={{ marginTop: '1rem' }}>
-                            No backup in over a day — the scheduled backup only runs while the server's task scheduler (cron) is
-                            active. If this shop is on a real server, confirm `php artisan schedule:run` is wired up; on a local
-                            machine that isn't left running overnight, use "Back up now" before closing for the day.
+                            No backup in over a day — the scheduled backup only runs while the server's task scheduler (cron) is active. If this shop
+                            is on a real server, confirm `php artisan schedule:run` is wired up; on a local machine that isn't left running overnight,
+                            use "Back up now" before closing for the day.
                         </div>
                     )}
                 </div>
@@ -118,7 +134,7 @@ export default function BackupsIndex({ backups, secondaryConfigured, secondaryAv
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {backups.map(b => (
+                                    {backups.map((b) => (
                                         <tr key={`${b.disk}:${b.path}`}>
                                             <td>{b.filename}</td>
                                             <td>
@@ -143,9 +159,9 @@ export default function BackupsIndex({ backups, secondaryConfigured, secondaryAv
                 </div>
 
                 <p className="adm-card-sub" style={{ maxWidth: '65ch' }}>
-                    Every backup is a complete snapshot of the database at that moment — sales, inventory, invoices, rates, and
-                    users. {secondaryConfigured ? 'Both copies are made automatically every night; downloading' : 'Downloading'}
-                    {' '}one here is entirely optional, e.g. to also keep a copy on a USB drive.
+                    Every backup is a complete snapshot of the database at that moment — sales, inventory, invoices, rates, and users.{' '}
+                    {secondaryConfigured ? 'Both copies are made automatically every night; downloading' : 'Downloading'} one here is entirely
+                    optional, e.g. to also keep a copy on a USB drive.
                 </p>
             </div>
         </AdminLayout>

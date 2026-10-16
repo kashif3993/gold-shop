@@ -1,9 +1,9 @@
-import { Head } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { carryTraditional, formatNumber, gramsToTraditional, traditionalToGrams } from '@/utils/weight';
+import { Head } from '@inertiajs/react';
 import { Info } from 'lucide-react';
-import { gramsToTraditional, traditionalToGrams, carryTraditional, formatNumber } from '@/utils/weight';
+import { useEffect, useMemo, useState } from 'react';
 import '../../../css/zakat.css';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Zakat', href: '/zakat' }];
@@ -11,11 +11,31 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Zakat', href: '/zakat' }];
 const fmt = (n: number | string) =>
     'Rs ' + new Intl.NumberFormat('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 
-interface Metal { id: number; name: string; }
-interface Purity { id: number; name: string; metal_type_id: number; }
-interface NisabSide { grams: number; rate_per_gram: number; value: number; }
-interface Nisab { gold: NisabSide | null; silver: NisabSide | null; threshold: number; }
-interface ByMetal { metal: string; item_count: number; weight_grams: number; value: number; }
+interface Metal {
+    id: number;
+    name: string;
+}
+interface Purity {
+    id: number;
+    name: string;
+    metal_type_id: number;
+}
+interface NisabSide {
+    grams: number;
+    rate_per_gram: number;
+    value: number;
+}
+interface Nisab {
+    gold: NisabSide | null;
+    silver: NisabSide | null;
+    threshold: number;
+}
+interface ByMetal {
+    metal: string;
+    item_count: number;
+    weight_grams: number;
+    value: number;
+}
 interface ShopStock {
     stock_value: number;
     by_metal: ByMetal[];
@@ -27,10 +47,19 @@ interface ShopStock {
 const EMPTY_WEIGHT = { gram: '', tola: '', masha: '', ratti: '', point: '' };
 
 export default function ZakatIndex({
-    metals = [], purities = [], currentRates = {}, ratePercent, nisab, shopStock,
+    metals = [],
+    purities = [],
+    currentRates = {},
+    ratePercent,
+    nisab,
+    shopStock,
 }: {
-    metals: Metal[]; purities: Purity[]; currentRates: Record<string, number>;
-    ratePercent: number; nisab: Nisab; shopStock: ShopStock;
+    metals: Metal[];
+    purities: Purity[];
+    currentRates: Record<string, number>;
+    ratePercent: number;
+    nisab: Nisab;
+    shopStock: ShopStock;
 }) {
     const [metalTypeId, setMetalTypeId] = useState<string>(metals[0] ? String(metals[0].id) : '');
     const [purityId, setPurityId] = useState<string>('');
@@ -38,12 +67,12 @@ export default function ZakatIndex({
     const [heldOneYear, setHeldOneYear] = useState(false);
 
     const availablePurities = useMemo(
-        () => purities.filter(p => !metalTypeId || String(p.metal_type_id) === String(metalTypeId)),
+        () => purities.filter((p) => !metalTypeId || String(p.metal_type_id) === String(metalTypeId)),
         [purities, metalTypeId],
     );
 
     useEffect(() => {
-        if (purityId && !availablePurities.some(p => String(p.id) === purityId)) {
+        if (purityId && !availablePurities.some((p) => String(p.id) === purityId)) {
             setPurityId('');
         } else if (!purityId && availablePurities[0]) {
             setPurityId(String(availablePurities[0].id));
@@ -56,10 +85,7 @@ export default function ZakatIndex({
             return;
         }
         const draft = { ...weight, [unit]: value };
-        const needsCarry =
-            (parseFloat(draft.point) || 0) >= 100 ||
-            (parseFloat(draft.ratti) || 0) >= 8 ||
-            (parseFloat(draft.masha) || 0) >= 12;
+        const needsCarry = (parseFloat(draft.point) || 0) >= 100 || (parseFloat(draft.ratti) || 0) >= 8 || (parseFloat(draft.masha) || 0) >= 12;
         const next: any = needsCarry ? { ...draft, ...carryTraditional(draft) } : draft;
         const g = traditionalToGrams(next);
         const allEmpty = !next.tola && !next.masha && !next.ratti && !next.point;
@@ -76,7 +102,7 @@ export default function ZakatIndex({
     const value = +(grams * rate).toFixed(2);
     const meetsNisab = value >= nisab.threshold && nisab.threshold > 0;
     const zakatDue = meetsNisab ? +((value * ratePercent) / 100).toFixed(2) : 0;
-    const purityName = availablePurities.find(p => String(p.id) === purityId)?.name;
+    const purityName = availablePurities.find((p) => String(p.id) === purityId)?.name;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -84,15 +110,17 @@ export default function ZakatIndex({
             <div className="zk-page">
                 <div className="zk-header">
                     <h1 className="zk-title">Zakat Calculator</h1>
-                    <p className="zk-desc">Live Nisab, the shop's own stock, and a quick calculator for anyone's gold or silver — all priced at today's rate.</p>
+                    <p className="zk-desc">
+                        Live Nisab, the shop's own stock, and a quick calculator for anyone's gold or silver — all priced at today's rate.
+                    </p>
                 </div>
 
                 <div className="zk-notice">
                     <Info size={18} />
                     <div>
                         <strong>Zakat applies only once wealth has been held for a full Islamic (lunar) year.</strong>
-                        The figures below show what's due if that condition is already met — they don't track dates for you.
-                        Rate ({ratePercent}%) and Nisab thresholds are set by an admin in Settings.
+                        The figures below show what's due if that condition is already met — they don't track dates for you. Rate ({ratePercent}%) and
+                        Nisab thresholds are set by an admin in Settings.
                     </div>
                 </div>
 
@@ -108,18 +136,26 @@ export default function ZakatIndex({
                                     {nisab.gold ? (
                                         <>
                                             <div className="zk-nisab-value">{fmt(nisab.gold.value)}</div>
-                                            <div className="zk-nisab-sub">{nisab.gold.grams}g at {fmt(nisab.gold.rate_per_gram)}/g</div>
+                                            <div className="zk-nisab-sub">
+                                                {nisab.gold.grams}g at {fmt(nisab.gold.rate_per_gram)}/g
+                                            </div>
                                         </>
-                                    ) : <div className="zk-nisab-sub">No live gold rate available</div>}
+                                    ) : (
+                                        <div className="zk-nisab-sub">No live gold rate available</div>
+                                    )}
                                 </div>
                                 <div className="zk-nisab-tile">
                                     <div className="zk-nisab-label">Silver Nisab</div>
                                     {nisab.silver ? (
                                         <>
                                             <div className="zk-nisab-value">{fmt(nisab.silver.value)}</div>
-                                            <div className="zk-nisab-sub">{nisab.silver.grams}g at {fmt(nisab.silver.rate_per_gram)}/g</div>
+                                            <div className="zk-nisab-sub">
+                                                {nisab.silver.grams}g at {fmt(nisab.silver.rate_per_gram)}/g
+                                            </div>
                                         </>
-                                    ) : <div className="zk-nisab-sub">No live silver rate available</div>}
+                                    ) : (
+                                        <div className="zk-nisab-sub">No live silver rate available</div>
+                                    )}
                                 </div>
                                 <div className="zk-nisab-tile zk-threshold">
                                     <div className="zk-nisab-label">Threshold used</div>
@@ -134,7 +170,10 @@ export default function ZakatIndex({
                             <h2 className="zk-card-title">Shop's Own Stock</h2>
                             <p className="zk-card-sub">Every item currently in stock, valued live — same numbers as the stock valuation report.</p>
 
-                            <div className="zk-sum-row"><span>Total stock value</span><span>{fmt(shopStock.stock_value)}</span></div>
+                            <div className="zk-sum-row">
+                                <span>Total stock value</span>
+                                <span>{fmt(shopStock.stock_value)}</span>
+                            </div>
                             <div className="zk-sum-row">
                                 <span>Meets Nisab?</span>
                                 <span>
@@ -143,7 +182,10 @@ export default function ZakatIndex({
                                     </span>
                                 </span>
                             </div>
-                            <div className="zk-sum-row"><span>Zakat due (if held one year)</span><span>{fmt(shopStock.zakat_due)}</span></div>
+                            <div className="zk-sum-row">
+                                <span>Zakat due (if held one year)</span>
+                                <span>{fmt(shopStock.zakat_due)}</span>
+                            </div>
 
                             {shopStock.by_metal.length > 0 && (
                                 <div className="zk-table-wrap">
@@ -157,7 +199,7 @@ export default function ZakatIndex({
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {shopStock.by_metal.map(row => (
+                                            {shopStock.by_metal.map((row) => (
                                                 <tr key={row.metal}>
                                                     <td>{row.metal}</td>
                                                     <td>{row.item_count}</td>
@@ -179,38 +221,63 @@ export default function ZakatIndex({
                             <div className="zk-field-grid">
                                 <div className="zk-field">
                                     <label className="zk-label">Metal</label>
-                                    <select className="zk-select" value={metalTypeId} onChange={e => { setMetalTypeId(e.target.value); setPurityId(''); }}>
-                                        {metals.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                    <select
+                                        className="zk-select"
+                                        value={metalTypeId}
+                                        onChange={(e) => {
+                                            setMetalTypeId(e.target.value);
+                                            setPurityId('');
+                                        }}
+                                    >
+                                        {metals.map((m) => (
+                                            <option key={m.id} value={m.id}>
+                                                {m.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="zk-field">
                                     <label className="zk-label">Purity</label>
-                                    <select className="zk-select" value={purityId} onChange={e => setPurityId(e.target.value)}>
-                                        {availablePurities.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                    <select className="zk-select" value={purityId} onChange={(e) => setPurityId(e.target.value)}>
+                                        {availablePurities.map((p) => (
+                                            <option key={p.id} value={p.id}>
+                                                {p.name}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="zk-field zk-col-2">
                                     <label className="zk-label">Weight</label>
                                     <div className="zk-weight-grid">
-                                        {(['gram', 'tola', 'masha', 'ratti', 'point'] as const).map(u => (
+                                        {(['gram', 'tola', 'masha', 'ratti', 'point'] as const).map((u) => (
                                             <div key={u} className="zk-field">
-                                                <label className="zk-label" style={{ textTransform: 'capitalize', fontWeight: 500, fontSize: '0.72rem' }}>{u}</label>
+                                                <label
+                                                    className="zk-label"
+                                                    style={{ textTransform: 'capitalize', fontWeight: 500, fontSize: '0.72rem' }}
+                                                >
+                                                    {u}
+                                                </label>
                                                 <input
-                                                    type="number" step="any" min="0" className="zk-input"
+                                                    type="number"
+                                                    step="any"
+                                                    min="0"
+                                                    className="zk-input"
                                                     value={(weight as any)[u]}
-                                                    onChange={e => setWeightUnit(u, e.target.value)}
+                                                    onChange={(e) => setWeightUnit(u, e.target.value)}
                                                 />
                                             </div>
                                         ))}
                                     </div>
                                     {purityId && currentRates[purityId] != null && (
-                                        <div className="zk-hint">Today's {purityName} rate: {fmt(currentRates[purityId])}/g</div>
+                                        <div className="zk-hint">
+                                            Today's {purityName} rate: {fmt(currentRates[purityId])}/g
+                                        </div>
                                     )}
                                 </div>
                             </div>
 
                             <label className="zk-checkbox-row">
-                                <input type="checkbox" checked={heldOneYear} onChange={e => setHeldOneYear(e.target.checked)} />
+                                <input type="checkbox" checked={heldOneYear} onChange={(e) => setHeldOneYear(e.target.checked)} />
                                 I've owned this for a full Islamic (lunar) year
                             </label>
                         </div>
@@ -221,29 +288,42 @@ export default function ZakatIndex({
                         <div className="zk-summary">
                             <div className="zk-summary-head">Zakat Result</div>
                             <div className="zk-summary-body">
-                                <div className="zk-sum-row"><span>Weight</span><span>{formatNumber(grams, 3)} g</span></div>
+                                <div className="zk-sum-row">
+                                    <span>Weight</span>
+                                    <span>{formatNumber(grams, 3)} g</span>
+                                </div>
 
                                 {rateMissing ? (
                                     <div className="zk-error-box">
-                                        No live rate is set for {purityName ?? 'this purity'} yet, so Zakat can't be
-                                        calculated for it. An admin needs to set a rate in Rate Management first.
+                                        No live rate is set for {purityName ?? 'this purity'} yet, so Zakat can't be calculated for it. An admin needs
+                                        to set a rate in Rate Management first.
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="zk-sum-row"><span>Rate applied</span><span>{fmt(rate)}</span></div>
-                                        <div className="zk-sum-row"><span>Value today</span><span>{fmt(value)}</span></div>
+                                        <div className="zk-sum-row">
+                                            <span>Rate applied</span>
+                                            <span>{fmt(rate)}</span>
+                                        </div>
+                                        <div className="zk-sum-row">
+                                            <span>Value today</span>
+                                            <span>{fmt(value)}</span>
+                                        </div>
                                         <hr className="zk-sum-divider" />
                                         <div className={`zk-payout ${meetsNisab && heldOneYear ? '' : 'zk-payout-clear'}`}>
                                             <div className="zk-payout-label">
-                                                {!meetsNisab ? 'Below Nisab — no Zakat due' : !heldOneYear ? 'Zakat due once one year has passed' : 'Zakat due now'}
+                                                {!meetsNisab
+                                                    ? 'Below Nisab — no Zakat due'
+                                                    : !heldOneYear
+                                                      ? 'Zakat due once one year has passed'
+                                                      : 'Zakat due now'}
                                             </div>
                                             <div className="zk-payout-value">{fmt(meetsNisab && heldOneYear ? zakatDue : 0)}</div>
                                         </div>
 
                                         {meetsNisab && !heldOneYear && (
                                             <div className="zk-note">
-                                                This value clears Nisab ({fmt(nisab.threshold)}), so {fmt(zakatDue)} will be due once you've
-                                                held it for a full lunar year — check the box above once that's true.
+                                                This value clears Nisab ({fmt(nisab.threshold)}), so {fmt(zakatDue)} will be due once you've held it
+                                                for a full lunar year — check the box above once that's true.
                                             </div>
                                         )}
                                     </>

@@ -1,9 +1,9 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import RateTicker from '@/components/rate-ticker';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { RefreshCw, AlertTriangle, Trash2 } from 'lucide-react';
-import RateTicker from '@/components/rate-ticker';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import '../../../css/rate-management.css';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Rate Management', href: '/rate-management' }];
@@ -71,7 +71,9 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
             reloading.current = true;
             router.reload({
                 only: ['rates', 'fetchLog', 'feedStale'],
-                onFinish: () => { reloading.current = false; },
+                onFinish: () => {
+                    reloading.current = false;
+                },
             });
         }, 60_000);
         return () => window.clearInterval(id);
@@ -138,8 +140,13 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                 <div className="rm-head">
                     <div>
                         <h1 className="rm-title">Rate Management</h1>
-                        <p className="rm-desc">Today's gold &amp; silver rate — fetched, adjusted for your counter margin, and used across POS and buy-back.</p>
-                        <p className="rm-desc rm-auto-note">Auto-refreshes from the API roughly every {autoRefreshMinutes} minutes while this or any other screen is open — no need to click Refresh.</p>
+                        <p className="rm-desc">
+                            Today's gold &amp; silver rate — fetched, adjusted for your counter margin, and used across POS and buy-back.
+                        </p>
+                        <p className="rm-desc rm-auto-note">
+                            Auto-refreshes from the API roughly every {autoRefreshMinutes} minutes while this or any other screen is open — no need to
+                            click Refresh.
+                        </p>
                     </div>
                     <button type="button" className="rm-btn rm-btn-gold" onClick={submitRefresh} disabled={refresh.processing}>
                         <RefreshCw size={15} /> {refresh.processing ? 'Fetching…' : 'Refresh now'}
@@ -155,8 +162,8 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                     <div className="rm-stale-banner">
                         <AlertTriangle size={17} />
                         <span>
-                            The rate feed hasn't updated in over {staleAfterHours} h. Billing keeps working on the last cached rate —
-                            use <strong>Refresh now</strong> or enter a manual rate below.
+                            The rate feed hasn't updated in over {staleAfterHours} h. Billing keeps working on the last cached rate — use{' '}
+                            <strong>Refresh now</strong> or enter a manual rate below.
                         </span>
                     </div>
                 )}
@@ -190,36 +197,53 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                                         <td>{adjLabel(r.adjustment_type, r.adjustment_value)}</td>
                                         <td className="rm-effective">{fmt(r.effective)}</td>
                                         <td>
-                                            {r.source
-                                                ? <span className={`rm-badge rm-badge-${r.source}`}>{r.source}</span>
-                                                : <span className="rm-muted">—</span>}
+                                            {r.source ? (
+                                                <span className={`rm-badge rm-badge-${r.source}`}>{r.source}</span>
+                                            ) : (
+                                                <span className="rm-muted">—</span>
+                                            )}
                                         </td>
                                         <td>
-                                            {r.is_stale && <span className="rm-badge rm-badge-stale" style={{ marginRight: 6 }}>stale</span>}
+                                            {r.is_stale && (
+                                                <span className="rm-badge rm-badge-stale" style={{ marginRight: 6 }}>
+                                                    stale
+                                                </span>
+                                            )}
                                             <span className="rm-muted">{ago(r.fetched_at)}</span>
                                         </td>
                                         {isAdmin && (
                                             <td>
                                                 {overrideId === r.purity_id ? (
                                                     <form className="rm-override-row" onSubmit={submitOverrideRate}>
-                                                        <span className="rm-override-old"><s>{fmt(r.effective)}</s></span>
+                                                        <span className="rm-override-old">
+                                                            <s>{fmt(r.effective)}</s>
+                                                        </span>
                                                         <input
-                                                            type="number" step="0.01" min="0.01" className="rm-input rm-override-input"
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0.01"
+                                                            className="rm-input rm-override-input"
                                                             value={overrideForm.data.new_rate}
-                                                            onChange={e => overrideForm.setData('new_rate', e.target.value)}
+                                                            onChange={(e) => overrideForm.setData('new_rate', e.target.value)}
                                                             placeholder="New rate"
                                                             autoFocus
                                                         />
                                                         <input
                                                             className="rm-input rm-override-input"
                                                             value={overrideForm.data.reason}
-                                                            onChange={e => overrideForm.setData('reason', e.target.value)}
+                                                            onChange={(e) => overrideForm.setData('reason', e.target.value)}
                                                             placeholder="Reason (required)"
                                                         />
-                                                        <button type="submit" className="rm-btn rm-btn-gold" disabled={overrideForm.processing}>Save</button>
-                                                        <button type="button" className="rm-btn rm-btn-ghost" onClick={cancelOverride}>Cancel</button>
+                                                        <button type="submit" className="rm-btn rm-btn-gold" disabled={overrideForm.processing}>
+                                                            Save
+                                                        </button>
+                                                        <button type="button" className="rm-btn rm-btn-ghost" onClick={cancelOverride}>
+                                                            Cancel
+                                                        </button>
                                                         {(overrideForm.errors.new_rate || overrideForm.errors.reason) && (
-                                                            <div className="rm-error">{overrideForm.errors.new_rate || overrideForm.errors.reason}</div>
+                                                            <div className="rm-error">
+                                                                {overrideForm.errors.new_rate || overrideForm.errors.reason}
+                                                            </div>
                                                         )}
                                                     </form>
                                                 ) : (
@@ -240,27 +264,28 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                 <div className="rm-card">
                     <h2 className="rm-card-title">USD → PKR exchange rate</h2>
                     <p className="rm-card-sub">
-                        gold-api.com gives prices in USD only. This is the rate used to convert to PKR — set it to the
-                        current interbank rate, or let it auto-fetch with each rate update.
+                        gold-api.com gives prices in USD only. This is the rate used to convert to PKR — set it to the current interbank rate, or let
+                        it auto-fetch with each rate update.
                     </p>
                     <form className="rm-form-row" onSubmit={submitFx}>
                         <div className="rm-field">
                             <label className="rm-label">1 USD = ? PKR</label>
                             <input
-                                type="number" step="any" min="1" className="rm-input"
+                                type="number"
+                                step="any"
+                                min="1"
+                                className="rm-input"
                                 value={fxForm.data.usd_pkr}
-                                onChange={e => fxForm.setData('usd_pkr', e.target.value)}
+                                onChange={(e) => fxForm.setData('usd_pkr', e.target.value)}
                                 disabled={fxForm.data.auto}
                             />
                             {fxForm.errors.usd_pkr && <span className="rm-error">{fxForm.errors.usd_pkr}</span>}
                         </div>
                         <label className="rm-field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem', paddingBottom: '0.55rem' }}>
-                            <input
-                                type="checkbox"
-                                checked={fxForm.data.auto}
-                                onChange={e => fxForm.setData('auto', e.target.checked)}
-                            />
-                            <span className="rm-label" style={{ textTransform: 'none', letterSpacing: 0 }}>Auto-fetch with each rate update</span>
+                            <input type="checkbox" checked={fxForm.data.auto} onChange={(e) => fxForm.setData('auto', e.target.checked)} />
+                            <span className="rm-label" style={{ textTransform: 'none', letterSpacing: 0 }}>
+                                Auto-fetch with each rate update
+                            </span>
                         </label>
                         <button type="submit" className="rm-btn rm-btn-gold" disabled={fxForm.processing}>
                             {fxForm.processing ? 'Saving…' : 'Save & refresh'}
@@ -277,53 +302,89 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                 {/* ── manual entry ─────────────────────────────────────── */}
                 <div className="rm-card">
                     <h2 className="rm-card-title">Manual rate entry</h2>
-                    <p className="rm-card-sub">Type today's pure-metal spot (PKR per gram). Every purity is derived from its fineness, then your adjustment is applied.</p>
+                    <p className="rm-card-sub">
+                        Type today's pure-metal spot (PKR per gram). Every purity is derived from its fineness, then your adjustment is applied.
+                    </p>
                     <form className="rm-form-row" onSubmit={submitManual}>
                         {dealsInGold && (
                             <div className="rm-field">
                                 <label className="rm-label">Pure gold spot / g</label>
-                                <input type="number" step="any" min="0" className="rm-input" placeholder="e.g. 24500"
-                                    value={manual.data.gold_spot} onChange={e => manual.setData('gold_spot', e.target.value)} />
+                                <input
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    className="rm-input"
+                                    placeholder="e.g. 24500"
+                                    value={manual.data.gold_spot}
+                                    onChange={(e) => manual.setData('gold_spot', e.target.value)}
+                                />
                                 {manual.errors.gold_spot && <span className="rm-error">{manual.errors.gold_spot}</span>}
                             </div>
                         )}
                         {dealsInSilver && (
                             <div className="rm-field">
                                 <label className="rm-label">Pure silver spot / g</label>
-                                <input type="number" step="any" min="0" className="rm-input" placeholder="e.g. 312"
-                                    value={manual.data.silver_spot} onChange={e => manual.setData('silver_spot', e.target.value)} />
+                                <input
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    className="rm-input"
+                                    placeholder="e.g. 312"
+                                    value={manual.data.silver_spot}
+                                    onChange={(e) => manual.setData('silver_spot', e.target.value)}
+                                />
                                 {manual.errors.silver_spot && <span className="rm-error">{manual.errors.silver_spot}</span>}
                             </div>
                         )}
-                        <button type="submit" className="rm-btn rm-btn-gold" disabled={manual.processing}>Save manual rate</button>
+                        <button type="submit" className="rm-btn rm-btn-gold" disabled={manual.processing}>
+                            Save manual rate
+                        </button>
                     </form>
                 </div>
 
                 {/* ── shop default adjustment ──────────────────────────── */}
                 <div className="rm-card">
                     <h2 className="rm-card-title">Counter margin (shop default)</h2>
-                    <p className="rm-card-sub">Applied to every metal / purity unless a more specific override exists. Use 0 to bill exactly at the official rate.</p>
+                    <p className="rm-card-sub">
+                        Applied to every metal / purity unless a more specific override exists. Use 0 to bill exactly at the official rate.
+                    </p>
                     <form className="rm-form-row" onSubmit={submitDefault}>
                         <input type="hidden" value="shop" />
                         <div className="rm-field">
                             <label className="rm-label">Type</label>
-                            <select className="rm-select" value={def.data.adjustment_type} onChange={e => def.setData('adjustment_type', e.target.value)}>
+                            <select
+                                className="rm-select"
+                                value={def.data.adjustment_type}
+                                onChange={(e) => def.setData('adjustment_type', e.target.value)}
+                            >
                                 <option value="amount">Amount (Rs / g)</option>
                                 <option value="percent">Percent</option>
                             </select>
                         </div>
                         <div className="rm-field">
                             <label className="rm-label">Value</label>
-                            <input type="number" step="any" className="rm-input"
-                                value={def.data.adjustment_value} onChange={e => def.setData('adjustment_value', e.target.value)} />
+                            <input
+                                type="number"
+                                step="any"
+                                className="rm-input"
+                                value={def.data.adjustment_value}
+                                onChange={(e) => def.setData('adjustment_value', e.target.value)}
+                            />
                             {def.errors.adjustment_value && <span className="rm-error">{def.errors.adjustment_value}</span>}
                         </div>
                         <div className="rm-field" style={{ flex: 1 }}>
                             <label className="rm-label">Reason (optional)</label>
-                            <input type="text" className="rm-input" style={{ width: '100%' }}
-                                value={def.data.reason} onChange={e => def.setData('reason', e.target.value)} />
+                            <input
+                                type="text"
+                                className="rm-input"
+                                style={{ width: '100%' }}
+                                value={def.data.reason}
+                                onChange={(e) => def.setData('reason', e.target.value)}
+                            />
                         </div>
-                        <button type="submit" className="rm-btn rm-btn-gold" disabled={def.processing}>Save default</button>
+                        <button type="submit" className="rm-btn rm-btn-gold" disabled={def.processing}>
+                            Save default
+                        </button>
                     </form>
                     <div className="rm-preview">
                         On an official <strong>{fmt(sample)}</strong>/g this bills at <strong>{fmt(previewDefault)}</strong>/g.
@@ -339,7 +400,13 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                         <div className="rm-table-wrap" style={{ marginBottom: '1.25rem' }}>
                             <table className="rm-table">
                                 <thead>
-                                    <tr><th>Scope</th><th>Metal</th><th>Purity</th><th>Adjustment</th><th></th></tr>
+                                    <tr>
+                                        <th>Scope</th>
+                                        <th>Metal</th>
+                                        <th>Purity</th>
+                                        <th>Adjustment</th>
+                                        <th></th>
+                                    </tr>
                                 </thead>
                                 <tbody>
                                     {overrides.map((o: any) => (
@@ -363,43 +430,68 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                     <form className="rm-form-row" onSubmit={submitOverride}>
                         <div className="rm-field">
                             <label className="rm-label">Scope</label>
-                            <select className="rm-select" value={ovr.data.scope} onChange={e => ovr.setData('scope', e.target.value)}>
+                            <select className="rm-select" value={ovr.data.scope} onChange={(e) => ovr.setData('scope', e.target.value)}>
                                 <option value="metal">Per metal</option>
                                 <option value="purity">Per purity</option>
                             </select>
                         </div>
                         <div className="rm-field">
                             <label className="rm-label">Metal</label>
-                            <select className="rm-select" value={ovr.data.metal_type_id}
-                                onChange={e => { ovr.setData('metal_type_id', e.target.value); ovr.setData('purity_id', ''); }}>
+                            <select
+                                className="rm-select"
+                                value={ovr.data.metal_type_id}
+                                onChange={(e) => {
+                                    ovr.setData('metal_type_id', e.target.value);
+                                    ovr.setData('purity_id', '');
+                                }}
+                            >
                                 <option value="">Select…</option>
-                                {metals.map((m: any) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                {metals.map((m: any) => (
+                                    <option key={m.id} value={m.id}>
+                                        {m.name}
+                                    </option>
+                                ))}
                             </select>
                             {ovr.errors.metal_type_id && <span className="rm-error">{ovr.errors.metal_type_id}</span>}
                         </div>
                         {ovr.data.scope === 'purity' && (
                             <div className="rm-field">
                                 <label className="rm-label">Purity</label>
-                                <select className="rm-select" value={ovr.data.purity_id} onChange={e => ovr.setData('purity_id', e.target.value)}>
+                                <select className="rm-select" value={ovr.data.purity_id} onChange={(e) => ovr.setData('purity_id', e.target.value)}>
                                     <option value="">Select…</option>
-                                    {ovrPurities.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                    {ovrPurities.map((p: any) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))}
                                 </select>
                                 {ovr.errors.purity_id && <span className="rm-error">{ovr.errors.purity_id}</span>}
                             </div>
                         )}
                         <div className="rm-field">
                             <label className="rm-label">Type</label>
-                            <select className="rm-select" value={ovr.data.adjustment_type} onChange={e => ovr.setData('adjustment_type', e.target.value)}>
+                            <select
+                                className="rm-select"
+                                value={ovr.data.adjustment_type}
+                                onChange={(e) => ovr.setData('adjustment_type', e.target.value)}
+                            >
                                 <option value="amount">Amount</option>
                                 <option value="percent">Percent</option>
                             </select>
                         </div>
                         <div className="rm-field">
                             <label className="rm-label">Value</label>
-                            <input type="number" step="any" className="rm-input"
-                                value={ovr.data.adjustment_value} onChange={e => ovr.setData('adjustment_value', e.target.value)} />
+                            <input
+                                type="number"
+                                step="any"
+                                className="rm-input"
+                                value={ovr.data.adjustment_value}
+                                onChange={(e) => ovr.setData('adjustment_value', e.target.value)}
+                            />
                         </div>
-                        <button type="submit" className="rm-btn rm-btn-gold" disabled={ovr.processing}>Add override</button>
+                        <button type="submit" className="rm-btn rm-btn-gold" disabled={ovr.processing}>
+                            Add override
+                        </button>
                     </form>
                 </div>
 
@@ -410,24 +502,41 @@ export default function RateManagement({ rates, metals, shopDefault, overrides, 
                     <div className="rm-table-wrap">
                         <table className="rm-table">
                             <thead>
-                                <tr><th>When</th><th>Result</th><th>Source</th><th>Detail</th></tr>
+                                <tr>
+                                    <th>When</th>
+                                    <th>Result</th>
+                                    <th>Source</th>
+                                    <th>Detail</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 {fetchLog.length === 0 ? (
-                                    <tr><td colSpan={4} className="rm-muted" style={{ textAlign: 'center', padding: '1.5rem' }}>No fetches yet.</td></tr>
-                                ) : fetchLog.map((l: any) => (
-                                    <tr key={l.id}>
-                                        <td className="rm-muted">{new Date(l.attempted_at).toLocaleString()}</td>
-                                        <td>
-                                            {l.success
-                                                ? <span className="rm-badge rm-badge-ok">ok</span>
-                                                : <span className="rm-badge rm-badge-fail">failed</span>}
-                                            {l.fallback_used ? <span className="rm-badge rm-badge-manual" style={{ marginLeft: 6 }}>fallback</span> : null}
+                                    <tr>
+                                        <td colSpan={4} className="rm-muted" style={{ textAlign: 'center', padding: '1.5rem' }}>
+                                            No fetches yet.
                                         </td>
-                                        <td>{l.source_api}</td>
-                                        <td className="rm-muted">{l.response_summary}</td>
                                     </tr>
-                                ))}
+                                ) : (
+                                    fetchLog.map((l: any) => (
+                                        <tr key={l.id}>
+                                            <td className="rm-muted">{new Date(l.attempted_at).toLocaleString()}</td>
+                                            <td>
+                                                {l.success ? (
+                                                    <span className="rm-badge rm-badge-ok">ok</span>
+                                                ) : (
+                                                    <span className="rm-badge rm-badge-fail">failed</span>
+                                                )}
+                                                {l.fallback_used ? (
+                                                    <span className="rm-badge rm-badge-manual" style={{ marginLeft: 6 }}>
+                                                        fallback
+                                                    </span>
+                                                ) : null}
+                                            </td>
+                                            <td>{l.source_api}</td>
+                                            <td className="rm-muted">{l.response_summary}</td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

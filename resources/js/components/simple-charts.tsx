@@ -17,8 +17,8 @@ interface LineSeries {
 }
 
 export function LineChart({ series }: { series: LineSeries[] }) {
-    const allX = Array.from(new Set(series.flatMap(s => s.points.map(p => p.x)))).sort();
-    const allY = series.flatMap(s => s.points.map(p => p.y));
+    const allX = Array.from(new Set(series.flatMap((s) => s.points.map((p) => p.x)))).sort();
+    const allY = series.flatMap((s) => s.points.map((p) => p.y));
 
     if (allX.length === 0) {
         return <div className="chart-empty">No data for this range.</div>;
@@ -36,8 +36,8 @@ export function LineChart({ series }: { series: LineSeries[] }) {
     return (
         <div className="chart-wrap">
             <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="chart-svg">
-                {series.map(s => {
-                    const byX = new Map(s.points.map(p => [p.x, p.y]));
+                {series.map((s) => {
+                    const byX = new Map(s.points.map((p) => [p.x, p.y]));
                     const coords = allX
                         .map((x, i) => {
                             const y = byX.get(x);
@@ -61,7 +61,7 @@ export function LineChart({ series }: { series: LineSeries[] }) {
             </svg>
 
             <div className="chart-legend">
-                {series.map(s => (
+                {series.map((s) => (
                     <span key={s.name} className="chart-legend-item">
                         <span className="chart-swatch" style={{ background: s.color }} />
                         {s.name}
@@ -88,11 +88,11 @@ export function BarChart({ data }: { data: BarDatum[] }) {
         return <div className="chart-empty">No data for this range.</div>;
     }
 
-    const max = Math.max(...data.map(d => Math.abs(d.value)), 1);
+    const max = Math.max(...data.map((d) => Math.abs(d.value)), 1);
 
     return (
         <div className="bar-chart">
-            {data.map(d => (
+            {data.map((d) => (
                 <div className="bar-chart-row" key={d.label}>
                     <div className="bar-chart-label">{d.label}</div>
                     <div className="bar-chart-track">

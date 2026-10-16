@@ -1,7 +1,7 @@
-import { Head, useForm } from '@inertiajs/react';
+import PartyForm from '@/components/party-form';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import PartyForm from '@/components/party-form';
+import { Head, useForm } from '@inertiajs/react';
 import '../../../css/parties.css';
 
 export default function PartyEdit({ party, partyTypes = [] }: { party: any; partyTypes: any[] }) {

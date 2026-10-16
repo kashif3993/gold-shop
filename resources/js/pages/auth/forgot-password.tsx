@@ -91,7 +91,7 @@ export default function ForgotPassword({ status, verifiedEmail }: ForgotPassword
                         </div>
                     </form>
 
-                    <div className="text-center text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-center text-sm">
                         <TextLink href={route('login')}>Back to log in</TextLink>
                     </div>
                 </div>
@@ -103,7 +103,7 @@ export default function ForgotPassword({ status, verifiedEmail }: ForgotPassword
         <AuthLayout title="Forgot password" description="Enter your email to look up your account">
             <Head title="Forgot password" />
 
-            {status && <div className="mb-4 text-center text-sm font-medium text-gold">{status}</div>}
+            {status && <div className="text-gold mb-4 text-center text-sm font-medium">{status}</div>}
 
             <div className="space-y-6">
                 <form onSubmit={submitEmail}>
@@ -132,7 +132,7 @@ export default function ForgotPassword({ status, verifiedEmail }: ForgotPassword
                     </div>
                 </form>
 
-                <div className="space-x-1 text-center text-sm text-muted-foreground">
+                <div className="text-muted-foreground space-x-1 text-center text-sm">
                     <span>Or, return to</span>
                     <TextLink href={route('login')}>log in</TextLink>
                 </div>

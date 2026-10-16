@@ -98,6 +98,15 @@ class AdminBackupsTest extends TestCase
 
     public function test_missing_secondary_drive_does_not_break_the_page(): void
     {
+        // A genuinely unplugged drive is a Windows drive-letter concept (this
+        // app only ever runs on the shop's Windows PC) — on Linux, PHP's
+        // dirname() has no notion of a drive letter, so walking up from
+        // "Z:/..." lands on "." (the cwd), which always exists, making the
+        // "missing" case unsimulable there. Only meaningful on Windows.
+        if (PHP_OS_FAMILY !== 'Windows') {
+            $this->markTestSkipped('Simulates an unplugged Windows drive letter; not representable on this OS.');
+        }
+
         // Configured, but pointing at a path that can't exist right now —
         // what a genuinely unplugged/missing drive looks like. The page
         // should degrade gracefully rather than 500.

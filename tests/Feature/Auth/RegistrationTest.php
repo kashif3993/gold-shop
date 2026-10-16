@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Schema;
+
 test('registration screen can be rendered', function () {
     $response = $this->get('/register');
 
@@ -27,5 +29,5 @@ test('registration does not accept a full name', function () {
     ])->assertRedirect(route('dashboard', absolute: false));
 
     // full_name is no longer a column or a field
-    expect(\Illuminate\Support\Facades\Schema::hasColumn('users', 'full_name'))->toBeFalse();
+    expect(Schema::hasColumn('users', 'full_name'))->toBeFalse();
 });

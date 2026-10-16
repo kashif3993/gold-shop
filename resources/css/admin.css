@@ -47,7 +47,11 @@
     width: 100%;
     box-sizing: border-box;
     min-width: 0;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
     color: var(--adm-ink);
 }
 
@@ -106,7 +110,9 @@
     padding: 1.5rem;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.15s, transform 0.15s;
+    transition:
+        border-color 0.15s,
+        transform 0.15s;
 }
 
 .adm-link-card:hover {
@@ -328,7 +334,9 @@
     color: var(--adm-muted);
     font-family: inherit;
     cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .adm-file:hover {

@@ -20,8 +20,11 @@ class ReportTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Party $customer;
+
     private MetalType $gold;
+
     private Purity $p22;
 
     protected function setUp(): void
@@ -39,7 +42,7 @@ class ReportTest extends TestCase
     private function sellItem(float $purchasePrice, float $saleTotal, string $date): Transaction
     {
         $item = Item::create([
-            'item_code' => 'GLD-' . uniqid(),
+            'item_code' => 'GLD-'.uniqid(),
             'item_type' => 'ring',
             'metal_type_id' => $this->gold->id,
             'purity_id' => $this->p22->id,

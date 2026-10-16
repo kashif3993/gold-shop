@@ -1,6 +1,6 @@
-import { Head, Link, usePage } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
 import '../../../css/admin.css';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admin', href: '/admin' }];
@@ -28,31 +28,47 @@ export default function AdminIndex() {
                     </Link>
                     <Link href="/admin/daily-rates" className="adm-link-card">
                         <h2 className="adm-link-card-title">Daily rate history</h2>
-                        <p className="adm-link-card-sub">Every rate ever stored — API fetches, manual entries, and overrides — filterable by metal, purity, source, and date.</p>
+                        <p className="adm-link-card-sub">
+                            Every rate ever stored — API fetches, manual entries, and overrides — filterable by metal, purity, source, and date.
+                        </p>
                     </Link>
                     <Link href="/rate-management" className="adm-link-card">
                         <h2 className="adm-link-card-title">Manual price override</h2>
-                        <p className="adm-link-card-sub">On the Rate Management screen — override a purity's current rate directly, with a required reason.</p>
+                        <p className="adm-link-card-sub">
+                            On the Rate Management screen — override a purity's current rate directly, with a required reason.
+                        </p>
                     </Link>
                     <Link href="/admin/payment" className="adm-link-card">
                         <h2 className="adm-link-card-title">Bank QR payment</h2>
-                        <p className="adm-link-card-sub">Upload your bank/JazzCash/Easypaisa account QR — shown at POS checkout. Confirming a payment also stays admin-only.</p>
+                        <p className="adm-link-card-sub">
+                            Upload your bank/JazzCash/Easypaisa account QR — shown at POS checkout. Confirming a payment also stays admin-only.
+                        </p>
                     </Link>
                     <Link href="/admin/users" className="adm-link-card">
                         <h2 className="adm-link-card-title">Users</h2>
-                        <p className="adm-link-card-sub">Every login the shop has — promote to admin, or deactivate an account, with built-in protection against locking yourself out.</p>
+                        <p className="adm-link-card-sub">
+                            Every login the shop has — promote to admin, or deactivate an account, with built-in protection against locking yourself
+                            out.
+                        </p>
                     </Link>
                     <Link href="/admin/audit-log" className="adm-link-card">
                         <h2 className="adm-link-card-title">Audit log</h2>
-                        <p className="adm-link-card-sub">Every rate edit, price/weight override, discount, and purity change ever recorded — who, when, and why.</p>
+                        <p className="adm-link-card-sub">
+                            Every rate edit, price/weight override, discount, and purity change ever recorded — who, when, and why.
+                        </p>
                     </Link>
                     <Link href="/admin/backups" className="adm-link-card">
                         <h2 className="adm-link-card-title">Backups</h2>
-                        <p className="adm-link-card-sub">Automatic nightly database backup, stored locally — works with or without internet. See what's saved, or back up on demand.</p>
+                        <p className="adm-link-card-sub">
+                            Automatic nightly database backup, stored locally — works with or without internet. See what's saved, or back up on
+                            demand.
+                        </p>
                     </Link>
                     <Link href="/admin/settings" className="adm-link-card">
                         <h2 className="adm-link-card-title">Settings</h2>
-                        <p className="adm-link-card-sub">Shop profile shown on invoices, module on/off switches, sales tax, and the maintenance-mode emergency stop.</p>
+                        <p className="adm-link-card-sub">
+                            Shop profile shown on invoices, module on/off switches, sales tax, and the maintenance-mode emergency stop.
+                        </p>
                     </Link>
                 </div>
             </div>

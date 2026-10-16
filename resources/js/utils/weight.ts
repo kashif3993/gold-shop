@@ -57,9 +57,18 @@ export function gramsToTraditional(grams: number | string): TraditionalUnits {
     let point = Math.round(points * 100) / 100;
 
     // Guard rounding that pushes a part up to its rollover value.
-    if (point >= POINTS_PER_RATTI) { point -= POINTS_PER_RATTI; ratti += 1; }
-    if (ratti >= 8) { ratti -= 8; masha += 1; }
-    if (masha >= 12) { masha -= 12; tola += 1; }
+    if (point >= POINTS_PER_RATTI) {
+        point -= POINTS_PER_RATTI;
+        ratti += 1;
+    }
+    if (ratti >= 8) {
+        ratti -= 8;
+        masha += 1;
+    }
+    if (masha >= 12) {
+        masha -= 12;
+        tola += 1;
+    }
 
     return {
         tola: tola ? String(tola) : '',

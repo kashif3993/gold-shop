@@ -1,5 +1,5 @@
-import { Gem } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
+import { Gem } from 'lucide-react';
 
 export default function AppLogo() {
     // Shared on every page (see HandleInertiaRequests) — falls back to the
@@ -13,12 +13,10 @@ export default function AppLogo() {
                 <Gem className="size-[22px] fill-transparent stroke-[2.5] text-black group-data-[collapsible=icon]:size-4" />
             </div>
             <div className="ml-3 flex flex-col justify-center text-left group-data-[collapsible=icon]:hidden">
-                <span className="truncate text-[17px] font-bold uppercase leading-tight tracking-wide text-sidebar-foreground">
+                <span className="text-sidebar-foreground truncate text-[17px] leading-tight font-bold tracking-wide uppercase">
                     {shop_name || 'Zar & Noor'}
                 </span>
-                <span className="mt-1 text-[10px] font-bold uppercase leading-none tracking-widest text-[#b5892f]">
-                    Jewelry ERP
-                </span>
+                <span className="mt-1 text-[10px] leading-none font-bold tracking-widest text-[#b5892f] uppercase">Jewelry ERP</span>
             </div>
         </div>
     );
