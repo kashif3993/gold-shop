@@ -29,6 +29,12 @@ class StorePOSTransactionRequest extends FormRequest
             'discount_reason' => 'nullable|string|max:255',
             'discountType' => 'required|in:flat,percentage',
             'paymentMethod' => 'required|in:Cash,Card,Transfer,cash,card,bank_transfer,credit',
+            // How much the customer is actually paying right now — null/omitted
+            // means "the full total" (today's default). Less than the total
+            // leaves the rest as a due balance on the invoice, settled later
+            // under Invoices. The server re-clamps this against the computed
+            // grand total; a client can't send more than what's actually owed.
+            'amount_paid' => 'nullable|numeric|min:0',
             'items' => 'required_without:exchanges|array',
             'items.*.id' => 'required|exists:items,id',
             // Optional negotiated rate for this one line — everything else is

@@ -66,4 +66,32 @@ class Invoice extends Model
     {
         return $this->hasOne(BankQrPayment::class);
     }
+
+    /** Every payment recorded against this invoice, oldest first — a full history, never a single overwritten total. */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(InvoicePayment::class)->orderBy('paid_at')->orderBy('id');
+    }
+
+    public function amountPaid(): float
+    {
+        return round((float) $this->payments->sum('amount'), 2);
+    }
+
+    public function amountDue(): float
+    {
+        return max(0, round((float) $this->grand_total - $this->amountPaid(), 2));
+    }
+
+    /** 'paid' | 'partial' | 'due' — 'due' also covers zero payments made so far. */
+    public function paymentStatus(): string
+    {
+        $due = $this->amountDue();
+
+        if ($due <= 0) {
+            return 'paid';
+        }
+
+        return $this->amountPaid() > 0 ? 'partial' : 'due';
+    }
 }

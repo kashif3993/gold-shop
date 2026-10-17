@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\RateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\InvoicePaymentController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\POSController;
@@ -138,10 +139,12 @@ Route::middleware(['auth'])->group(function () {
     // the current rate (config/Admin → Settings controls the rate % and Nisab).
     Route::get('zakat', [ZakatController::class, 'index'])->middleware('feature:zakat')->name('zakat.index');
 
-    // Invoices (read-only — created by the POS module)
+    // Invoices — created by the POS module; the only write from here on is
+    // recording a payment against an existing one (see InvoicePaymentController).
     Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/{invoice}/data', [InvoiceController::class, 'data'])->name('invoices.data');
     Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::post('invoices/{invoice}/payments', [InvoicePaymentController::class, 'store'])->name('invoices.payments.store');
 
     Route::post('items', [ItemController::class, 'store'])->name('items.store');
     Route::get('items/{item}/tag', [ItemController::class, 'tag'])->name('items.tag');

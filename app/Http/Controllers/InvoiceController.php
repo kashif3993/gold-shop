@@ -30,6 +30,7 @@ class InvoiceController extends Controller
         $invoices = (clone $base)
             ->with(['party:id,name,phone', 'bankQrPayment:id,invoice_id,reference,bank_txn_id,slip_path'])
             ->withCount('lineItems')
+            ->withSum('payments as amount_paid', 'amount')
             ->orderByDesc('invoice_date')
             ->orderByDesc('id')
             ->paginate(20)
@@ -44,6 +45,14 @@ class InvoiceController extends Controller
                 ? route('admin.pos.bank-qr.slip', $invoice->bankQrPayment->reference)
                 : null;
             unset($invoice->bankQrPayment);
+
+            // withSum leaves amount_paid null when an invoice has zero payment
+            // rows (a fully-due invoice) — treat that the same as 0 paid.
+            $paid = round((float) ($invoice->amount_paid ?? 0), 2);
+            $due = max(0, round((float) $invoice->grand_total - $paid, 2));
+            $invoice->amount_paid = $paid;
+            $invoice->amount_due = $due;
+            $invoice->payment_status = $due <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'due');
 
             return $invoice;
         });
@@ -95,6 +104,7 @@ class InvoiceController extends Controller
             'transactions.metalType:id,name',
             'transactions.purity:id,name',
             'bankQrPayment',
+            'payments.recordedBy:id,username',
         ]);
 
         // A slip can show real account/transaction details, so it's only
@@ -115,6 +125,9 @@ class InvoiceController extends Controller
         return [
             'invoice' => $invoice,
             'subtotal' => $subtotal,
+            'amountPaid' => $invoice->amountPaid(),
+            'amountDue' => $invoice->amountDue(),
+            'paymentStatus' => $invoice->paymentStatus(),
             'exchangeLines' => $invoice->transactions->map(fn ($t) => [
                 'id' => $t->id,
                 'description' => trim(($t->metalType->name ?? '').' '.($t->purity->name ?? '').' scrap'),

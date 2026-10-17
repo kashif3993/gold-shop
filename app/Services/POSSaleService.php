@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\InvoiceLineItem;
+use App\Models\InvoicePayment;
 use App\Models\Item;
 use App\Models\Party;
 use App\Models\PartyType;
@@ -167,6 +168,18 @@ class POSSaleService
         $partyId = $this->resolveParty($validated);
         $dbPaymentMethod = self::PAYMENT_METHOD_MAP[strtolower($validated['paymentMethod'])] ?? 'cash';
 
+        // Bank QR is always paid in full by its own confirm flow — the
+        // partial-payment field only applies to Cash/Card/Transfer. Anything
+        // else defaults to the full total, same as before this existed.
+        $isBankQr = strtolower($validated['paymentMethod']) === 'bank_qr' || strtolower($validated['paymentMethod']) === 'bank qr';
+        $amountPaid = $isBankQr ? $totals['grandTotal'] : (float) ($validated['amount_paid'] ?? $totals['grandTotal']);
+
+        if ($amountPaid < 0 || $amountPaid > $totals['grandTotal']) {
+            throw new \InvalidArgumentException(
+                "Amount paid (Rs {$amountPaid}) must be between 0 and the grand total (Rs {$totals['grandTotal']})."
+            );
+        }
+
         $dateStr = now()->format('Ymd');
         $lastInvoice = Invoice::where('invoice_number', 'like', "INV-{$dateStr}-%")->latest('id')->first();
         $sequence = $lastInvoice ? ((int) substr($lastInvoice->invoice_number, -4)) + 1 : 1;
@@ -298,6 +311,27 @@ class POSSaleService
                     'created_by_user_id' => $userId,
                 ]);
             }
+        }
+
+        // Only a real payment creates a row — a due invoice with nothing
+        // paid yet starts with zero rows in its payment history, not a
+        // zero-amount one.
+        if ($amountPaid > 0) {
+            // invoice_payments' method is how this one payment physically
+            // arrived — 'credit' isn't a real payment method, so it can
+            // never land here; the POS UI doesn't offer it as a tab anyway.
+            $paymentRowMethod = $isBankQr ? 'bank_qr' : $dbPaymentMethod;
+            if (! in_array($paymentRowMethod, ['cash', 'card', 'bank_transfer', 'bank_qr'], true)) {
+                $paymentRowMethod = 'cash';
+            }
+
+            InvoicePayment::create([
+                'invoice_id' => $invoice->id,
+                'amount' => $amountPaid,
+                'payment_method' => $paymentRowMethod,
+                'paid_at' => now(),
+                'recorded_by_user_id' => $userId,
+            ]);
         }
 
         return $invoice;

@@ -582,4 +582,73 @@ class POSTransactionTest extends TestCase
             ]);
         }
     }
+
+    public function test_omitting_amount_paid_still_pays_the_invoice_in_full(): void
+    {
+        $this->setRate($this->purity22k, 20000);
+        $item = $this->createInStockItem();
+
+        $payload = ['discount' => 0, 'discountType' => 'flat', 'paymentMethod' => 'Cash', 'items' => [['id' => $item->id]]];
+        $response = $this->actingAs($this->user)->postJson('/api/v1/pos/transaction', $payload);
+
+        $invoice = Invoice::find($response->json('invoice.id'));
+        $this->assertEquals(0, $invoice->amountDue());
+        $this->assertEquals('paid', $invoice->paymentStatus());
+        $this->assertDatabaseHas('invoice_payments', [
+            'invoice_id' => $invoice->id,
+            'amount' => (float) $invoice->grand_total,
+            'payment_method' => 'cash',
+        ]);
+    }
+
+    public function test_a_partial_amount_paid_leaves_the_rest_due(): void
+    {
+        $this->setRate($this->purity22k, 20000);
+        $item = $this->createInStockItem();
+
+        $payload = [
+            'discount' => 0, 'discountType' => 'flat', 'paymentMethod' => 'Cash',
+            'items' => [['id' => $item->id]], 'amount_paid' => 50000,
+        ];
+        $response = $this->actingAs($this->user)->postJson('/api/v1/pos/transaction', $payload);
+        $response->assertStatus(201);
+
+        $invoice = Invoice::find($response->json('invoice.id'));
+        $this->assertEquals(50000, $invoice->amountPaid());
+        $this->assertEqualsWithDelta((float) $invoice->grand_total - 50000, $invoice->amountDue(), 0.001);
+        $this->assertEquals('partial', $invoice->paymentStatus());
+    }
+
+    public function test_zero_amount_paid_leaves_the_invoice_fully_due_with_no_payment_row(): void
+    {
+        $this->setRate($this->purity22k, 20000);
+        $item = $this->createInStockItem();
+
+        $payload = [
+            'discount' => 0, 'discountType' => 'flat', 'paymentMethod' => 'Cash',
+            'items' => [['id' => $item->id]], 'amount_paid' => 0,
+        ];
+        $response = $this->actingAs($this->user)->postJson('/api/v1/pos/transaction', $payload);
+
+        $invoice = Invoice::find($response->json('invoice.id'));
+        $this->assertEquals(0, $invoice->amountPaid());
+        $this->assertEquals((float) $invoice->grand_total, $invoice->amountDue());
+        $this->assertEquals('due', $invoice->paymentStatus());
+        $this->assertDatabaseCount('invoice_payments', 0);
+    }
+
+    public function test_an_amount_paid_above_the_grand_total_is_rejected(): void
+    {
+        $this->setRate($this->purity22k, 20000);
+        $item = $this->createInStockItem();
+
+        $payload = [
+            'discount' => 0, 'discountType' => 'flat', 'paymentMethod' => 'Cash',
+            'items' => [['id' => $item->id]], 'amount_paid' => 99999999,
+        ];
+        $response = $this->actingAs($this->user)->postJson('/api/v1/pos/transaction', $payload);
+
+        $response->assertStatus(400);
+        $response->assertJson(['success' => false]);
+    }
 }
