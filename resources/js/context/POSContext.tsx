@@ -15,6 +15,7 @@ const initialState: CartState = {
     customer_name: '',
     customer_phone: '',
     paymentMethod: 'Cash',
+    amountPaid: null,
 };
 
 // Helper to recalculate totals. Each item/exchange already carries its own
@@ -122,6 +123,9 @@ const posReducer = (state: CartState, action: CartAction): CartState => {
         }
         case 'SET_PAYMENT_METHOD': {
             return { ...state, paymentMethod: action.payload };
+        }
+        case 'SET_AMOUNT_PAID': {
+            return { ...state, amountPaid: action.payload };
         }
         case 'SET_TAX_CONFIG': {
             const { enabled, ratePercent } = action.payload;

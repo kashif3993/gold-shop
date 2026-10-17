@@ -49,6 +49,10 @@ export interface CartState {
     customer_name: string;
     customer_phone: string;
     paymentMethod: 'Cash' | 'Card' | 'Transfer' | 'Bank QR';
+    // null = "pay the full total" (the default). A number — including 0 —
+    // means the cashier has deliberately chosen to collect less than the
+    // total now; the rest is left as a due balance on the invoice.
+    amountPaid: number | null;
 }
 
 export type CartAction =
@@ -61,5 +65,6 @@ export type CartAction =
     | { type: 'SET_DISCOUNT_REASON'; payload: string }
     | { type: 'SET_CUSTOMER'; payload: { name: string; phone: string } }
     | { type: 'SET_PAYMENT_METHOD'; payload: 'Cash' | 'Card' | 'Transfer' | 'Bank QR' }
+    | { type: 'SET_AMOUNT_PAID'; payload: number | null }
     | { type: 'SET_TAX_CONFIG'; payload: { enabled: boolean; ratePercent: number } }
     | { type: 'CLEAR_CART' };

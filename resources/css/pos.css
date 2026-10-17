@@ -442,6 +442,146 @@
     box-shadow: 0 2px 6px rgba(179, 138, 54, 0.25);
 }
 
+/* ── Amount Paid Now ─────────────────────────── */
+.pos-amount-paid-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+
+.pos-amount-paid-full {
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 10px;
+    font-weight: 700;
+    color: #b38a36;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.pos-amount-paid-full:hover {
+    color: #a07a2a;
+}
+
+.pos-due-hint {
+    margin: 0.4rem 0 0;
+    font-size: 0.72rem;
+    color: #b91c1c;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+}
+
+/* ── Dark mode ─────────────────────────────────────────────────
+   This file was written in fixed light-mode colors throughout, so
+   every surface needs its own .dark override here too. */
+
+.dark .pos-sidebar-container {
+    background: #161616;
+    border-color: #2a2a2a;
+    box-shadow:
+        0 4px 24px 0 rgba(0, 0, 0, 0.3),
+        0 1px 4px 0 rgba(0, 0, 0, 0.2);
+    scrollbar-color: #3a3a3a transparent;
+}
+
+.dark .pos-sidebar-container::-webkit-scrollbar-thumb {
+    background: #3a3a3a;
+}
+
+.dark .pos-gold-rate-box {
+    background: linear-gradient(135deg, rgba(232, 209, 138, 0.1) 0%, rgba(232, 209, 138, 0.05) 100%);
+    border-color: rgba(212, 175, 55, 0.3);
+}
+
+.dark .pos-gold-rate-icon {
+    background: #1f1f1f;
+}
+
+.dark .pos-gold-rate-status {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dark .pos-gold-rate-input {
+    background-color: #1f1f1f;
+    border-color: rgba(212, 175, 55, 0.35);
+    color: #f5f5f5;
+}
+
+.dark .pos-bill-summary {
+    background: #1a1a1a;
+    border-color: #2a2a2a;
+}
+
+.dark .pos-bill-row-value {
+    color: #f5f5f5;
+}
+
+.dark .pos-discount-toggle {
+    background: #1f1f1f;
+    border-color: #3a3a3a;
+}
+
+.dark .pos-discount-toggle button.active {
+    background: #2a2a2a;
+    color: #f5f5f5;
+    box-shadow: inset 0 0 0 1px #3a3a3a;
+}
+
+.dark .pos-discount-input {
+    background: #1f1f1f;
+    border-color: #3a3a3a;
+    color: #f5f5f5;
+}
+
+.dark .pos-bill-divider {
+    border-top-color: #2a2a2a;
+}
+
+.dark .pos-grand-total {
+    background: linear-gradient(135deg, rgba(232, 209, 138, 0.1) 0%, rgba(232, 209, 138, 0.05) 100%);
+    border-color: rgba(212, 175, 55, 0.35);
+}
+
+.dark .pos-grand-total-label {
+    color: #d1d5db;
+}
+
+.dark .pos-payment-tabs {
+    background: #1f1f1f;
+    border-color: #3a3a3a;
+}
+
+.dark .pos-payment-tab:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f5f5f5;
+}
+
+.dark .pos-payment-tab.active {
+    background: rgba(232, 209, 138, 0.16);
+    color: #f0d489;
+    border-color: rgba(212, 175, 55, 0.35);
+}
+
+.dark .pos-amount-paid-full {
+    color: #e8d18a;
+}
+
+.dark .pos-amount-paid-full:hover {
+    color: #f0d489;
+}
+
+.dark .pos-due-hint {
+    color: #fca5a5;
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
 /* ── Responsive small-screen tweaks ─────── */
 @media (max-width: 640px) {
     .pos-sidebar-container {

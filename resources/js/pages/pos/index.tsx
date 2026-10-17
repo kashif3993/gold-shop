@@ -117,7 +117,7 @@ function POSCart() {
                     </div>
                     <input
                         type="text"
-                        className="block w-full rounded-lg border border-gray-200 py-2 pr-12 pl-11 text-gray-900 placeholder-gray-400 shadow-sm focus:border-[#b38a36] focus:ring-[#b38a36]"
+                        className="block w-full rounded-lg border border-gray-200 py-2 pr-12 pl-11 text-gray-900 placeholder-gray-400 shadow-sm focus:border-[#b38a36] focus:ring-[#b38a36] dark:border-[#3a3a3a] dark:bg-[#1f1f1f] dark:text-gray-100 dark:placeholder-gray-500"
                         placeholder="Scan barcode or search item code (e.g. ITM-1042)..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -134,21 +134,21 @@ function POSCart() {
 
                     {/* Search Results Dropdown */}
                     {searchResults.length > 0 && (
-                        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-[#3a3a3a] dark:bg-[#1f1f1f]">
                             {searchResults.map((item) => (
                                 <button
                                     key={item.id}
                                     onClick={() => handleAddItem(item)}
-                                    className="flex w-full items-center justify-between border-b border-gray-100 px-4 py-3 text-left transition last:border-0 hover:bg-gray-50"
+                                    className="flex w-full items-center justify-between border-b border-gray-100 px-4 py-3 text-left transition last:border-0 hover:bg-gray-50 dark:border-[#2a2a2a] dark:hover:bg-white/5"
                                 >
                                     <div>
-                                        <div className="font-bold text-gray-900">{item.item_code}</div>
-                                        <div className="text-xs text-gray-500">
+                                        <div className="font-bold text-gray-900 dark:text-gray-100">{item.item_code}</div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
                                             {item.item_type} - {item.metal_name} {item.purity_name}
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="font-semibold text-gray-900">{item.net_weight_grams}g</div>
+                                        <div className="font-semibold text-gray-900 dark:text-gray-100">{item.net_weight_grams}g</div>
                                         <div className="text-xs text-[#c39b66]">Add to cart</div>
                                     </div>
                                 </button>
@@ -159,27 +159,45 @@ function POSCart() {
             </div>
 
             {/* Table */}
-            <div className="flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-[#2a2a2a] dark:bg-[#161616]">
                 <div className="overflow-x-auto">
-                    <table className="w-full min-w-[650px] divide-y divide-gray-200">
-                        <thead className="bg-gray-50/50">
+                    <table className="w-full min-w-[650px] divide-y divide-gray-200 dark:divide-[#2a2a2a]">
+                        <thead className="bg-gray-50/50 dark:bg-white/5">
                             <tr>
-                                <th scope="col" className="w-12 px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                <th
+                                    scope="col"
+                                    className="w-12 px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                                >
                                     #
                                 </th>
-                                <th scope="col" className="px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                <th
+                                    scope="col"
+                                    className="px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                                >
                                     Item Details
                                 </th>
-                                <th scope="col" className="px-6 py-4 text-right text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                <th
+                                    scope="col"
+                                    className="px-6 py-4 text-right text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                                >
                                     Net Weight
                                 </th>
-                                <th scope="col" className="px-6 py-4 text-right text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                <th
+                                    scope="col"
+                                    className="px-6 py-4 text-right text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                                >
                                     Labour
                                 </th>
-                                <th scope="col" className="px-6 py-4 text-right text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                <th
+                                    scope="col"
+                                    className="px-6 py-4 text-right text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                                >
                                     Polish
                                 </th>
-                                <th scope="col" className="px-6 py-4 text-right text-[11px] font-bold tracking-wider text-gray-500 uppercase">
+                                <th
+                                    scope="col"
+                                    className="px-6 py-4 text-right text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                                >
                                     Calculated Price
                                     <div className="mt-0.5 text-[9px] tracking-normal text-[#c39b66] normal-case">Based on today's rate</div>
                                 </th>
@@ -188,20 +206,22 @@ function POSCart() {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 bg-white">
+                        <tbody className="divide-y divide-gray-100 bg-white dark:divide-[#2a2a2a] dark:bg-[#161616]">
                             {state.items.map((item, index) => {
                                 const itemGoldValue = item.net_weight_grams * item.rate_per_gram;
                                 const lineTotal = itemGoldValue + item.labour_cost + item.polish_cost;
 
                                 return (
-                                    <tr key={item.id} className="transition hover:bg-gray-50/50">
-                                        <td className="px-6 py-5 text-sm font-medium whitespace-nowrap text-gray-400">{index + 1}</td>
+                                    <tr key={item.id} className="transition hover:bg-gray-50/50 dark:hover:bg-white/5">
+                                        <td className="px-6 py-5 text-sm font-medium whitespace-nowrap text-gray-400 dark:text-gray-500">
+                                            {index + 1}
+                                        </td>
                                         <td className="px-6 py-5">
-                                            <div className="mb-1.5 text-sm font-bold text-gray-900">
+                                            <div className="mb-1.5 text-sm font-bold text-gray-900 dark:text-gray-100">
                                                 {item.purity_name} {item.metal_name} {item.item_type}
                                             </div>
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-800">
+                                                <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-800 dark:bg-white/10 dark:text-gray-200">
                                                     {item.item_code}
                                                 </span>
                                                 <span className="inline-flex items-center rounded border border-amber-100 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-800">
@@ -216,16 +236,16 @@ function POSCart() {
                                                 />
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5 text-right text-sm font-bold whitespace-nowrap text-gray-900 tabular-nums">
+                                        <td className="px-6 py-5 text-right text-sm font-bold whitespace-nowrap text-gray-900 tabular-nums dark:text-gray-100">
                                             {item.net_weight_grams.toFixed(3)} g
                                         </td>
-                                        <td className="px-6 py-5 text-right text-sm whitespace-nowrap text-gray-600 tabular-nums">
+                                        <td className="px-6 py-5 text-right text-sm whitespace-nowrap text-gray-600 tabular-nums dark:text-gray-400">
                                             {formatPKR(item.labour_cost)}
                                         </td>
-                                        <td className="px-6 py-5 text-right text-sm whitespace-nowrap text-gray-600 tabular-nums">
+                                        <td className="px-6 py-5 text-right text-sm whitespace-nowrap text-gray-600 tabular-nums dark:text-gray-400">
                                             {formatPKR(item.polish_cost)}
                                         </td>
-                                        <td className="px-6 py-5 text-right text-sm font-bold whitespace-nowrap text-gray-900 tabular-nums">
+                                        <td className="px-6 py-5 text-right text-sm font-bold whitespace-nowrap text-gray-900 tabular-nums dark:text-gray-100">
                                             {formatPKR(lineTotal)}
                                         </td>
                                         <td className="px-6 py-5 text-right text-sm font-medium whitespace-nowrap">
@@ -242,7 +262,7 @@ function POSCart() {
 
                             {state.items.length === 0 && (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-20 text-center text-gray-400">
+                                    <td colSpan={7} className="px-6 py-20 text-center text-gray-400 dark:text-gray-500">
                                         <div className="flex flex-col items-center justify-center">
                                             <QrCode className="mb-3 h-10 w-10 opacity-20" />
                                             <p>Cart is empty. Scan an item to begin.</p>
@@ -257,45 +277,60 @@ function POSCart() {
 
             {/* Exchanges (Old Gold) Section — hidden entirely when the module is off (Admin → Settings) */}
             {exchangeEnabled && (
-                <div className="mt-4 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/50 px-6 py-3">
-                        <h3 className="text-xs font-bold tracking-wider text-gray-700 uppercase">Old Gold / Silver Exchange</h3>
+                <div className="mt-4 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-[#2a2a2a] dark:bg-[#161616]">
+                    <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/50 px-6 py-3 dark:border-[#2a2a2a] dark:bg-white/5">
+                        <h3 className="text-xs font-bold tracking-wider text-gray-700 uppercase dark:text-gray-300">Old Gold / Silver Exchange</h3>
                     </div>
                     <div className="p-4">
                         <ExchangeForm metals={metals} purities={purities} />
 
                         {state.exchanges.length > 0 && (
                             <div className="mt-4">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-[#2a2a2a]">
+                                    <thead className="bg-gray-50 dark:bg-white/5">
                                         <tr>
-                                            <th scope="col" className="px-4 py-2 text-left text-[10px] font-bold text-gray-500 uppercase">
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-2 text-left text-[10px] font-bold text-gray-500 uppercase dark:text-gray-400"
+                                            >
                                                 Item
                                             </th>
-                                            <th scope="col" className="px-4 py-2 text-right text-[10px] font-bold text-gray-500 uppercase">
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-2 text-right text-[10px] font-bold text-gray-500 uppercase dark:text-gray-400"
+                                            >
                                                 Gross Wt.
                                             </th>
-                                            <th scope="col" className="px-4 py-2 text-right text-[10px] font-bold text-gray-500 uppercase">
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-2 text-right text-[10px] font-bold text-gray-500 uppercase dark:text-gray-400"
+                                            >
                                                 Deduction
                                             </th>
-                                            <th scope="col" className="px-4 py-2 text-right text-[10px] font-bold text-gray-500 uppercase">
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-2 text-right text-[10px] font-bold text-gray-500 uppercase dark:text-gray-400"
+                                            >
                                                 Net Wt.
                                             </th>
-                                            <th scope="col" className="px-4 py-2 text-right text-[10px] font-bold text-gray-500 uppercase">
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-2 text-right text-[10px] font-bold text-gray-500 uppercase dark:text-gray-400"
+                                            >
                                                 Valuation
                                             </th>
                                             <th scope="col" className="relative w-12 px-4 py-2"></th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
+                                    <tbody className="divide-y divide-gray-100 dark:divide-[#2a2a2a]">
                                         {state.exchanges.map((exc) => (
                                             <tr key={exc.id}>
-                                                <td className="px-4 py-2 text-sm font-medium text-gray-900">
+                                                <td className="px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                                                     {exc.metal_name} {exc.purity_name}
                                                 </td>
-                                                <td className="px-4 py-2 text-right text-sm tabular-nums">{exc.weight_grams} g</td>
+                                                <td className="px-4 py-2 text-right text-sm tabular-nums dark:text-gray-300">{exc.weight_grams} g</td>
                                                 <td className="px-4 py-2 text-right text-sm text-red-500 tabular-nums">{exc.deduction_percent}%</td>
-                                                <td className="px-4 py-2 text-right text-sm font-bold tabular-nums">
+                                                <td className="px-4 py-2 text-right text-sm font-bold tabular-nums dark:text-gray-100">
                                                     {exc.net_weight_grams.toFixed(3)} g
                                                 </td>
                                                 <td className="px-4 py-2 text-right text-sm font-bold text-[#b38a36] tabular-nums">
@@ -365,7 +400,7 @@ function EditableRate({ detectedRate, rate, onChange }: { detectedRate: number; 
                         if (e.key === 'Enter') commit();
                         if (e.key === 'Escape') setEditing(false);
                     }}
-                    className="w-20 rounded border border-[#b38a36] px-1 py-0.5 text-[10px] tabular-nums"
+                    className="w-20 rounded border border-[#b38a36] px-1 py-0.5 text-[10px] tabular-nums dark:bg-[#1f1f1f] dark:text-gray-100"
                 />
                 <span className="text-[10px] text-gray-400">/g</span>
             </span>
@@ -382,7 +417,7 @@ function EditableRate({ detectedRate, rate, onChange }: { detectedRate: number; 
                 }}
                 className={cn(
                     'text-[10px] tabular-nums underline decoration-dotted underline-offset-2',
-                    isOverridden ? 'font-semibold text-[#b38a36]' : 'text-gray-400 hover:text-gray-600',
+                    isOverridden ? 'font-semibold text-[#b38a36]' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
                 )}
                 title="Click to edit this item's rate"
             >
@@ -457,9 +492,9 @@ function ExchangeForm({ metals, purities }: { metals: any[]; purities: any[] }) 
     return (
         <div className="flex items-end gap-3">
             <div className="flex-1">
-                <label className="mb-1 block text-[10px] font-medium text-gray-500">Metal</label>
+                <label className="mb-1 block text-[10px] font-medium text-gray-500 dark:text-gray-400">Metal</label>
                 <select
-                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs dark:border-[#3a3a3a] dark:bg-[#1f1f1f] dark:text-gray-100"
                     value={metalId}
                     onChange={(e) => setMetalId(e.target.value)}
                 >
@@ -472,9 +507,9 @@ function ExchangeForm({ metals, purities }: { metals: any[]; purities: any[] }) 
                 </select>
             </div>
             <div className="flex-1">
-                <label className="mb-1 block text-[10px] font-medium text-gray-500">Purity</label>
+                <label className="mb-1 block text-[10px] font-medium text-gray-500 dark:text-gray-400">Purity</label>
                 <select
-                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs dark:border-[#3a3a3a] dark:bg-[#1f1f1f] dark:text-gray-100"
                     value={purityId}
                     onChange={(e) => setPurityId(e.target.value)}
                 >
@@ -489,27 +524,30 @@ function ExchangeForm({ metals, purities }: { metals: any[]; purities: any[] }) 
                 </select>
             </div>
             <div className="w-24">
-                <label className="mb-1 block text-[10px] font-medium text-gray-500">Wt. (g)</label>
+                <label className="mb-1 block text-[10px] font-medium text-gray-500 dark:text-gray-400">Wt. (g)</label>
                 <input
                     type="number"
                     step="0.001"
-                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs dark:border-[#3a3a3a] dark:bg-[#1f1f1f] dark:text-gray-100"
                     placeholder="0.000"
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
                 />
             </div>
             <div className="w-20">
-                <label className="mb-1 block text-[10px] font-medium text-gray-500">Ded. %</label>
+                <label className="mb-1 block text-[10px] font-medium text-gray-500 dark:text-gray-400">Ded. %</label>
                 <input
                     type="number"
-                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs dark:border-[#3a3a3a] dark:bg-[#1f1f1f] dark:text-gray-100"
                     placeholder="0"
                     value={deduction}
                     onChange={(e) => setDeduction(e.target.value)}
                 />
             </div>
-            <button onClick={handleAdd} className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-gray-800">
+            <button
+                onClick={handleAdd}
+                className="rounded-lg bg-gray-900 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-gray-800 dark:bg-[#e8d18a] dark:text-[#1c1a16] dark:hover:bg-[#ddc06b]"
+            >
                 Add
             </button>
         </div>
@@ -564,23 +602,23 @@ function POSSidebar() {
 
             {/* Customer Details */}
             <div>
-                <h3 className="mb-2 text-[10px] font-bold tracking-wider text-gray-500 uppercase">Customer Details</h3>
+                <h3 className="mb-2 text-[10px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400">Customer Details</h3>
                 <div className="space-y-2">
                     <div>
-                        <label className="mb-1 block text-[10px] font-medium text-gray-500">Customer Name</label>
+                        <label className="mb-1 block text-[10px] font-medium text-gray-500 dark:text-gray-400">Customer Name</label>
                         <input
                             type="text"
-                            className="block w-full rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-900 focus:border-[#b38a36] focus:ring-[#b38a36]"
+                            className="block w-full rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-900 focus:border-[#b38a36] focus:ring-[#b38a36] dark:border-[#3a3a3a] dark:bg-[#1f1f1f] dark:text-gray-100"
                             placeholder="Enter name"
                             value={state.customer_name}
                             onChange={(e) => dispatch({ type: 'SET_CUSTOMER', payload: { name: e.target.value, phone: state.customer_phone } })}
                         />
                     </div>
                     <div>
-                        <label className="mb-1 block text-[10px] font-medium text-gray-500">Phone Number</label>
+                        <label className="mb-1 block text-[10px] font-medium text-gray-500 dark:text-gray-400">Phone Number</label>
                         <input
                             type="text"
-                            className="block w-full rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-900 focus:border-[#b38a36] focus:ring-[#b38a36]"
+                            className="block w-full rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-900 focus:border-[#b38a36] focus:ring-[#b38a36] dark:border-[#3a3a3a] dark:bg-[#1f1f1f] dark:text-gray-100"
                             placeholder="+92 3XX XXXXXXX"
                             value={state.customer_phone}
                             onChange={(e) => dispatch({ type: 'SET_CUSTOMER', payload: { name: state.customer_name, phone: e.target.value } })}
@@ -589,11 +627,11 @@ function POSSidebar() {
                 </div>
             </div>
 
-            <hr className="border-gray-100" />
+            <hr className="border-gray-100 dark:border-[#2a2a2a]" />
 
             {/* Bill Summary */}
             <div>
-                <h3 className="mb-2 text-[10px] font-bold tracking-wider text-gray-500 uppercase">Bill Summary</h3>
+                <h3 className="mb-2 text-[10px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400">Bill Summary</h3>
                 <div className="pos-bill-summary">
                     {/* Subtotal */}
                     <div className="pos-bill-row">
@@ -678,6 +716,44 @@ function POSSidebar() {
                 </div>
             </div>
 
+            {/* Amount Paid Now — defaults to the full total; editable down to 0
+                for a partial/credit sale. Bank QR is always paid in full by its
+                own confirm step, so this doesn't apply there. */}
+            {state.paymentMethod !== 'Bank QR' && (
+                <div>
+                    <div className="pos-amount-paid-head">
+                        <h3 className="mb-0 text-[10px] font-bold tracking-wider text-gray-500 uppercase">Amount Paid Now</h3>
+                        {state.amountPaid !== null && (
+                            <button type="button" className="pos-amount-paid-full" onClick={() => dispatch({ type: 'SET_AMOUNT_PAID', payload: null })}>
+                                Pay in full
+                            </button>
+                        )}
+                    </div>
+                    <div className="pos-input-wrapper">
+                        <span className="pos-input-prefix">Rs</span>
+                        <input
+                            type="number"
+                            min={0}
+                            max={state.total}
+                            step="1"
+                            className="pos-gold-rate-input"
+                            value={state.amountPaid === null ? state.total : state.amountPaid}
+                            onChange={(e) => {
+                                const raw = e.target.value === '' ? 0 : Number(e.target.value);
+                                const clamped = Math.max(0, Math.min(raw, state.total));
+                                dispatch({ type: 'SET_AMOUNT_PAID', payload: clamped });
+                            }}
+                        />
+                    </div>
+                    {(state.amountPaid !== null ? state.amountPaid : state.total) < state.total && (
+                        <p className="pos-due-hint">
+                            Due after this sale: <strong>{formatPKR(state.total - (state.amountPaid ?? state.total))}</strong> — settle it later
+                            from Invoices.
+                        </p>
+                    )}
+                </div>
+            )}
+
             {/* Action Buttons */}
             <div className="mt-2 flex gap-3">
                 <button
@@ -701,6 +777,9 @@ function POSSidebar() {
                                 ...(item.rate_per_gram !== item.detected_rate_per_gram ? { rate_override: item.rate_per_gram } : {}),
                             })),
                             exchanges: state.exchanges,
+                            // Omitted (null) means "pay the full total" — the
+                            // server defaults to that too if this key is absent.
+                            ...(state.paymentMethod !== 'Bank QR' && state.amountPaid !== null ? { amount_paid: state.amountPaid } : {}),
                         };
 
                         if (state.paymentMethod === 'Bank QR') {

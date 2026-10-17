@@ -319,6 +319,126 @@
     border-color: var(--inv-gold-soft-border);
 }
 
+/* Payment status — paid uses the same gold-soft as a good outcome, due uses
+   the one red this module allows (negative amounts / errors), partial stays
+   the plain neutral badge. No other accent colors. */
+.inv-status-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    border: 1px solid var(--inv-line);
+    background: var(--inv-surface-head);
+    color: var(--inv-muted);
+}
+
+.inv-status-badge.paid {
+    background: var(--inv-gold-soft);
+    color: var(--inv-gold-text);
+    border-color: var(--inv-gold-soft-border);
+}
+
+.inv-status-badge.due {
+    background: #fef2f2;
+    color: var(--inv-negative);
+    border-color: #fecaca;
+}
+
+.inv-pay-btn {
+    color: var(--inv-gold-dark);
+}
+
+/* ── Record Payment modal ───────────────────────────────────── */
+.inv-pay-modal {
+    max-width: 560px;
+}
+
+.inv-pay-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.inv-pay-summary-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--inv-muted-2);
+    margin-bottom: 0.2rem;
+}
+
+.inv-pay-summary-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--inv-ink);
+}
+
+.inv-pay-summary-value.due {
+    color: var(--inv-negative);
+}
+
+.inv-pay-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--inv-muted);
+    margin: 1.1rem 0 0.5rem;
+}
+
+.inv-pay-history {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+
+.inv-pay-history th {
+    text-align: left;
+    padding: 0.3rem 0.4rem;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--inv-muted-2);
+    border-bottom: 1px solid var(--inv-line);
+}
+
+.inv-pay-history td {
+    padding: 0.35rem 0.4rem;
+    border-bottom: 1px solid var(--inv-line);
+}
+
+.inv-pay-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+
+.inv-pay-done {
+    color: var(--inv-gold-text);
+    background: var(--inv-gold-soft);
+    border: 1px solid var(--inv-gold-soft-border);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+}
+
+@media (max-width: 420px) {
+    .inv-pay-summary {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .inv-pay-form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
 .inv-empty {
     text-align: center;
     padding: 4rem 2rem;
@@ -842,6 +962,52 @@
     background: rgba(212, 175, 55, 0.18);
     color: #f0d489;
     border-color: rgba(212, 175, 55, 0.35);
+}
+
+.dark .inv-status-badge {
+    background: #374151;
+    color: #d1d5db;
+    border-color: #4b5563;
+}
+
+.dark .inv-status-badge.paid {
+    background: rgba(212, 175, 55, 0.18);
+    color: #f0d489;
+    border-color: rgba(212, 175, 55, 0.35);
+}
+
+.dark .inv-status-badge.due {
+    background: rgba(248, 113, 113, 0.12);
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
+.dark .inv-pay-btn {
+    color: var(--inv-gold);
+}
+
+.dark .inv-pay-summary-value {
+    color: #f3f4f6;
+}
+
+.dark .inv-pay-summary-value.due {
+    color: #fca5a5;
+}
+
+.dark .inv-pay-history th {
+    border-color: #4b5563;
+    color: #9ca3af;
+}
+
+.dark .inv-pay-history td {
+    border-color: #374151;
+    color: #f3f4f6;
+}
+
+.dark .inv-pay-done {
+    background: rgba(212, 175, 55, 0.14);
+    color: #f0d489;
+    border-color: rgba(212, 175, 55, 0.3);
 }
 
 .dark .inv-shop-name,
