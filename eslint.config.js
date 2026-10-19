@@ -44,7 +44,10 @@ export default [
         // scale-bridge is a standalone Node.js utility (its own package.json and
         // node_modules), not part of this Vite/React frontend — it doesn't use
         // browser globals and isn't meant to be linted by these rules.
-        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'scale-bridge'],
+        // metal-ledger-engine is a separate Laravel project (its own git history,
+        // its own PHP/JS conventions) living here only as a git submodule — not
+        // part of this app, and has its own lint tooling if it needs one.
+        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'scale-bridge', 'metal-ledger-engine'],
     },
     prettier, // Turn off all rules that might conflict with Prettier
 ];

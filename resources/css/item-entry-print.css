@@ -18,7 +18,11 @@
         sans-serif;
     color: #111827;
     width: var(--ies-width, 80mm);
-    padding: var(--ies-padding, 4mm);
+    /* Side padding only half the configured value — the table needs the
+       width more than the sides need the breathing room. Top/bottom keep
+       the full configured padding, untouched, so row spacing never moves. */
+    padding-block: var(--ies-padding, 4mm);
+    padding-inline: calc(var(--ies-padding, 4mm) / 2);
     box-sizing: border-box;
 }
 
@@ -120,23 +124,24 @@
     border: 1px solid #9ca3af;
     padding: 0.2rem 0.15rem;
     text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: break-word;
 }
 
 .ies-weight-table thead th {
     background: #f3f4f6;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
-    font-size: 0.6rem;
+    letter-spacing: 0.01em;
+    font-size: 0.5rem;
+    line-height: 1.15;
 }
 
 .ies-weight-table tbody th {
     text-align: left;
     font-weight: 600;
     background: #fafafa;
+    font-size: 0.62rem;
+    line-height: 1.15;
 }
 
 .ies-weight-table tbody tr:last-child th,

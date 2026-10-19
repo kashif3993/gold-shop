@@ -11,6 +11,11 @@ use Inertia\Inertia;
 
 class InventoryController extends Controller
 {
+    /** Allowed page sizes for the "rows per page" picker — anything else falls back to the default. */
+    private const PER_PAGE_OPTIONS = [10, 20, 50, 100];
+
+    private const DEFAULT_PER_PAGE = 20;
+
     public function index(Request $request)
     {
         $query = Item::with(['metalType', 'purity', 'sourceParty'])
@@ -36,15 +41,26 @@ class InventoryController extends Controller
             $query->where('source_party_id', $request->source_party_id);
         }
 
-        $items = $query->paginate(20)->withQueryString();
+        if ($request->filled('search')) {
+            $query->where('item_code', 'like', '%'.$request->search.'%');
+        }
+
+        $perPage = (int) $request->input('per_page', self::DEFAULT_PER_PAGE);
+        if (! in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
+            $perPage = self::DEFAULT_PER_PAGE;
+        }
+
+        $items = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('inventory/index', [
             'items' => $items,
-            'filters' => $request->only(['metal_type_id', 'purity_id', 'item_type', 'date', 'source_party_id']),
+            'filters' => $request->only(['metal_type_id', 'purity_id', 'item_type', 'date', 'source_party_id', 'search']),
             'metals' => MetalType::all(),
             'purities' => Purity::all(),
             'parties' => Party::whereHas('sourcedItems')->orderBy('name')->get(['id', 'name']),
             'stockSummary' => $this->stockSummary(),
+            'perPage' => $perPage,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
     }
 

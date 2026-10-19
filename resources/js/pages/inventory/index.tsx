@@ -1,9 +1,10 @@
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { formatNumber, fromGrams } from '@/utils/weight';
 import { Head, Link, router } from '@inertiajs/react';
-import { Edit, Eye, Printer, Trash2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit, Eye, MoreVertical, Printer, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import '../../../css/inventory.css';
 
@@ -118,13 +119,15 @@ function agingInfo(dateReceived: string, status: string): { text: string; cls: s
     return { text, cls: 'inv-age-stale' };
 }
 
-export default function InventoryIndex({ items, filters, metals, purities, parties = [], stockSummary = [] }: any) {
+export default function InventoryIndex({ items, filters, metals, purities, parties = [], stockSummary = [], perPage, perPageOptions }: any) {
     const [metalFilter, setMetalFilter] = useState(filters.metal_type_id || '');
     const [purityFilter, setPurityFilter] = useState(filters.purity_id || '');
     const [typeFilter, setTypeFilter] = useState(filters.item_type || '');
     const [dateFilter, setDateFilter] = useState(filters.date || '');
     const [sourceFilter, setSourceFilter] = useState(filters.source_party_id || '');
+    const [search, setSearch] = useState(filters.search || '');
     const [viewItem, setViewItem] = useState<any>(null);
+    const rowsOptions: number[] = perPageOptions || [10, 20, 50, 100];
 
     const handleFilter = (e: any) => {
         e.preventDefault();
@@ -136,6 +139,8 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                 item_type: typeFilter,
                 date: dateFilter,
                 source_party_id: sourceFilter,
+                search: search,
+                per_page: perPage,
             },
             {
                 preserveState: true,
@@ -150,7 +155,24 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
         setTypeFilter('');
         setDateFilter('');
         setSourceFilter('');
-        router.get('/inventory');
+        setSearch('');
+        router.get('/inventory', { per_page: perPage }, { preserveScroll: true });
+    };
+
+    const changeRowsPerPage = (value: string) => {
+        router.get(
+            '/inventory',
+            {
+                metal_type_id: metalFilter,
+                purity_id: purityFilter,
+                item_type: typeFilter,
+                date: dateFilter,
+                source_party_id: sourceFilter,
+                search: search,
+                per_page: value,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const handleDelete = (item: any) => {
@@ -240,10 +262,31 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                         <input type="date" className="filter-input" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
                     </div>
 
+                    <div className="filter-group">
+                        <label className="filter-label">Search (item code)</label>
+                        <input
+                            className="filter-input"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="e.g. GLD-RNG-..."
+                        />
+                    </div>
+
+                    <div className="filter-group">
+                        <label className="filter-label">Rows per page</label>
+                        <select className="filter-input" value={perPage} onChange={(e) => changeRowsPerPage(e.target.value)}>
+                            {rowsOptions.map((n: number) => (
+                                <option key={n} value={n}>
+                                    {n}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
                     <button type="submit" className="filter-btn">
                         Apply Filters
                     </button>
-                    {(metalFilter || purityFilter || typeFilter || dateFilter || sourceFilter) && (
+                    {(metalFilter || purityFilter || typeFilter || dateFilter || sourceFilter || search) && (
                         <button type="button" onClick={clearFilters} className="filter-clear">
                             Clear
                         </button>
@@ -319,52 +362,32 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                                                     return <span className={`inv-age ${a.cls}`}>{a.text}</span>;
                                                 })()}
                                             </td>
-                                            <td>
-                                                <div className="action-buttons" style={{ justifyContent: 'flex-end' }}>
-                                                    <button
-                                                        type="button"
-                                                        className="action-btn view"
-                                                        title="View Item Details"
-                                                        onClick={() => setViewItem(item)}
-                                                    >
-                                                        <Eye size={16} />
-                                                    </button>
-                                                    <Link
-                                                        href={`/items/${item.id}/tag`}
-                                                        className="action-btn"
-                                                        title="Print Tag"
-                                                        style={{
-                                                            textDecoration: 'none',
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            color: '#6366f1',
-                                                        }}
-                                                    >
-                                                        <Printer size={16} />
-                                                    </Link>
-                                                    <Link
-                                                        href={`/items/${item.id}/edit`}
-                                                        className="action-btn edit"
-                                                        title="Edit Item"
-                                                        style={{
-                                                            textDecoration: 'none',
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                        }}
-                                                    >
-                                                        <Edit size={16} />
-                                                    </Link>
-                                                    <button
-                                                        type="button"
-                                                        className="action-btn delete"
-                                                        title="Delete Item"
-                                                        onClick={() => handleDelete(item)}
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
+                                            <td style={{ textAlign: 'right' }}>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <button type="button" className="action-btn" title="Actions">
+                                                            <MoreVertical size={16} />
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onSelect={() => setViewItem(item)}>
+                                                            <Eye size={14} /> View Details
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem asChild>
+                                                            <Link href={`/items/${item.id}/tag`}>
+                                                                <Printer size={14} /> Print Tag
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem asChild>
+                                                            <Link href={`/items/${item.id}/edit`}>
+                                                                <Edit size={14} /> Edit Item
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="inv-menu-item-danger" onSelect={() => handleDelete(item)}>
+                                                            <Trash2 size={14} /> Delete Item
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </td>
                                         </tr>
                                     ))
@@ -373,24 +396,50 @@ export default function InventoryIndex({ items, filters, metals, purities, parti
                         </table>
                     </div>
 
-                    {/* Basic Pagination */}
-                    {items.links && items.links.length > 3 && (
-                        <div className="pagination">
-                            <div style={{ color: 'var(--color-muted-foreground, #6b7280)', fontSize: '0.9rem' }}>
-                                Showing {items.from || 0} to {items.to || 0} of {items.total} results
-                            </div>
-                            <div className="pagination-links">
-                                {items.links.map((link: any, index: number) => (
+                    <div className="pagination">
+                        <div style={{ color: 'var(--color-muted-foreground, #6b7280)', fontSize: '0.9rem' }}>
+                            Showing {items.from || 0} to {items.to || 0} of {items.total} results
+                        </div>
+                        <div className="pagination-links">
+                            <Link
+                                href={items.prev_page_url || '#'}
+                                preserveScroll
+                                aria-label="Previous page"
+                                onClick={(e) => {
+                                    if (!items.prev_page_url) e.preventDefault();
+                                }}
+                                className={`page-link page-nav ${!items.prev_page_url ? 'disabled' : ''}`}
+                            >
+                                <ChevronLeft size={15} />
+                            </Link>
+
+                            {items.links &&
+                                items.links.slice(1, -1).map((link: any, index: number) => (
                                     <Link
                                         key={index}
                                         href={link.url || '#'}
+                                        preserveScroll
+                                        onClick={(e) => {
+                                            if (!link.url) e.preventDefault();
+                                        }}
                                         className={`page-link ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}`}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                     />
                                 ))}
-                            </div>
+
+                            <Link
+                                href={items.next_page_url || '#'}
+                                preserveScroll
+                                aria-label="Next page"
+                                onClick={(e) => {
+                                    if (!items.next_page_url) e.preventDefault();
+                                }}
+                                className={`page-link page-nav ${!items.next_page_url ? 'disabled' : ''}`}
+                            >
+                                <ChevronRight size={15} />
+                            </Link>
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 {/* Quick View Item Modal */}

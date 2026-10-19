@@ -1,4 +1,4 @@
-import { formatNumber, gramsToTraditional } from '@/utils/weight';
+import { formatNumber, gramsToTraditional, TOLA_GRAMS } from '@/utils/weight';
 import * as React from 'react';
 
 interface Shop {
@@ -79,6 +79,7 @@ export default function ItemEntryPrintSlip({
     const polishGrams = Number(item.polish_weight_grams) || 0;
     const labourCost = Number(item.labour_cost) || 0;
     const ratePerGram = Number(item.purchase_rate_per_gram) || 0;
+    const ratePerTola = ratePerGram * TOLA_GRAMS;
     const totalPrice = Number(item.purchase_price) || 0;
     const metalValue = netGrams * ratePerGram;
 
@@ -136,6 +137,14 @@ export default function ItemEntryPrintSlip({
 
             <div className="ies-section-label">Weight Breakdown</div>
             <table className="ies-weight-table">
+                <colgroup>
+                    <col style={{ width: '29%' }} />
+                    <col style={{ width: '14.2%' }} />
+                    <col style={{ width: '14.2%' }} />
+                    <col style={{ width: '14.2%' }} />
+                    <col style={{ width: '14.2%' }} />
+                    <col style={{ width: '14.2%' }} />
+                </colgroup>
                 <thead>
                     <tr>
                         <th></th>
@@ -162,15 +171,15 @@ export default function ItemEntryPrintSlip({
 
             <div className="ies-costing">
                 <div className="ies-row">
-                    <span>Rate / Gram</span>
-                    <span>{fmt(ratePerGram)}</span>
+                    <span>Rate / Tola</span>
+                    <span>{fmt(ratePerTola)}</span>
                 </div>
                 <div className="ies-row">
                     <span>Metal Value</span>
                     <span>{fmt(metalValue)}</span>
                 </div>
                 <div className="ies-row">
-                    <span>Labour Cost</span>
+                    <span>Manufacturing</span>
                     <span>{fmt(labourCost)}</span>
                 </div>
                 <div className="ies-row ies-row-grand">

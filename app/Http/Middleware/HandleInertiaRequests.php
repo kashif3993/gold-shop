@@ -47,6 +47,11 @@ class HandleInertiaRequests extends Middleware
             // the static .env app name, so renaming the shop there updates
             // the branding everywhere without a code change.
             'shop_name' => Setting::get('shop_name', config('app.name', 'Zar & Noor')),
+            // Same idea for the uploaded shop logo (stored as a data URI —
+            // see SystemSettingsController) — was already reaching POS/invoice
+            // prints but never the sidebar badge itself. Null when no logo
+            // has been uploaded, so AppLogo falls back to the default icon.
+            'shop_logo' => Setting::get('shop_logo'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
