@@ -417,4 +417,25 @@ class RateManagementTest extends TestCase
 
         $this->assertEquals(1, RateFetchLog::where('success', false)->count());
     }
+
+    /**
+     * Previously this job called refreshFromApi() unconditionally, so turning
+     * off "Rate Auto-Refresh" in Admin -> Settings did nothing on a shop
+     * running the scheduler — the rate kept auto-updating every 15 minutes
+     * regardless of the toggle.
+     */
+    public function test_scheduled_fetch_job_does_nothing_when_auto_refresh_is_disabled(): void
+    {
+        Setting::create(['key' => 'rate_auto_refresh_enabled', 'value' => '0']);
+
+        Http::fake([
+            '*/price/XAU' => Http::response(['price' => 2700.0]),
+            '*/price/XAG' => Http::response(['price' => 32.0]),
+        ]);
+
+        app(FetchGoldRatesJob::class)->handle(app(GoldRateService::class));
+
+        $this->assertEquals(0, RateFetchLog::count());
+        Http::assertNothingSent();
+    }
 }
