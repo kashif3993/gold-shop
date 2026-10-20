@@ -220,6 +220,7 @@ class ZakatTest extends TestCase
             'shop_phone' => '0300 0000000',
             'shop_ntn' => '',
             'active_metal_ids' => [$this->gold->id, $this->silver->id],
+            'item_type_cost_defaults' => [],
             'buyback_enabled' => true,
             'bank_qr_enabled' => true,
             'bank_qr_manager_confirm_enabled' => false,

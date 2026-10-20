@@ -172,6 +172,12 @@
     gap: 0.35rem;
 }
 
+.adm-labour-defaults-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.9rem;
+}
+
 .adm-label {
     font-size: 0.75rem;
     font-weight: 700;

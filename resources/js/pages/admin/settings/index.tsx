@@ -15,6 +15,30 @@ interface MetalRow {
     is_active: boolean;
 }
 
+interface ItemTypeCostDefaultRow {
+    item_type: string;
+    labour_cost_default: number;
+}
+
+const ITEM_TYPE_LABELS: Record<string, string> = {
+    ring: 'Ring',
+    bangle: 'Bangle',
+    necklace: 'Necklace',
+    earring: 'Earring',
+    bracelet: 'Bracelet',
+    chain: 'Chain',
+    pendant: 'Pendant',
+    locket: 'Locket',
+    nose_pin: 'Nose Pin',
+    tops: 'Tops',
+    other: 'Other Jewelry',
+    biscuit: 'Biscuit',
+    bar: 'Bar',
+    nugget: 'Nugget',
+    coin: 'Coin',
+    piece: 'Raw Gold / Lagdi',
+};
+
 interface Settings {
     shop_name: string;
     shop_tagline: string;
@@ -70,7 +94,15 @@ function ToggleRow({
     );
 }
 
-export default function SystemSettings({ settings, metals }: { settings: Settings; metals: MetalRow[] }) {
+export default function SystemSettings({
+    settings,
+    metals,
+    itemTypeCostDefaults,
+}: {
+    settings: Settings;
+    metals: MetalRow[];
+    itemTypeCostDefaults: ItemTypeCostDefaultRow[];
+}) {
     const { flash } = usePage().props as any;
     const [logoPreview, setLogoPreview] = useState<string | null>(settings.shop_logo);
 
@@ -88,6 +120,8 @@ export default function SystemSettings({ settings, metals }: { settings: Setting
         item_slip_print_padding_mm: settings.item_slip_print_padding_mm,
 
         active_metal_ids: metals.filter((m) => m.is_active).map((m) => m.id) as number[],
+
+        item_type_cost_defaults: itemTypeCostDefaults as any[],
 
         buyback_enabled: settings.buyback_enabled,
         bank_qr_enabled: settings.bank_qr_enabled,
@@ -125,6 +159,13 @@ export default function SystemSettings({ settings, metals }: { settings: Setting
     const toggleMetal = (id: number, checked: boolean) => {
         const current = form.data.active_metal_ids;
         form.setData('active_metal_ids', checked ? [...current, id] : current.filter((x) => x !== id));
+    };
+
+    const setLabourDefault = (itemType: string, value: number) => {
+        form.setData(
+            'item_type_cost_defaults',
+            form.data.item_type_cost_defaults.map((row) => (row.item_type === itemType ? { ...row, labour_cost_default: value } : row)),
+        );
     };
 
     return (
@@ -392,6 +433,35 @@ export default function SystemSettings({ settings, metals }: { settings: Setting
                             />
                         ))}
                         {form.errors.active_metal_ids && <span className="adm-error">{form.errors.active_metal_ids}</span>}
+                    </div>
+
+                    {/* ── Labour cost defaults ─────────────────────── */}
+                    <div className="adm-card">
+                        <h2 className="adm-card-title">Labour Cost Defaults</h2>
+                        <p className="adm-card-sub">
+                            Pre-fills Item Entry's Labour Cost field the moment an item type is picked — still fully editable per item, this just
+                            saves re-typing the usual charge every time. Leave at 0 for a type that should stay manual.
+                        </p>
+
+                        <div className="adm-labour-defaults-grid">
+                            {form.data.item_type_cost_defaults.map((row) => (
+                                <div className="adm-field" key={row.item_type}>
+                                    <label className="adm-label" htmlFor={`labour_default_${row.item_type}`}>
+                                        {ITEM_TYPE_LABELS[row.item_type] || row.item_type}
+                                    </label>
+                                    <input
+                                        id={`labour_default_${row.item_type}`}
+                                        type="number"
+                                        step="any"
+                                        min="0"
+                                        className="adm-input"
+                                        style={{ width: '100%' }}
+                                        value={row.labour_cost_default || ''}
+                                        onChange={(e) => setLabourDefault(row.item_type, parseFloat(e.target.value) || 0)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     {/* ── Feature toggles ──────────────────────────── */}

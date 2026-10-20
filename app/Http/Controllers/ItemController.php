@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DailyRate;
 use App\Models\Item;
+use App\Models\ItemTypeCostDefault;
 use App\Models\MetalType;
 use App\Models\Party;
 use App\Models\Purity;
@@ -75,6 +76,7 @@ class ItemController extends Controller
             'purities' => Purity::all(),
             'parties' => Party::all(),
             'currentRates' => $this->currentRates(),
+            'labourCostDefaults' => ItemTypeCostDefault::pluck('labour_cost_default', 'item_type'),
         ], $this->printContext()));
     }
 

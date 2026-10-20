@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Models\Item;
 use App\Models\MetalType;
@@ -346,6 +347,60 @@ class SystemSettingsTest extends TestCase
         $this->assertTrue($this->goldMetal->fresh()->is_active);
     }
 
+    /* ── labour cost defaults (FR-24/FR-25) ──────────────────────── */
+
+    public function test_settings_screen_lists_every_item_type_defaulting_to_zero(): void
+    {
+        $this->actingAs($this->admin)
+            ->get('/admin/settings')
+            ->assertInertia(fn ($page) => $page
+                ->has('itemTypeCostDefaults', 16)
+                ->where('itemTypeCostDefaults.0.labour_cost_default', 0));
+    }
+
+    public function test_admin_can_set_a_labour_cost_default_for_an_item_type_and_it_is_audited(): void
+    {
+        $this->actingAs($this->admin)->post('/admin/settings', $this->validPayload([
+            'item_type_cost_defaults' => [
+                ['item_type' => 'ring', 'labour_cost_default' => 500],
+            ],
+        ]))->assertRedirect();
+
+        $this->assertDatabaseHas('item_type_cost_defaults', [
+            'item_type' => 'ring',
+            'labour_cost_default' => 500,
+        ]);
+
+        $this->assertDatabaseHas('audit_log', [
+            'entity_type' => 'settings',
+            'field_name' => 'item_type_cost_default',
+            'old_value' => 'Rs 0',
+            'new_value' => 'Rs 500',
+        ]);
+    }
+
+    public function test_unchanged_labour_cost_defaults_write_no_audit_row(): void
+    {
+        $before = AuditLog::count();
+
+        $this->actingAs($this->admin)->post('/admin/settings', $this->validPayload())->assertRedirect();
+
+        $this->assertSame($before, AuditLog::where('field_name', 'item_type_cost_default')->count());
+    }
+
+    public function test_item_create_screen_receives_the_saved_labour_cost_defaults(): void
+    {
+        $this->actingAs($this->admin)->post('/admin/settings', $this->validPayload([
+            'item_type_cost_defaults' => [
+                ['item_type' => 'ring', 'labour_cost_default' => 750],
+            ],
+        ]))->assertRedirect();
+
+        $this->actingAs($this->shopkeeper)
+            ->get('/items/create')
+            ->assertInertia(fn ($page) => $page->where('labourCostDefaults.ring', '750.00'));
+    }
+
     /* ── helpers ──────────────────────────────────────────────────── */
 
     private function validPayload(array $overrides = []): array
@@ -357,6 +412,7 @@ class SystemSettingsTest extends TestCase
             'shop_phone' => '0300 0000000',
             'shop_ntn' => '',
             'active_metal_ids' => [$this->goldMetal->id],
+            'item_type_cost_defaults' => [],
             'buyback_enabled' => true,
             'bank_qr_enabled' => true,
             'bank_qr_manager_confirm_enabled' => false,

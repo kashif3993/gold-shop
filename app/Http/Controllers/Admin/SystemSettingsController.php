@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ItemTypeCostDefault;
 use App\Models\MetalType;
 use App\Models\Setting;
 use App\Services\AuditLogger;
@@ -21,10 +22,27 @@ class SystemSettingsController extends Controller
     /** Feature toggles this screen manages — each defaults to whatever existing shops already experience today (most "on"; the Manager permission below defaults "off", since it's a new ability nobody had before). */
     private const FEATURE_TOGGLES = ['buyback_enabled', 'bank_qr_enabled', 'exchange_enabled', 'rate_auto_refresh_enabled', 'zakat_enabled', 'bank_qr_manager_confirm_enabled'];
 
+    /**
+     * Every item type Item Entry offers (see items/create.tsx's type picker)
+     * — kept here too so a default row can be shown/managed for a type even
+     * before anyone has ever entered an item of that kind.
+     */
+    private const ITEM_TYPES = [
+        'ring', 'bangle', 'necklace', 'earring', 'bracelet', 'chain', 'pendant', 'locket', 'nose_pin', 'tops', 'other',
+        'biscuit', 'bar', 'nugget', 'coin', 'piece',
+    ];
+
     public function edit()
     {
+        $existingDefaults = ItemTypeCostDefault::whereIn('item_type', self::ITEM_TYPES)
+            ->get()->keyBy('item_type');
+
         return Inertia::render('admin/settings/index', [
             'metals' => MetalType::orderBy('name')->get(['id', 'name', 'is_active']),
+            'itemTypeCostDefaults' => collect(self::ITEM_TYPES)->map(fn ($type) => [
+                'item_type' => $type,
+                'labour_cost_default' => (float) ($existingDefaults[$type]->labour_cost_default ?? 0),
+            ])->values(),
             'settings' => [
                 'shop_name' => Setting::get('shop_name', config('app.name', 'Zar & Noor')),
                 'shop_tagline' => Setting::get('shop_tagline', 'Jewellers — Gold & Silver'),
@@ -92,6 +110,10 @@ class SystemSettingsController extends Controller
 
             'active_metal_ids' => 'required|array|min:1',
             'active_metal_ids.*' => ['integer', Rule::exists('metal_types', 'id')],
+
+            'item_type_cost_defaults' => 'present|array',
+            'item_type_cost_defaults.*.item_type' => ['required', 'string', Rule::in(self::ITEM_TYPES)],
+            'item_type_cost_defaults.*.labour_cost_default' => 'required|numeric|min:0',
         ], [
             'active_metal_ids.min' => 'The shop must deal in at least one metal.',
         ]);
@@ -116,6 +138,38 @@ class SystemSettingsController extends Controller
                 $userId,
             );
             $metal->update(['is_active' => $shouldBeActive]);
+        }
+
+        // Labour cost defaults per item type (FR-24/FR-25) — a making
+        // charge, same category G-2 already requires logging for ("Only
+        // Admin can change ... making charges. Every such action is logged
+        // with no exceptions"), so each type that actually changed gets its
+        // own audit row rather than one blanket entry for the whole form.
+        $existingDefaults = ItemTypeCostDefault::whereIn('item_type', self::ITEM_TYPES)->get()->keyBy('item_type');
+        foreach ($data['item_type_cost_defaults'] as $row) {
+            $type = $row['item_type'];
+            $existing = $existingDefaults[$type] ?? null;
+            $oldLabour = (float) ($existing->labour_cost_default ?? 0);
+            $newLabour = (float) $row['labour_cost_default'];
+
+            if (round($oldLabour, 2) === round($newLabour, 2)) {
+                continue;
+            }
+
+            ItemTypeCostDefault::updateOrCreate(
+                ['item_type' => $type],
+                ['labour_cost_default' => $newLabour, 'updated_by_user_id' => $userId],
+            );
+
+            $audit->log(
+                'settings',
+                0,
+                'item_type_cost_default',
+                "Rs {$oldLabour}",
+                "Rs {$newLabour}",
+                ucfirst(str_replace('_', ' ', $type)).' default labour cost updated',
+                $userId,
+            );
         }
 
         // Maintenance mode and sales tax have real, shop-wide consequences

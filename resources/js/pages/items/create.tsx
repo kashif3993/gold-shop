@@ -44,6 +44,7 @@ interface ItemCreateProps {
     purities: Purity[];
     parties: Party[];
     currentRates?: Record<string, string | number>;
+    labourCostDefaults?: Record<string, string | number>;
     shop: Shop;
     printerType: 'regular' | 'thermal';
     printDimensions: PrintDimensions;
@@ -256,6 +257,7 @@ export default function ItemCreate({
     purities = [],
     parties = [],
     currentRates = {},
+    labourCostDefaults = {},
     shop,
     printerType,
     printDimensions,
@@ -264,6 +266,9 @@ export default function ItemCreate({
     const [codePreview, setCodePreview] = useState('');
     // Once the shopkeeper types their own purchase rate, stop auto-filling it.
     const rateTouched = useRef(false);
+    // Same idea for labour cost — auto-filled from the item type's default
+    // (Admin → Settings) until the shopkeeper overrides it by hand.
+    const labourTouched = useRef(false);
     const initialMetalId = metals.length > 0 ? metals[0].id : '';
     const initialItemType = 'ring';
     const initialPurityId = resolveDefaultPurityId(initialItemType, initialMetalId, purities);
@@ -326,6 +331,16 @@ export default function ItemCreate({
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data.purity_id, hasLiveRate, liveRate]);
+
+    // Pre-fill labour cost from this item type's default (Admin → Settings),
+    // until the shopkeeper overrides it — same pattern as the rate above.
+    useEffect(() => {
+        if (!labourTouched.current) {
+            const defaultLabour = Number(labourCostDefaults[data.item_type]) || 0;
+            setData('labour_cost', defaultLabour);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.item_type]);
 
     const handleItemTypeChange = (newType: string) => {
         const isBullionType = isBullion(newType);
@@ -868,8 +883,30 @@ export default function ItemCreate({
                                     min="0"
                                     className="form-input"
                                     value={data.labour_cost || ''}
-                                    onChange={(e) => setData('labour_cost', parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => {
+                                        labourTouched.current = true;
+                                        setData('labour_cost', parseFloat(e.target.value) || 0);
+                                    }}
                                 />
+                                {(() => {
+                                    const defaultLabour = Number(labourCostDefaults[data.item_type]) || 0;
+                                    if (defaultLabour <= 0 || Number(data.labour_cost) === defaultLabour) return null;
+                                    return (
+                                        <div className="rate-hint">
+                                            Default for {data.item_type.replace('_', ' ')}: <strong>Rs {formatNumber(defaultLabour, 2)}</strong>
+                                            <button
+                                                type="button"
+                                                className="rate-hint-use"
+                                                onClick={() => {
+                                                    labourTouched.current = false;
+                                                    setData('labour_cost', defaultLabour);
+                                                }}
+                                            >
+                                                use this
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </div>
                     </div>
