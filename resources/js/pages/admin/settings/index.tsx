@@ -507,7 +507,7 @@ export default function SystemSettings({
                         <ToggleRow
                             id="rate_auto_refresh_enabled"
                             title="Automatic Rate Refresh"
-                            desc="Quietly re-fetches the gold/silver rate from the live feed while a screen is open. Off means rates only update from 'Refresh now' or the scheduled job."
+                            desc="Quietly re-fetches the gold/silver rate from the live feed — both while a screen is open and on the scheduled job. Off means rates only ever update from the 'Refresh now' button."
                             checked={form.data.rate_auto_refresh_enabled}
                             onChange={(v) => form.setData('rate_auto_refresh_enabled', v)}
                         />
