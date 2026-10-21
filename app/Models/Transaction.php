@@ -20,6 +20,7 @@ class Transaction extends Model
         'purity_id',
         'weight_grams',
         'rate_per_gram',
+        'quoted_at',
         'metal_cost',
         'labour_cost',
         'polish_cost',
@@ -41,6 +42,7 @@ class Transaction extends Model
         return [
             'weight_grams' => 'decimal:3',
             'rate_per_gram' => 'decimal:2',
+            'quoted_at' => 'datetime',
             'metal_cost' => 'decimal:2',
             'labour_cost' => 'decimal:2',
             'polish_cost' => 'decimal:2',
