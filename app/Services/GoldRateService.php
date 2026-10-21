@@ -37,7 +37,7 @@ class GoldRateService
     /** Current effective rate per purity_id, with the numbers behind it. */
     public function currentRates(): Collection
     {
-        return DailyRate::with(['metalType:id,name', 'purity:id,name,metal_type_id'])
+        return DailyRate::with(['metalType:id,name,is_active', 'purity:id,name,metal_type_id'])
             ->where('is_current', true)
             ->get()
             ->keyBy('purity_id');

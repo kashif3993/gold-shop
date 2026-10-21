@@ -246,6 +246,24 @@ class RateManagementTest extends TestCase
         $this->getJson('/api/v1/rates/current')->assertUnauthorized();
     }
 
+    /**
+     * A metal switched off in Admin -> Settings already disappears from item
+     * entry, POS, buy-back, and rate management — the ticker was the one
+     * place still showing its rate regardless.
+     */
+    public function test_ticker_endpoint_excludes_a_deactivated_metal(): void
+    {
+        app(GoldRateService::class)->storeRate($this->gold->id, $this->g22->id, 24000, 'manual', $this->user->id);
+        app(GoldRateService::class)->storeRate($this->silver->id, $this->s999->id, 300, 'manual', $this->user->id);
+
+        $this->silver->update(['is_active' => false]);
+
+        $this->actingAs($this->user)->getJson('/api/v1/rates/current')
+            ->assertOk()
+            ->assertJsonCount(1, 'rates')
+            ->assertJsonPath('rates.0.metal', 'Gold');
+    }
+
     public function test_is_due_for_auto_refresh_when_no_current_rate_exists(): void
     {
         $this->assertTrue(app(GoldRateService::class)->isDueForAutoRefresh());

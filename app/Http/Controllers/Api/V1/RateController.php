@@ -21,6 +21,10 @@ class RateController extends Controller
         $rates->autoRefreshIfDue();
 
         $list = $rates->currentRates()
+            // A metal switched off in Admin → Settings disappears from item
+            // entry, POS, buy-back, and rate management (see MetalType::active()
+            // usages) — the ticker was the one place still showing it.
+            ->filter(fn ($r) => (bool) ($r->metalType->is_active ?? false))
             ->map(fn ($r) => [
                 'metal' => $r->metalType->name ?? '',
                 'purity' => $r->purity->name ?? '',

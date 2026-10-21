@@ -115,6 +115,7 @@ class SystemSettingsController extends Controller
             'item_type_cost_defaults.*.item_type' => ['required', 'string', Rule::in(self::ITEM_TYPES)],
             'item_type_cost_defaults.*.labour_cost_default' => 'required|numeric|min:0',
         ], [
+            'active_metal_ids.required' => 'The shop must deal in at least one metal.',
             'active_metal_ids.min' => 'The shop must deal in at least one metal.',
         ]);
 
